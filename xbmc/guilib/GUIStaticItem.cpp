@@ -46,6 +46,8 @@ CGUIStaticItem::CGUIStaticItem(const TiXmlElement *item, int parentID) : CFileIt
     const char *id = item->Attribute("id");
     int visibleCondition = 0;
     CGUIControlFactory::GetConditionalVisibility(item, visibleCondition);
+    // NOTE: Use this when backporting #318 PR. Link to commit: https://github.com/xbmc/xbmc/commit/acfe38802f9bc55fd403c87c2fae919283219c3c
+    //SetVisibleCondition(condition, parentID);
     CGUIControlFactory::GetActions(item, "onclick", m_clickActions);
     SetLabel(label.GetLabel(parentID));
     SetLabel2(label2.GetLabel(parentID));
@@ -89,6 +91,13 @@ CGUIStaticItem::CGUIStaticItem(const TiXmlElement *item, int parentID) : CFileIt
   }
 }
 
+CGUIStaticItem::CGUIStaticItem(const CFileItem &item)
+: CFileItem(item)
+{
+  m_visCondition = 0;
+  m_visState = false;
+}
+
 void CGUIStaticItem::UpdateProperties(int contextWindow)
 {
   for (InfoVector::const_iterator i = m_info.begin(); i != m_info.end(); i++)
@@ -128,4 +137,10 @@ bool CGUIStaticItem::IsVisible() const
   if (m_visCondition)
     return m_visState;
   return true;
+}
+
+void CGUIStaticItem::SetVisibleCondition(const std::string &condition, int context)
+{
+  m_visCondition = g_infoManager.Register(condition, context);
+  m_visState = false;
 }

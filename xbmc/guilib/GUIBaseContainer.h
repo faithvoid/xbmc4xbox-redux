@@ -37,6 +37,8 @@ typedef boost::shared_ptr<CGUIListItem> CGUIListItemPtr;
  \brief
  */
 
+class IListProvider;
+
 class CGUIBaseContainer : public CGUIControl
 {
 public:
@@ -70,7 +72,7 @@ public:
 
   virtual void DoRender(unsigned int currentTime);
   void LoadLayout(TiXmlElement *layout);
-  void LoadContent(TiXmlElement *content);
+  void LoadListProvider(TiXmlElement *content, int defaultItem, bool defaultAlways);
 
   VIEW_TYPE GetType() const { return m_type; };
   const CStdString &GetLabel() const { return m_label; };
@@ -82,7 +84,10 @@ public:
   virtual bool GetCondition(int condition, int data) const;
   CStdString GetLabel(int info) const;
 
-  void SetStaticContent(const std::vector<CGUIListItemPtr> &items, bool forceUpdate = true);
+  /*! \brief Set the list provider for this container (for python).
+   \param provider the list provider to use for this container.
+   */
+  void SetListProvider(IListProvider *provider);
 
   /*! \brief Set the offset of the first item in the container from the container's position
    Useful for lists/panels where the focused item may be larger than the non-focused items and thus
@@ -102,6 +107,7 @@ protected:
   virtual void Scroll(int amount);
   virtual bool MoveDown(bool wrapAround);
   virtual bool MoveUp(bool wrapAround);
+  virtual bool GetOffsetRange(int &minOffset, int &maxOffset) const;
   virtual void ValidateOffset();
   virtual int  CorrectOffset(int offset, int cursor) const;
   virtual void UpdateLayout(bool refreshAllItems = false);
@@ -115,7 +121,8 @@ protected:
   virtual unsigned int GetNumItems() const { return m_items.size(); };
   virtual int GetCurrentPage() const;
   bool InsideLayout(const CGUIListItemLayout *layout, const CPoint &point) const;
-  void UpdateStaticItems(bool refreshItems = false);
+  virtual void OnFocus();
+  void UpdateListProvider(bool refreshItems = false);
 
   inline float Size() const;
   void MoveToRow(int row);
@@ -156,9 +163,8 @@ protected:
   VIEW_TYPE m_type;
   CStdString m_label;
 
-  bool m_staticContent;
-  unsigned int m_staticUpdateTime;
-  std::vector<CGUIListItemPtr> m_staticItems;
+  IListProvider *m_listProvider;
+
   bool m_wasReset;  // true if we've received a Reset message until we've rendered once.  Allows
                     // us to make sure we don't tell the infomanager that we've been moving when
                     // the "movement" was simply due to the list being repopulated (thus cursor position
