@@ -87,7 +87,6 @@ bool CGUIDialogPluginSettings::OnMessage(CGUIMessage& message)
   {
     case GUI_MSG_WINDOW_DEINIT:
     {
-      FreeControls();
       FreeSections();
     }
     break;
@@ -532,7 +531,7 @@ void CGUIDialogPluginSettings::SaveSettings(void)
 
 void CGUIDialogPluginSettings::FreeSections()
 {
-  CGUIControlGroupList *group = (CGUIControlGroupList *)GetControl(CONTROL_SETTINGS_AREA);
+  CGUIControlGroupList *group = (CGUIControlGroupList *)GetControl(CONTROL_SECTION_AREA);
   if (group)
   {
     group->FreeResources();
@@ -540,6 +539,7 @@ void CGUIDialogPluginSettings::FreeSections()
   }
   m_settings.clear();
   m_buttonValues.clear();
+  FreeControls();
 }
 
 void CGUIDialogPluginSettings::FreeControls()
