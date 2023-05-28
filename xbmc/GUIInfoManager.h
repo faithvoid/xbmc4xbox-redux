@@ -47,15 +47,12 @@ class CDateTime;
 namespace INFO
 {
   class InfoBool;
+  class InfoSingle;
 }
 
 // conditions for window retrieval
 #define WINDOW_CONDITION_HAS_LIST_ITEMS  1
 #define WINDOW_CONDITION_IS_MEDIA_WINDOW 2
-
-#define OPERATOR_NOT  3
-#define OPERATOR_AND  2
-#define OPERATOR_OR   1
 
 #define PLAYER_HAS_MEDIA              1
 #define PLAYER_HAS_AUDIO              2
@@ -336,13 +333,13 @@ namespace INFO
 #define INTEGER_GREATER_THAN        413
 #define VALUE_IS_TRUE               414
 
-#define SKIN_HAS_THEME_START        500
-#define SKIN_HAS_THEME_END          599 // allow for max 100 themes
-
 #define SKIN_BOOL                   600
 #define SKIN_STRING                 601
 #define SKIN_HAS_MUSIC_OVERLAY      602
 #define SKIN_HAS_VIDEO_OVERLAY      603
+#define SKIN_THEME                  604
+#define SKIN_COLOUR_THEME           605
+#define SKIN_HAS_THEME              606
 
 #define SYSTEM_TOTAL_MEMORY         644
 #define SYSTEM_CPU_USAGE            645
@@ -410,6 +407,7 @@ namespace INFO
 #define SYSTEM_OPENGL_VERSION       709
 #define SYSTEM_SETTING              710
 #define SYSTEM_HAS_ADDON            711
+#define SYSTEM_IDLE_TIME            715
 
 #define LIBRARY_HAS_MUSIC           720
 #define LIBRARY_HAS_VIDEO           721
@@ -424,9 +422,6 @@ namespace INFO
 #define SYSTEM_PLATFORM_LINUX       741
 #define SYSTEM_PLATFORM_WINDOWS     742
 #define SYSTEM_PLATFORM_OSX         743
-
-#define SKIN_THEME                  800
-#define SKIN_COLOUR_THEME           801
 
 #define SLIDE_INFO_START            900
 #define SLIDE_INFO_END              980
@@ -443,9 +438,6 @@ namespace INFO
 #define WINDOW_PREVIOUS             9997
 #define WINDOW_IS_MEDIA             9998
 #define WINDOW_IS_ACTIVE            9999
-
-#define SYSTEM_IDLE_TIME_START      20000
-#define SYSTEM_IDLE_TIME_FINISH     21000 // 1000 seconds
 
 #define CONTROL_GET_LABEL           29996
 #define CONTROL_IS_ENABLED          29997
@@ -618,7 +610,6 @@ public:
   bool EvaluateBool(const CStdString &expression, int context = 0);
 
   int TranslateString(const CStdString &strCondition);
-  bool GetBool(int condition, int contextWindow = 0, const CGUIListItem *item=NULL);
   int GetInt(int info, int contextWindow = 0) const;
   CStdString GetLabel(int info, int contextWindow = 0);
 
@@ -668,7 +659,7 @@ public:
   void SetShowCodec(bool showcodec) { m_playerShowCodec = showcodec; };
   void SetShowInfo(bool showinfo) { m_playerShowInfo = showinfo; };
   void ToggleShowCodec() { m_playerShowCodec = !m_playerShowCodec; };
-  void ToggleShowInfo() { m_playerShowInfo = !m_playerShowInfo; };
+  bool ToggleShowInfo() { m_playerShowInfo = !m_playerShowInfo; return m_playerShowInfo; };
   bool m_performingSeek;
 
   std::string GetSystemHeatInfo(int info);
@@ -680,7 +671,6 @@ public:
   void SetPreviousWindow(int windowID) { m_prevWindowID = windowID; };
 
   void ResetCache();
-  void ResetPersistentCache();
 
   CStdString GetItemLabel(const CFileItem *item, int info);
   CStdString GetItemImage(const CFileItem *item, int info);
@@ -714,18 +704,49 @@ public:
   /// \brief iterates through boolean conditions and compares their stored values to current values. Returns true if any condition changed value.
   bool ConditionsChangedValues(const std::map<int, bool>& map);
 protected:
+  friend class INFO::InfoSingle;
+  friend class CGUIWindowFullScreen;
+  bool GetBool(int condition, int contextWindow = 0, const CGUIListItem *item=NULL);
+
   // routines for window retrieval
   bool CheckWindowCondition(CGUIWindow *window, int condition) const;
   CGUIWindow *GetWindowWithCondition(int contextWindow, int condition) const;
 
+  /*! \brief class for holding information on properties
+   */
+  class Property
+  {
+  public:
+    Property(const CStdString &property, const CStdString &parameters);
+
+    const CStdString &param(unsigned int n = 0) const;
+    unsigned int num_params() const;
+
+    CStdString name;
+  private:
+    std::vector<CStdString> params;
+  };
+
   bool GetMultiInfoBool(const GUIInfo &info, int contextWindow = 0, const CGUIListItem *item = NULL);
   CStdString GetMultiInfoLabel(const GUIInfo &info, int contextWindow = 0);
-  int TranslateListItem(const CStdString &info);
+  int TranslateListItem(const Property &info);
   int TranslateMusicPlayerString(const CStdString &info) const;
   TIME_FORMAT TranslateTimeFormat(const CStdString &format);
   bool GetItemBool(const CGUIListItem *item, int condition) const;
   CStdString VideoWidthToResolutionDescription(int iWidth) const;
   CStdString VideoAspectToAspectDescription(float fAspect) const;
+
+  /*! \brief Split an info string into it's constituent parts and parameters
+   Format is:
+     
+     info1(params1).info2(params2).info3(params3) ...
+   
+   where the parameters are an optional comma separated parameter list.
+   
+   \param infoString the original string
+   \param info the resulting pairs of info and parameters.
+   */
+  void SplitInfoString(const CStdString &infoString, std::vector<Property> &info);
 
   // Conditional string parameters for testing are stored in a vector for later retrieval.
   // The offset into the string parameters array is returned.
@@ -777,31 +798,10 @@ protected:
   int m_nextWindowID;
   int m_prevWindowID;
 
-  class CCombinedValue
-  {
-  public:
-    CStdString m_info;    // the text expression
-    int m_id;             // the id used to identify this expression
-    std::list<int> m_postfix;  // the postfix binary expression
-    CCombinedValue& operator=(const CCombinedValue& mSrc);
-  };
-
-  int GetOperator(const char ch);
-  int TranslateBooleanExpression(const CStdString &expression);
-  bool EvaluateBooleanExpression(const CCombinedValue &expression, bool &result, int contextWindow, const CGUIListItem *item=NULL);
-
-  std::vector<CCombinedValue> m_CombinedValues;
-
-  // routines for caching the bool results
-  bool IsCached(int condition, int contextWindow, bool &result) const;
-  void CacheBool(int condition, int contextWindow, bool result, bool persistent=false);
-  std::map<int, bool> m_boolCache;
   std::vector<INFO::InfoBool*> m_bools;
   std::vector<INFO::CSkinVariableString> m_skinVariableStrings;
   unsigned int m_updateTime;
 
-  // persistent cache
-  std::map<int, bool> m_persistentBoolCache;
   int m_libraryHasMusic;
   int m_libraryHasMovies;
   int m_libraryHasTVShows;

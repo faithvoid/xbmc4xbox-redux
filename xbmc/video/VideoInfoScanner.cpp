@@ -364,9 +364,6 @@ namespace VIDEO
     CVideoInfoTag showDetails;
     int idTvShow = -1;
     m_database.Open();
-    // needed to ensure the movie count etc is cached
-    for (int i=LIBRARY_HAS_VIDEO;i<LIBRARY_HAS_MUSICVIDEOS+1;++i)
-      g_infoManager.GetBool(i);
     //m_database.BeginTransaction();
 
     bool Return(false);
@@ -629,7 +626,7 @@ namespace VIDEO
       pDlgProgress->ShowProgressBar(false);
 
     //m_database.CommitTransaction();
-    g_infoManager.ResetPersistentCache();
+    g_infoManager.ResetLibraryBools();
     m_database.Close();
     return Return;
   }

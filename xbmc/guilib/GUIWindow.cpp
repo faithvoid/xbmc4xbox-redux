@@ -185,13 +185,15 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
     }
     else if (strValue == "visible" && pChild->FirstChild())
     {
-      CGUIControlFactory::GetConditionalVisibility(pRootElement, m_visibleCondition);
+      CStdString condition;
+      CGUIControlFactory::GetConditionalVisibility(pRootElement, condition);
+      m_visibleCondition = g_infoManager.Register(condition, GetID());
     }
     else if (strValue == "animation" && pChild->FirstChild())
     {
       FRECT rect = { 0, 0, (float)g_settings.m_ResInfo[m_coordsRes].iWidth, (float)g_settings.m_ResInfo[m_coordsRes].iHeight };
       CAnimation anim;
-      anim.Create(pChild, rect);
+      anim.Create(pChild, rect, GetID());
       m_animations.push_back(anim);
     }
     else if (strValue == "zorder" && pChild->FirstChild())
@@ -221,7 +223,7 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
         originElement->QueryFloatAttribute("x", &origin.x);
         originElement->QueryFloatAttribute("y", &origin.y);
         if (originElement->FirstChild())
-          origin.condition = g_infoManager.TranslateString(originElement->FirstChild()->Value());
+          origin.condition = g_infoManager.Register(originElement->FirstChild()->Value(), GetID());
         m_origins.push_back(origin);
         originElement = originElement->NextSiblingElement("origin");
       }
@@ -375,7 +377,7 @@ CPoint CGUIWindow::GetPosition() const
   for (unsigned int i = 0; i < m_origins.size(); i++)
   {
     // no condition implies true
-    if (!m_origins[i].condition || g_infoManager.GetBool(m_origins[i].condition, GetID()))
+    if (!m_origins[i].condition || g_infoManager.GetBoolValue(m_origins[i].condition))
     { // found origin
       return CPoint(m_origins[i].x, m_origins[i].y);
     }

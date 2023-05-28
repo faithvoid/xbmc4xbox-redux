@@ -65,7 +65,7 @@ public:
   static bool GetTexture(const TiXmlNode* pRootNode, const char* strTag, CTextureInfo &image);
   static bool GetAlignment(const TiXmlNode* pRootNode, const char* strTag, uint32_t& dwAlignment);
   static bool GetAlignmentY(const TiXmlNode* pRootNode, const char* strTag, uint32_t& dwAlignment);
-  static bool GetAnimations(const TiXmlNode *control, const FRECT &rect, std::vector<CAnimation> &animation);
+  static bool GetAnimations(const TiXmlNode *control, const FRECT &rect, int context, std::vector<CAnimation> &animation);
 
   /*! \brief Create an info label from an XML element
    Processes XML elements of the form
@@ -83,15 +83,14 @@ public:
   static bool GetColor(const TiXmlNode* pRootNode, const char* strTag, color_t &value);
   static bool GetInfoColor(const TiXmlNode* pRootNode, const char* strTag, CGUIInfoColor &value, int parentID);
   static CStdString FilterLabel(const CStdString &label);
-  static bool GetConditionalVisibility(const TiXmlNode* control, int &condition);
+  static bool GetConditionalVisibility(const TiXmlNode* control, CStdString &condition);
   static bool GetActions(const TiXmlNode* pRootNode, const char* strTag, CGUIAction& actions);
   static void GetRectFromString(const CStdString &string, FRECT &rect);
   static bool GetHitRect(const TiXmlNode* pRootNode, CRect &rect);
   static bool GetScroller(const TiXmlNode *pControlNode, const CStdString &scrollerTag, CScroller& scroller);
 private:
   static CStdString GetType(const TiXmlElement *pControlNode);
-  bool GetCondition(const TiXmlNode *control, const char *tag, int &condition);
-  static bool GetConditionalVisibility(const TiXmlNode* control, int &condition, CGUIInfoBool &allowHiddenFocus);
+  static bool GetConditionalVisibility(const TiXmlNode* control, CStdString &condition, CStdString &allowHiddenFocus);
   bool GetPath(const TiXmlNode* pRootNode, const char* strTag, CStdString& strStringPath);
   bool GetString(const TiXmlNode* pRootNode, const char* strTag, CStdString& strString);
   bool GetFloatRange(const TiXmlNode* pRootNode, const char* strTag, float& iMinValue, float& iMaxValue, float& iIntervalValue);
