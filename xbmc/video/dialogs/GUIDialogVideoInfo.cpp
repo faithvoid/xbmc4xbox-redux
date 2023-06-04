@@ -115,7 +115,7 @@ bool CGUIWindowVideoInfo::OnMessage(CGUIMessage& message)
       m_hasUpdatedThumb = false;
 
       CGUIDialog::OnMessage(message);
-      m_bViewReview = true;
+      m_bViewReview = false;
       CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), CONTROL_DISC);
       OnMessage(msg);
       for (int i = 0; i < 1000; ++i)
@@ -290,16 +290,12 @@ void CGUIWindowVideoInfo::SetMovie(const CFileItem *item)
   { // movie/show/episode
     for (CVideoInfoTag::iCast it = m_movieItem->GetVideoInfoTag()->m_cast.begin(); it != m_movieItem->GetVideoInfoTag()->m_cast.end(); ++it)
     {
-      CStdString character;
-      if (it->strRole.IsEmpty())
-        character = it->strName;
-      else
-        character.Format("%s %s %s", it->strName.c_str(), g_localizeStrings.Get(20347).c_str(), it->strRole.c_str());
       CFileItemPtr item(new CFileItem(it->strName));
       if (CFile::Exists(item->GetCachedActorThumb()))
         item->SetThumbnailImage(item->GetCachedActorThumb());
       item->SetIconImage("DefaultActor.png");
-      item->SetLabel(character);
+      item->SetLabel(it->strName);
+      item->SetLabel2(it->strRole);
       m_castList->Add(item);
     }
     // set fanart property for tvshows and movies
