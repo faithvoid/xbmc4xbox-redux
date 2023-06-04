@@ -437,6 +437,9 @@ namespace INFO
 #define SYSTEM_PLATFORM_WINDOWS     742
 #define SYSTEM_PLATFORM_OSX         743
 
+#define SYSTEM_CAN_POWERDOWN        750
+#define SYSTEM_CAN_REBOOT           753
+
 #define SLIDE_INFO_START            900
 #define SLIDE_INFO_END              980
 

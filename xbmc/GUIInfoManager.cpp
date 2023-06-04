@@ -197,7 +197,6 @@ const infomap player_labels[] =  {{ "hasmedia",         PLAYER_HAS_MEDIA },     
                                   { "muted",            PLAYER_MUTED },
                                   { "hasduration",      PLAYER_HASDURATION },
                                   { "cachelevel",       PLAYER_CACHELEVEL },          // labels from here
-                                  { "seekbar",          PLAYER_SEEKBAR },
                                   { "progress",         PLAYER_PROGRESS },
                                   { "progresscache",    PLAYER_PROGRESS_CACHE },
                                   { "volume",           PLAYER_VOLUME },
@@ -247,6 +246,8 @@ const infomap system_labels[] =  {{ "hasnetwork",           SYSTEM_ETHERNET_LINK
                                   { "dvdinfomodel",         SYSTEM_DVD_MODEL },
                                   { "dvdinfofirmware",      SYSTEM_DVD_FIRMWARE },
                                   { "mplayerversion",       SYSTEM_MPLAYER_VERSION },
+                                  { "canpowerdown",         SYSTEM_CAN_POWERDOWN },
+                                  { "canreboot",            SYSTEM_CAN_REBOOT },
                                   { "cputemperature",       SYSTEM_CPU_TEMPERATURE },     // labels from here
                                   { "cpuusage",             SYSTEM_CPU_USAGE },
                                   { "gputemperature",       SYSTEM_GPU_TEMPERATURE },
@@ -2121,6 +2122,10 @@ bool CGUIInfoManager::GetBool(int condition1, int contextWindow, const CGUIListI
     bReturn = CDetectDVDMedia::DriveReady() != DRIVE_NOT_READY;
   else if (condition == SYSTEM_TRAYOPEN)
     bReturn = CDetectDVDMedia::DriveReady() == DRIVE_OPEN;
+  else if (condition == SYSTEM_CAN_POWERDOWN)
+    bReturn = true;
+  else if (condition == SYSTEM_CAN_REBOOT)
+    bReturn = true;
   else if (condition == PLAYER_SHOWINFO)
     bReturn = m_playerShowInfo;
   else if (condition == PLAYER_SHOWCODEC)
