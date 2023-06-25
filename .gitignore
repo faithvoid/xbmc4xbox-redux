@@ -1,0 +1,4 @@
+Release/
+Debug/
+.vscode/
+svn_rev.h
