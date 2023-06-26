@@ -19,7 +19,6 @@
  */
 
 #include "video/windows/GUIWindowVideoNav.h"
-#include "GUIWindowVideoFiles.h"
 #include "music/windows/GUIWindowMusicNav.h"
 #include "windows/GUIWindowFileManager.h"
 #include "GUIInfoManager.h"
@@ -79,8 +78,6 @@ using namespace std;
 CGUIWindowVideoNav::CGUIWindowVideoNav(void)
     : CGUIWindowVideoBase(WINDOW_VIDEO_NAV, "MyVideoNav.xml")
 {
-  m_vecItems->SetPath("?");
-  m_bDisplayEmptyDatabaseMessage = false;
   m_thumbLoader.SetObserver(this);
 }
 
@@ -108,7 +105,7 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
   switch (message.GetMessage())
   {
   case GUI_MSG_WINDOW_RESET:
-    m_vecItems->SetPath("?");
+    m_vecItems->SetPath("");
     break;
   case GUI_MSG_WINDOW_DEINIT:
     if (m_thumbLoader.IsLoading())
@@ -116,23 +113,14 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
     break;
   case GUI_MSG_WINDOW_INIT:
     {
-      // is this the first time the window is opened?
-      if (m_vecItems->GetPath() == "?" && message.GetStringParam().IsEmpty())
-        message.SetStringParam(g_settings.m_defaultVideoLibSource);
-
-      DisplayEmptyDatabaseMessage(false); // reset message state
-
       if (!CGUIWindowVideoBase::OnMessage(message))
         return false;
 
       //  base class has opened the database, do our check
       m_database.Open();
-      DisplayEmptyDatabaseMessage(!m_database.HasContent());
 
-      if (m_bDisplayEmptyDatabaseMessage)
-      {
-        // no library - make sure we focus on a known control, and default to the root.
-        SET_CONTROL_FOCUS(CONTROL_BTNTYPE, 0);
+      if (!m_database.HasContent() && m_vecItems->IsVideoDb())
+      { // no library - make sure we default to the root.
         m_vecItems->SetPath("");
         SetHistoryForPath("");
         Update("");
@@ -261,6 +249,8 @@ CStdString CGUIWindowVideoNav::GetQuickpathName(const CStdString& strPath) const
     return "RecentlyAddedMusicVideos";
   else if (strPath.Equals("special://videoplaylists/"))
     return "Playlists";
+  else if (strPath.Equals("sources://video/"))
+    return "Files";
   else
   {
     CLog::Log(LOGERROR, "  CGUIWindowVideoNav::GetQuickpathName: Unknown parameter (%s)", strPath.c_str());
@@ -279,9 +269,6 @@ void CGUIWindowVideoNav::OnItemLoaded(CFileItem* pItem)
 
 bool CGUIWindowVideoNav::GetDirectory(const CStdString &strDirectory, CFileItemList &items)
 {
-  if (m_bDisplayEmptyDatabaseMessage)
-    return true;
-
   CFileItem directory(strDirectory, true);
 
   if (m_thumbLoader.IsLoading())
@@ -421,10 +408,46 @@ bool CGUIWindowVideoNav::GetDirectory(const CStdString &strDirectory, CFileItemL
       if (items.GetLabel().IsEmpty() && m_rootDir.IsSource(items.GetPath(), g_settings.GetSourcesFromType("video"), &label)) 
         items.SetLabel(label);
     }
-
+    else
+    { // load info from the database
+      LoadVideoInfo(items);
+    }
   }
-
   return bResult;
+}
+
+void CGUIWindowVideoNav::LoadVideoInfo(CFileItemList &items)
+{
+  // TODO: this could possibly be threaded as per the music info loading,
+  //       we could also cache the info
+  CStdString content = m_database.GetContentForPath(items.GetPath());
+  items.SetContent(content);
+  if (!content.IsEmpty())
+  {
+    for (int i = 0; i < items.Size(); i++)
+    {
+      CFileItemPtr pItem = items[i];
+      CFileItem item;
+      if (m_database.GetItemForPath(content, pItem->GetPath(), item))
+      { // copy info across
+        pItem->UpdateInfo(item);
+        // TODO: we may wish to use a playable_url parameter here rather than
+        //       switching the path of the item (eg movie as a folder)
+        pItem->SetPath(item.GetPath());
+        pItem->m_bIsFolder = item.m_bIsFolder;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 0; i < items.Size(); i++)
+    {
+      CFileItemPtr pItem = items[i];
+      int playCount = m_database.GetPlayCount(*pItem);
+      if (playCount >= 0)
+        pItem->SetOverlayImage(CGUIListItem::ICON_OVERLAY_UNWATCHED, playCount > 0);
+    }
+  }
 }
 
 void CGUIWindowVideoNav::UpdateButtons()
@@ -465,12 +488,16 @@ void CGUIWindowVideoNav::UpdateButtons()
     CStdString strDummy;
     URIUtils::Split(m_vecItems->GetPath(), strDummy, strLabel);
   }
+  else if (m_vecItems->GetPath().Equals("sources://video/"))
+    strLabel = g_localizeStrings.Get(744);
   // everything else is from a videodb:// path
-  else
+  else if (m_vecItems->IsVideoDb())
   {
     CVideoDatabaseDirectory dir;
     dir.GetLabel(m_vecItems->GetPath(), strLabel);
   }
+  else
+    strLabel = URIUtils::GetFileName(m_vecItems->GetPath());
 
   SET_CONTROL_LABEL(CONTROL_FILTER, strLabel);
 
@@ -562,20 +589,6 @@ void CGUIWindowVideoNav::PlayItem(int iItem)
   CGUIWindowVideoBase::PlayItem(iItem);
 }
 
-void CGUIWindowVideoNav::DisplayEmptyDatabaseMessage(bool bDisplay)
-{
-  m_bDisplayEmptyDatabaseMessage = bDisplay;
-}
-
-void CGUIWindowVideoNav::FrameMove()
-{
-  if (m_bDisplayEmptyDatabaseMessage)
-    SET_CONTROL_LABEL(CONTROL_LABELEMPTY,g_localizeStrings.Get(745)+'\n'+g_localizeStrings.Get(746));
-  else
-    SET_CONTROL_LABEL(CONTROL_LABELEMPTY,"");
-  CGUIWindowVideoBase::FrameMove();
-}
-
 void CGUIWindowVideoNav::OnInfo(CFileItem* pItem, const SScraperInfo& info)
 {
   SScraperInfo info2(info);
@@ -614,9 +627,11 @@ void CGUIWindowVideoNav::OnDeleteItem(CFileItemPtr pItem)
   if (m_vecItems->IsParentFolder())
     return;
 
-  if (m_vecItems->GetPath().Equals("special://videoplaylists/"))
+  if (!m_vecItems->IsVideoDb())
   {
-    if (!pItem->GetPath().Equals("newsmartplaylist://video"))
+    if (!pItem->GetPath().Equals("newsmartplaylist://video") &&
+        !pItem->GetPath().Equals("special://videoplaylists/") &&
+        !pItem->GetPath().Equals("sources://video/"))
       CGUIWindowVideoBase::OnDeleteItem(pItem);
   }
   else if (m_vecItems->GetPath().Equals("plugin://video/"))
@@ -682,7 +697,6 @@ void CGUIWindowVideoNav::OnDeleteItem(CFileItemPtr pItem)
   }
 
   CUtil::DeleteVideoDatabaseDirectoryCache();
-  DisplayEmptyDatabaseMessage(!m_database.HasContent());
 }
 
 bool CGUIWindowVideoNav::DeleteItem(CFileItem* pItem, bool bUnavailable /* = false */)
@@ -791,14 +805,10 @@ void CGUIWindowVideoNav::OnPrepareFileItems(CFileItemList &items)
   ||  node == NODE_TYPE_RECENTLY_ADDED_MOVIES
   ||  node == NODE_TYPE_RECENTLY_ADDED_MUSICVIDEOS)
     filterWatched = true;
-  if (items.IsPlugin())
+  if (!items.IsVideoDb())
     filterWatched = true;
-  if (items.IsSmartPlayList())
-  {
-    if (items.GetContent() == "tvshows")
-      node = NODE_TYPE_TITLE_TVSHOWS; // so that the check below works
-    filterWatched = true;
-  }
+  if (items.IsSmartPlayList() && items.GetContent() == "tvshows")
+    node = NODE_TYPE_TITLE_TVSHOWS; // so that the check below works
 
   for (int i = 0; i < items.Size(); i++)
   {
@@ -845,6 +855,37 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
       buttons.Add(CONTEXT_BUTTON_STOP_SCANNING, 13353);
     else
       buttons.Add(CONTEXT_BUTTON_UPDATE_LIBRARY, 653);
+  }
+  else if (m_vecItems->GetPath().Equals("sources://video/"))
+  {
+    // get the usual shares
+    CGUIDialogContextMenu::GetContextButtons("video", item, buttons);
+    // add scan button somewhere here
+    CGUIDialogVideoScan *pScanDlg = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
+    if (pScanDlg && pScanDlg->IsScanning())
+      buttons.Add(CONTEXT_BUTTON_STOP_SCANNING, 13353);  // Stop Scanning
+    if (!item->IsDVD() && item->GetPath() != "add" &&
+        (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
+    {
+      CVideoDatabase database;
+      database.Open();
+      SScraperInfo info;
+      database.GetScraperForPath(item->GetPath(), info);
+
+      if (!pScanDlg || (pScanDlg && !pScanDlg->IsScanning()))
+      {
+        if (!item->IsLiveTV() && !item->IsPlugin()/* && !item->IsAddonsPath()*/)
+        {
+          if (!info.strContent.IsEmpty())
+            buttons.Add(CONTEXT_BUTTON_SET_CONTENT, 20442);
+          else
+            buttons.Add(CONTEXT_BUTTON_SET_CONTENT, 20333);
+        }
+      }
+
+      if (info.strContent.IsEmpty() && (!pScanDlg || (pScanDlg && !pScanDlg->IsScanning())))
+        buttons.Add(CONTEXT_BUTTON_SCAN, 13349);
+    }
   }
   else
   {
@@ -901,17 +942,31 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
         }
         if ((info.strContent.Equals("tvshows") && item->m_bIsFolder) ||
             (item->IsVideoDb() && item->HasVideoInfoTag() && !item->m_bIsFolder))
+        if (!item->IsPlugin() && !item->IsLiveTV() && /*!item->IsAddonsPath() &&*/
+             item->GetPath() != "sources://video/" && item->GetPath() != "special://videoplaylists/")
         {
-          if (item->m_bIsFolder || item->GetVideoInfoTag()->m_playCount > 0)
+          if (item->m_bIsFolder)
+          {
+            // Have both options for folders since we don't know whether all childs are watched/unwatched
             buttons.Add(CONTEXT_BUTTON_MARK_UNWATCHED, 16104); //Mark as UnWatched
-          if (item->m_bIsFolder || item->GetVideoInfoTag()->m_playCount == 0)
             buttons.Add(CONTEXT_BUTTON_MARK_WATCHED, 16103);   //Mark as Watched
-          if (node != NODE_TYPE_SEASONS)
-            buttons.Add(CONTEXT_BUTTON_EDIT, 16105); //Edit Title
+          }
+          else
+          {
+            if (item->GetOverlayImage().Equals("OverlayWatched.png"))
+              buttons.Add(CONTEXT_BUTTON_MARK_UNWATCHED, 16104); //Mark as UnWatched
+            else
+              buttons.Add(CONTEXT_BUTTON_MARK_WATCHED, 16103);   //Mark as Watched
+          }
+        }
+        if ((node == NODE_TYPE_TITLE_TVSHOWS) ||
+            (item->IsVideoDb() && item->HasVideoInfoTag() && !item->m_bIsFolder))
+        {
+          buttons.Add(CONTEXT_BUTTON_EDIT, 16105); //Edit Title
         }
         if (m_database.HasContent(VIDEODB_CONTENT_TVSHOWS) && item->HasVideoInfoTag() &&
            !item->m_bIsFolder && item->GetVideoInfoTag()->m_iEpisode == -1 &&
-            item->GetVideoInfoTag()->m_artist.empty()) // movie entry
+            item->GetVideoInfoTag()->m_artist.empty() && item->GetVideoInfoTag()->m_iDbId >= 0) // movie entry
         {
           if (m_database.IsLinkedToTvshow(item->GetVideoInfoTag()->m_iDbId))
             buttons.Add(CONTEXT_BUTTON_UNLINK_MOVIE,20385);
@@ -964,38 +1019,24 @@ void CGUIWindowVideoNav::GetContextButtons(int itemNumber, CContextButtons &butt
           buttons.Add(CONTEXT_BUTTON_UPDATE_LIBRARY, 653);
       }
 
-      //Set default and/or clear default
-      NODE_TYPE nodetype = CVideoDatabaseDirectory::GetDirectoryType(item->GetPath());
-      if (!item->IsParentFolder() && !m_vecItems->GetPath().Equals("special://videoplaylists/") &&
-        (nodetype == NODE_TYPE_ROOT             ||
-         nodetype == NODE_TYPE_OVERVIEW         ||
-         nodetype == NODE_TYPE_TVSHOWS_OVERVIEW ||
-         nodetype == NODE_TYPE_MOVIES_OVERVIEW  ||
-         nodetype == NODE_TYPE_MUSICVIDEOS_OVERVIEW))
-      {
-        if (!item->GetPath().Equals(g_settings.m_defaultVideoLibSource))
-          buttons.Add(CONTEXT_BUTTON_SET_DEFAULT, 13335); // set default
-        if (strcmp(g_settings.m_defaultVideoLibSource, ""))
-          buttons.Add(CONTEXT_BUTTON_CLEAR_DEFAULT, 13403); // clear default
-      }
-
-      if ((CVideoDatabaseDirectory::GetDirectoryChildType(item->GetPath()) == NODE_TYPE_TITLE_MOVIES ||
-           CVideoDatabaseDirectory::GetDirectoryChildType(item->GetPath()) == NODE_TYPE_TITLE_MUSICVIDEOS ||
-           item->GetPath().Equals("videodb://1/") ||
-           item->GetPath().Equals("videodb://4/") ||
-           item->GetPath().Equals("videodb://6/")) &&
-           nodetype != NODE_TYPE_RECENTLY_ADDED_MOVIES)
-      {
-        buttons.Add(CONTEXT_BUTTON_MARK_WATCHED, 16103);   //Mark as Watched
-        buttons.Add(CONTEXT_BUTTON_MARK_UNWATCHED, 16104); //Mark as UnWatched
-      }
-
-      if (m_vecItems->GetPath().Equals("special://videoplaylists/"))
-      { // video playlists, file operations are allowed
+      if (!m_vecItems->IsVideoDb() && !m_vecItems->IsVirtualDirectoryRoot())
+      { // non-video db items, file operations are allowed
         if (!item->IsReadOnly())
         {
           buttons.Add(CONTEXT_BUTTON_DELETE, 117);
           buttons.Add(CONTEXT_BUTTON_RENAME, 118);
+        }
+        // add "Set/Change content" to folders
+        if (item->m_bIsFolder && !item->IsPlayList() && !item->IsLiveTV() && !item->IsPlugin()/* && !item->IsAddonsPath()*/)
+        {
+          CGUIDialogVideoScan *pScanDlg = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
+          if (!pScanDlg || (pScanDlg && !pScanDlg->IsScanning()))
+          {
+            if (!info.strContent.IsEmpty() && info.strContent != "None")
+              buttons.Add(CONTEXT_BUTTON_SET_CONTENT, 20442);
+            else
+              buttons.Add(CONTEXT_BUTTON_SET_CONTENT, 20333);
+          }
         }
       }
     }
@@ -1008,18 +1049,19 @@ bool CGUIWindowVideoNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
   CFileItemPtr item;
   if (itemNumber >= 0 && itemNumber < m_vecItems->Size())
     item = m_vecItems->Get(itemNumber);
+  if (CGUIDialogContextMenu::OnContextButton("video", item, button))
+  {
+    //TODO should we search DB for entries from plugins?
+    if (button == CONTEXT_BUTTON_REMOVE_SOURCE && !item->IsPlugin()
+        && !item->IsLiveTV() &&!item->IsRSS())
+    {
+      OnUnAssignContent(item->GetPath(),20375,20340,20341);
+    }
+    Update(m_vecItems->GetPath());
+    return true;
+  }
   switch (button)
   {
-  case CONTEXT_BUTTON_SET_DEFAULT:
-    g_settings.m_defaultVideoLibSource = GetQuickpathName(item->GetPath());
-    g_settings.Save();
-    return true;
-
-  case CONTEXT_BUTTON_CLEAR_DEFAULT:
-    g_settings.m_defaultVideoLibSource.Empty();
-    g_settings.Save();
-    return true;
-
   case CONTEXT_BUTTON_EDIT:
     UpdateVideoTitle(item.get());
     CUtil::DeleteVideoDatabaseDirectoryCache();
@@ -1487,5 +1529,7 @@ CStdString CGUIWindowVideoNav::GetStartFolder(const CStdString &dir)
     return "videodb://5/";
   else if (dir.Equals("RecentlyAddedMusicVideos"))
     return "videodb://6/";
+  else if (dir.Equals("Files"))
+    return "sources://video/";
   return CGUIWindowVideoBase::GetStartFolder(dir);
 }
