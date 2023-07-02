@@ -34,5 +34,4 @@ public:
   virtual bool OnAction(const CAction &action);
 protected:
   virtual bool OnMouseEvent(const CPoint &point, const CMouseEvent &event);
-  virtual void OnWindowLoaded();
 };

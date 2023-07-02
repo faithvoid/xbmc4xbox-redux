@@ -33,12 +33,6 @@ CGUIWindowOSD::~CGUIWindowOSD(void)
 {
 }
 
-void CGUIWindowOSD::OnWindowLoaded()
-{
-  CGUIDialog::OnWindowLoaded();
-  m_bRelativeCoords = true;
-}
-
 void CGUIWindowOSD::FrameMove()
 {
   if (m_autoClosing)

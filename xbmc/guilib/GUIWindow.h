@@ -225,7 +225,6 @@ protected:
 //#endif
 
   int m_idRange;
-  bool m_bRelativeCoords;
   OVERLAY_STATE m_overlayState;
   RESOLUTION m_coordsRes; // resolution that the window coordinates are in.
   bool m_needsScaling;
