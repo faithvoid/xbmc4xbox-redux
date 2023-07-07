@@ -505,7 +505,7 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
   AddSortMethod(SORT_METHOD_VIDEO_RATING, 563, LABEL_MASKS("%T", "%R"));  // Filename, Duration | Foldername, empty
   AddSortMethod(SORT_METHOD_YEAR,562, LABEL_MASKS("%T", "%Y"));
 
-  if (items.IsSmartPlayList())
+  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
     AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%T", "%R"));
 
   SetSortMethod(g_settings.m_viewStateVideoNavTitles.m_sortMethod);
@@ -539,7 +539,7 @@ CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList
     AddSortMethod(SORT_METHOD_ALBUM,558, LABEL_MASKS("%B - %T", "%Y"));
   }
 
-  if (items.IsSmartPlayList())
+  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
     AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%A - %T", "%Y"));
   
   SetSortMethod(g_settings.m_viewStateVideoNavMusicVideos.m_sortMethod);
@@ -564,7 +564,7 @@ CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items)
 
   AddSortMethod(SORT_METHOD_YEAR,562,LABEL_MASKS("%L","%Y","%L","%Y"));
 
-  if (items.IsSmartPlayList())
+  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
     AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%L", "%M", "%L", "%M"));
 
   SetSortMethod(g_settings.m_viewStateVideoNavTvShows.m_sortMethod);
@@ -601,7 +601,7 @@ CGUIViewStateVideoEpisodes::CGUIViewStateVideoEpisodes(const CFileItemList& item
     AddSortMethod(SORT_METHOD_DATE,552,LABEL_MASKS("%Z - %H. %T","%J"));
   }
 
-  if (items.IsSmartPlayList())
+  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
     AddSortMethod(SORT_METHOD_PLAYLIST_ORDER, 559, LABEL_MASKS("%Z - %H. %T", "%R"));
 
   SetSortMethod(g_settings.m_viewStateVideoNavEpisodes.m_sortMethod);
