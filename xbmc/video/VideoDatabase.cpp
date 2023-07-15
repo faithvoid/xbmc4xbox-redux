@@ -32,6 +32,7 @@
 #include "GUIWindowManager.h"
 #include "FileSystem/Directory.h"
 #include "FileSystem/File.h"
+#include "FileSystem/SpecialProtocol.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "FileItem.h"
@@ -60,6 +61,11 @@ CVideoDatabase::~CVideoDatabase(void)
 {}
 
 //********************************************************************************************************************************
+bool CVideoDatabase::Open()
+{
+  return CDatabase::Open(g_advancedSettings.m_databaseVideo);
+}
+
 bool CVideoDatabase::CreateTables()
 {
   /* indexes should be added on any columns that are used in in  */
@@ -291,6 +297,10 @@ bool CVideoDatabase::CreateTables()
     m_pDS->exec("CREATE INDEX ixEpisodeBasePath ON episode ( c19(12) )");
     m_pDS->exec("CREATE INDEX ixTVShowBasePath on tvshow ( c17(12) )");
 
+    CLog::Log(LOGINFO, "create seasons table");
+    m_pDS->exec("CREATE TABLE seasons ( idSeason integer primary key, idShow integer, season integer)");
+    m_pDS->exec("CREATE INDEX ix_seasons ON seasons (idShow, season)");
+
     // we create views last to ensure all indexes are rolled in
     CreateViews();
   }
@@ -323,14 +333,21 @@ void CVideoDatabase::CreateViews()
                                       "  tvshow.c%02d AS strStudio,"
                                       "  tvshow.c%02d AS premiered,"
                                       "  tvshow.c%02d AS mpaa,"
-                                      "  tvshow.c%02d AS strShowPath "
+                                      "  tvshow.c%02d AS strShowPath, "
+                                      "  bookmark.timeInSeconds AS resumeTimeInSeconds, "
+                                      "  bookmark.totalTimeInSeconds AS totalTimeInSeconds, "
+                                      "  seasons.idSeason AS idSeason "
                                       "FROM episode"
                                       "  JOIN files ON"
                                       "    files.idFile=episode.idFile"
                                       "  JOIN tvshow ON"
                                       "    tvshow.idShow=episode.idShow"
+                                      "  LEFT JOIN seasons ON"
+                                      "    seasons.idShow=episode.idShow AND seasons.season=episode.c%02d"
                                       "  JOIN path ON"
-                                      "    files.idPath=path.idPath", VIDEODB_ID_TV_TITLE, VIDEODB_ID_TV_STUDIOS, VIDEODB_ID_TV_PREMIERED, VIDEODB_ID_TV_MPAA, VIDEODB_ID_TV_BASEPATH);
+                                      "    files.idPath=path.idPath"
+                                      "  LEFT JOIN bookmark ON"
+                                      "    bookmark.idFile=episode.idFile AND bookmark.type=1", VIDEODB_ID_TV_TITLE, VIDEODB_ID_TV_STUDIOS, VIDEODB_ID_TV_PREMIERED, VIDEODB_ID_TV_MPAA, VIDEODB_ID_TV_BASEPATH, VIDEODB_ID_EPISODE_SEASON);
   m_pDS->exec(episodeview.c_str());
 
   CLog::Log(LOGINFO, "create tvshowview");
@@ -370,12 +387,16 @@ void CVideoDatabase::CreateViews()
               "  path.strPath as strPath,"
               "  files.playCount as playCount,"
               "  files.lastPlayed as lastPlayed,"
-              "  files.dateAdded as dateAdded "
+              "  files.dateAdded as dateAdded, "
+              "  bookmark.timeInSeconds AS resumeTimeInSeconds, "
+              "  bookmark.totalTimeInSeconds AS totalTimeInSeconds "
               "FROM musicvideo"
               "  JOIN files ON"
               "    files.idFile=musicvideo.idFile"
               "  JOIN path ON"
-              "    path.idPath=files.idPath");
+              "    path.idPath=files.idPath"
+              "  LEFT JOIN bookmark ON"
+              "    bookmark.idFile=musicvideo.idFile AND bookmark.type=1");
 
   CLog::Log(LOGINFO, "create movieview");
   try
@@ -389,12 +410,16 @@ void CVideoDatabase::CreateViews()
               "  path.strPath AS strPath,"
               "  files.playCount AS playCount,"
               "  files.lastPlayed AS lastPlayed,"
-              "  files.dateAdded AS dateAdded "
+              "  files.dateAdded AS dateAdded, "
+              "  bookmark.timeInSeconds AS resumeTimeInSeconds, "
+              "  bookmark.totalTimeInSeconds AS totalTimeInSeconds "
               "FROM movie"
               "  JOIN files ON"
               "    files.idFile=movie.idFile"
               "  JOIN path ON"
-              "    path.idPath=files.idPath");
+              "    path.idPath=files.idPath"
+              "  LEFT JOIN bookmark ON"
+              "    bookmark.idFile=movie.idFile AND bookmark.type=1");
 }
 
 //********************************************************************************************************************************
@@ -1891,6 +1916,9 @@ int CVideoDatabase::SetDetailsForTvShow(const CStdString& strPath, const CVideoI
       AddStudioToTvShow(idTvShow, vecStudios[i]);
     }
 
+    // add "all seasons" - the rest are added in SetDetailsForEpisode
+    AddSeason(idTvShow, -1);
+
     // and insert the new row
     CStdString sql = "update tvshow set " + GetValueString(details, VIDEODB_ID_TV_MIN, VIDEODB_ID_TV_MAX, DbTvShowOffsets);
     sql += PrepareSQL("where idShow=%i", idTvShow);
@@ -1955,6 +1983,9 @@ int CVideoDatabase::SetDetailsForEpisode(const CStdString& strFilenameAndPath, c
         SetStreamDetailsForFile(details.m_streamDetails, strFilenameAndPath);
     }
 
+    // ensure we have this season already added
+    AddSeason(idShow, details.m_iSeason);
+
     // and insert the new row
     CStdString sql = "update episode set " + GetValueString(details, VIDEODB_ID_EPISODE_MIN, VIDEODB_ID_EPISODE_MAX, DbEpisodeOffsets);
     sql += PrepareSQL("where idEpisode=%i", idEpisode);
@@ -1967,6 +1998,26 @@ int CVideoDatabase::SetDetailsForEpisode(const CStdString& strFilenameAndPath, c
     CLog::Log(LOGERROR, "%s (%s) failed", __FUNCTION__, strFilenameAndPath.c_str());
   }
   return -1;
+}
+
+int CVideoDatabase::GetSeasonId(int showID, int season)
+{
+  CStdString sql = PrepareSQL("idShow=%i AND season=%i", showID, season);
+  CStdString id = GetSingleValue("seasons", "idSeason", sql);
+  if (id.IsEmpty())
+    return -1;
+  return strtol(id.c_str(), NULL, 10);
+}
+
+int CVideoDatabase::AddSeason(int showID, int season)
+{
+  int seasonId = GetSeasonId(showID, season);
+  if (seasonId < 0)
+  {
+    if (ExecuteQuery(PrepareSQL("INSERT INTO seasons (idShow,season) VALUES(%i,%i)", showID, season)))
+      seasonId = m_pDS->lastinsertid();
+  }
+  return seasonId;
 }
 
 void CVideoDatabase::SetDetailsForMusicVideo(const CStdString& strFilenameAndPath, const CVideoInfoTag& details)
@@ -2515,6 +2566,9 @@ void CVideoDatabase::DeleteTvShow(const CStdString& strPath, bool bKeepId /* = f
     if (!bKeepThumb)
       DeleteThumbForItem(strPath,true);
 
+    strSQL=PrepareSQL("delete from seasons where idShow=%i", idTvShow);
+    m_pDS->exec(strSQL.c_str());
+
     // keep tvshow table and movielink table so we can update data in place
     if (!bKeepId)
     {
@@ -2846,11 +2900,8 @@ CVideoInfoTag CVideoDatabase::GetDetailsForMovie(const dbiplus::sql_record* cons
   GetCommonDetails(record, details);
   movieTime += CTimeUtils::GetTimeMS() - time; time = CTimeUtils::GetTimeMS();
 
-  GetStreamDetails(details);
-
   if (needsCast)
   {
-    GetResumePoint(details);
     GetCast("movie", "idMovie", details.m_iDbId, details.m_cast);
 
     castTime += CTimeUtils::GetTimeMS() - time; time = CTimeUtils::GetTimeMS();
@@ -2950,14 +3001,16 @@ CVideoInfoTag CVideoDatabase::GetDetailsForEpisode(const dbiplus::sql_record* co
   details.m_premiered.SetFromDBDate(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_AIRED).get_asString());
   details.m_iIdShow = record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_ID).get_asInt();
   details.m_strShowPath = record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_PATH).get_asString();
+  details.m_iIdSeason = record->at(VIDEODB_DETAILS_EPISODE_SEASON_ID).get_asInt();
+
+  details.m_resumePoint.timeInSeconds = record->at(VIDEODB_DETAILS_EPISODE_RESUME_TIME).get_asInt();
+  details.m_resumePoint.totalTimeInSeconds = record->at(VIDEODB_DETAILS_EPISODE_TOTAL_TIME).get_asInt();
+  details.m_resumePoint.type = CBookmark::RESUME;
 
   movieTime += CTimeUtils::GetTimeMS() - time; time = CTimeUtils::GetTimeMS();
 
-  GetStreamDetails(details);
-
   if (needsCast)
   {
-    GetResumePoint(details);
     GetCast("episode", "idEpisode", details.m_iDbId, details.m_cast);
     GetCast("tvshow", "idShow", details.m_iIdShow, details.m_cast);
 
@@ -2990,9 +3043,6 @@ CVideoInfoTag CVideoDatabase::GetDetailsForMusicVideo(const dbiplus::sql_record*
   GetCommonDetails(record, details);
   movieTime += CTimeUtils::GetTimeMS() - time; time = CTimeUtils::GetTimeMS();
 
-  GetStreamDetails(details);
-  GetResumePoint(details);
-
   details.m_strPictureURL.Parse();
   return details;
 }
@@ -3011,6 +3061,9 @@ void CVideoDatabase::GetCommonDetails(const dbiplus::sql_record* const record, C
   details.m_playCount = record->at(VIDEODB_DETAILS_PLAYCOUNT).get_asInt();
   details.m_lastPlayed.SetFromDBDateTime(record->at(VIDEODB_DETAILS_LASTPLAYED).get_asString());
   details.m_dateAdded.SetFromDBDateTime(record->at(VIDEODB_DETAILS_DATEADDED).get_asString());
+  details.m_resumePoint.timeInSeconds = record->at(VIDEODB_DETAILS_RESUME_TIME).get_asInt();
+  details.m_resumePoint.totalTimeInSeconds = record->at(VIDEODB_DETAILS_TOTAL_TIME).get_asInt();
+  details.m_resumePoint.type = CBookmark::RESUME;
 }
 
 void CVideoDatabase::GetCast(const CStdString &table, const CStdString &table_id, int type_id, vector<SActorInfo> &cast)
@@ -4981,13 +5034,16 @@ bool CVideoDatabase::GetSeasonsNav(const CStdString& strBaseDir, CFileItemList& 
                                    "       tvshow.c%02d,"
                                    "       tvshow.c%02d,"
                                    "       tvshow.c%02d,"
+                                   "       seasons.idSeason,"
                                    "       count(1),"
                                    "       count(files.playCount) "
                                    "FROM episode"
                                    " JOIN tvshow ON"
                                    "   tvshow.idShow=episode.idShow"
+                                   " JOIN seasons ON"
+                                   "   (seasons.idShow=tvshow.idShow AND seasons.season=episode.c%02d)"
                                    " JOIN files ON"
-                                   "   files.idFile=episode.idFile ", VIDEODB_ID_EPISODE_SEASON, VIDEODB_ID_TV_TITLE, VIDEODB_ID_TV_GENRE, VIDEODB_ID_TV_STUDIOS, VIDEODB_ID_TV_MPAA);
+                                   "   files.idFile=episode.idFile ", VIDEODB_ID_EPISODE_SEASON, VIDEODB_ID_TV_TITLE, VIDEODB_ID_TV_GENRE, VIDEODB_ID_TV_STUDIOS, VIDEODB_ID_TV_MPAA, VIDEODB_ID_EPISODE_SEASON);
     CStdString joins = PrepareSQL("  JOIN tvshowlinkpath ON"
                                   "    tvshowlinkpath.idShow = tvshow.idShow"
                                   "  JOIN path ON"
@@ -5043,8 +5099,9 @@ bool CVideoDatabase::GetSeasonsNav(const CStdString& strBaseDir, CFileItemList& 
           CSeason season;
           season.path = m_pDS->fv(1).get_asString();
           season.genre = StringUtils::Split(m_pDS->fv(3).get_asString(), g_advancedSettings.m_videoItemSeparator);
-          season.numEpisodes = m_pDS->fv(6).get_asInt();
-          season.numWatched = m_pDS->fv(7).get_asInt();
+          season.id = m_pDS->fv(6).get_asInt();
+          season.numEpisodes = m_pDS->fv(7).get_asInt();
+          season.numWatched = m_pDS->fv(8).get_asInt();
           mapSeasons.insert(make_pair(iSeason, season));
         }
         m_pDS->next();
@@ -5066,7 +5123,7 @@ bool CVideoDatabase::GetSeasonsNav(const CStdString& strBaseDir, CFileItemList& 
         pItem->m_bIsFolder=true;
         pItem->GetVideoInfoTag()->m_strTitle = strLabel;
         pItem->GetVideoInfoTag()->m_iSeason = iSeason;
-        pItem->GetVideoInfoTag()->m_iDbId = idShow;
+        pItem->GetVideoInfoTag()->m_iDbId = it->second.id;
         pItem->GetVideoInfoTag()->m_type = "season";
         pItem->GetVideoInfoTag()->m_strPath = it->second.path;
         pItem->GetVideoInfoTag()->m_genre = it->second.genre;
@@ -5101,15 +5158,15 @@ bool CVideoDatabase::GetSeasonsNav(const CStdString& strBaseDir, CFileItemList& 
         pItem->m_bIsFolder=true;
         pItem->GetVideoInfoTag()->m_strTitle = strLabel;
         pItem->GetVideoInfoTag()->m_iSeason = iSeason;
-        pItem->GetVideoInfoTag()->m_iDbId = idShow;
+        pItem->GetVideoInfoTag()->m_iDbId = m_pDS->fv(6).get_asInt();
         pItem->GetVideoInfoTag()->m_type = "season";
         pItem->GetVideoInfoTag()->m_strPath = m_pDS->fv(1).get_asString();
         pItem->GetVideoInfoTag()->m_genre = StringUtils::Split(m_pDS->fv(3).get_asString(), g_advancedSettings.m_videoItemSeparator);
         pItem->GetVideoInfoTag()->m_studio = StringUtils::Split(showStudio, g_advancedSettings.m_videoItemSeparator);
         pItem->GetVideoInfoTag()->m_strMPAARating = showMPAARating;
         pItem->GetVideoInfoTag()->m_strShowTitle = showTitle;
-        int totalEpisodes = m_pDS->fv(6).get_asInt();
-        int watchedEpisodes = m_pDS->fv(7).get_asInt();
+        int totalEpisodes = m_pDS->fv(7).get_asInt();
+        int watchedEpisodes = m_pDS->fv(8).get_asInt();
         pItem->GetVideoInfoTag()->m_iEpisode = totalEpisodes;
         pItem->SetProperty("totalepisodes", totalEpisodes);
         pItem->SetProperty("numepisodes", totalEpisodes); // will be changed later to reflect watchmode setting
@@ -7681,6 +7738,10 @@ void CVideoDatabase::CleanDatabase(IVideoInfoScannerObserver* pObserver, const v
     sql = "delete from genrelinktvshow where idShow not in (select idShow from tvshow)";
     m_pDS->exec(sql.c_str());
 
+    CLog::Log(LOGDEBUG, "%s: Cleaning seasons table", __FUNCTION__);
+    sql = "delete from seasons where idShow not in (select idShow from tvshow)";
+    m_pDS->exec(sql.c_str());
+    
     CLog::Log(LOGDEBUG, "%s Cleaning movielinktvshow table", __FUNCTION__);
     sql = "delete from movielinktvshow where idShow not in (select idShow from tvshow)";
     m_pDS->exec(sql.c_str());

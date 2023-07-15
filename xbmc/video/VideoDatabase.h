@@ -72,6 +72,8 @@ namespace VIDEO
 #define VIDEODB_DETAILS_PLAYCOUNT              VIDEODB_MAX_COLUMNS + 4
 #define VIDEODB_DETAILS_LASTPLAYED             VIDEODB_MAX_COLUMNS + 5
 #define VIDEODB_DETAILS_DATEADDED		           VIDEODB_MAX_COLUMNS + 6
+#define VIDEODB_DETAILS_RESUME_TIME		         VIDEODB_MAX_COLUMNS + 7
+#define VIDEODB_DETAILS_TOTAL_TIME		         VIDEODB_MAX_COLUMNS + 8
 
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_ID      VIDEODB_MAX_COLUMNS + 2
 #define VIDEODB_DETAILS_EPISODE_FILE           VIDEODB_MAX_COLUMNS + 3
@@ -84,6 +86,9 @@ namespace VIDEO
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_AIRED   VIDEODB_MAX_COLUMNS + 10
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_MPAA    VIDEODB_MAX_COLUMNS + 11
 #define VIDEODB_DETAILS_EPISODE_TVSHOW_PATH    VIDEODB_MAX_COLUMNS + 12
+#define VIDEODB_DETAILS_EPISODE_RESUME_TIME    VIDEODB_MAX_COLUMNS + 13
+#define VIDEODB_DETAILS_EPISODE_TOTAL_TIME     VIDEODB_MAX_COLUMNS + 14
+#define VIDEODB_DETAILS_EPISODE_SEASON_ID      VIDEODB_MAX_COLUMNS + 15
 
 #define VIDEODB_DETAILS_TVSHOW_PATH            VIDEODB_MAX_COLUMNS + 1
 #define VIDEODB_DETAILS_TVSHOW_DATEADDED		   VIDEODB_MAX_COLUMNS + 2
@@ -346,6 +351,7 @@ public:
     std::vector<std::string> genre;
     int numEpisodes;
     int numWatched;
+    int id;
   };
 
   class CSetInfo
@@ -359,6 +365,7 @@ public:
   CVideoDatabase(void);
   virtual ~CVideoDatabase(void);
 
+  virtual bool Open();
   virtual bool CommitTransaction();
 
   int AddMovie(const CStdString& strFilenameAndPath);
@@ -427,6 +434,7 @@ public:
   int GetPathId(const CStdString& strPath);
   int GetTvShowId(const CStdString& strPath);
   int GetEpisodeId(const CStdString& strFilenameAndPath, int idEpisode=-1, int idSeason=-1); // idEpisode, idSeason are used for multipart episodes as hints
+  int GetSeasonId(int idShow, int season);
 
   void GetEpisodesByFile(const CStdString& strFilenameAndPath, std::vector<CVideoInfoTag>& episodes);
 
@@ -465,6 +473,7 @@ public:
   void AddBookMarkForEpisode(const CVideoInfoTag& tag, const CBookmark& bookmark);
   void DeleteBookMarkForEpisode(const CVideoInfoTag& tag);
   bool GetResumePoint(CVideoInfoTag& tag) const;
+  bool GetStreamDetails(CVideoInfoTag& tag) const;
 
   // scraper settings
   void SetScraperForPath(const CStdString& filePath, const SScraperInfo& info, const VIDEO::SScanSettings& settings);
@@ -675,6 +684,7 @@ protected:
   int AddStudio(const CStdString& strStudio1);
   int AddTvShow(const CStdString& strPath);
   int AddMusicVideo(const CStdString& strFilenameAndPath);
+  int AddSeason(int showID, int season);
 
   // link functions - these two do all the work
   void AddLinkToActor(const char *table, int actorID, const char *secondField, int secondID, const CStdString &role, int order);
@@ -725,7 +735,6 @@ protected:
   void GetDetailsFromDB(std::auto_ptr<dbiplus::Dataset> &pDS, int min, int max, const SDbTableOffsets *offsets, CVideoInfoTag &details, int idxOffset = 2);
   void GetDetailsFromDB(const dbiplus::sql_record* const record, int min, int max, const SDbTableOffsets *offsets, CVideoInfoTag &details, int idxOffset = 2);
   CStdString GetValueString(const CVideoInfoTag &details, int min, int max, const SDbTableOffsets *offsets) const;
-  bool GetStreamDetails(CVideoInfoTag& tag) const;
 
 private:
   virtual bool CreateTables();
@@ -767,7 +776,7 @@ private:
    */
   bool LookupByFolders(const CStdString &path, bool shows = false);
   
-  virtual int GetMinVersion() const { return 45; };
+  virtual int GetMinVersion() const { return 46; };
   const char *GetDefaultDBName() const { return "MyVideos34.db"; };
 
   void ConstructPath(CStdString& strDest, const CStdString& strPath, const CStdString& strFileName);
