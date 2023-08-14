@@ -150,8 +150,17 @@ bool CSmartPlaylistRule::Load(TiXmlElement *element, const CStdString &encoding 
   // <value> tags containing a string
   const char *field = element->Attribute("field");
   const char *oper = element->Attribute("operator");
+  if (field == NULL || oper == NULL)
+    return false;
+
+  m_field = TranslateField(field);
+  m_operator = TranslateOperator(oper);
+
+  if (m_operator == OPERATOR_TRUE || m_operator == OPERATOR_FALSE)
+    return true;
+
   TiXmlNode *parameter = element->FirstChild();
-  if (field == NULL || oper == NULL || parameter == NULL)
+  if (parameter == NULL)
     return false;
 
   if (parameter->Type() == TiXmlNode::TEXT)
@@ -189,8 +198,6 @@ bool CSmartPlaylistRule::Load(TiXmlElement *element, const CStdString &encoding 
   else
     return false;
 
-  m_field = TranslateField(field);
-  m_operator = TranslateOperator(oper);
   return true;
 }
 
@@ -198,8 +205,16 @@ bool CSmartPlaylistRule::Load(const CVariant &obj)
 {
   if (!obj.isObject() ||
       !obj.isMember("field") || !obj["field"].isString() ||
-      !obj.isMember("operator") || !obj["operator"].isString() ||
-      !obj.isMember("value") || (!obj["value"].isString() && !obj["value"].isArray()))
+      !obj.isMember("operator") || !obj["operator"].isString())
+    return false;
+
+  m_field = TranslateField(obj["field"].asString().c_str());
+  m_operator = TranslateOperator(obj["operator"].asString().c_str());
+
+  if (m_operator == OPERATOR_TRUE || m_operator == OPERATOR_FALSE)
+    return true;
+
+   if (!obj.isMember("value") || (!obj["value"].isString() && !obj["value"].isArray()))
     return false;
 
   const CVariant &value = obj["value"];
@@ -216,14 +231,12 @@ bool CSmartPlaylistRule::Load(const CVariant &obj)
   else
     return false;
 
-  m_field = TranslateField(obj["field"].asString().c_str());
-  m_operator = TranslateOperator(obj["operator"].asString().c_str());
   return true;
 }
 
 bool CSmartPlaylistRule::Save(TiXmlNode *parent) const
 {
-  if (parent == NULL || m_parameter.empty())
+  if (parent == NULL || (m_parameter.empty() && m_operator != OPERATOR_TRUE && m_operator != OPERATOR_FALSE))
     return false;
 
   TiXmlElement rule("rule");
@@ -245,7 +258,7 @@ bool CSmartPlaylistRule::Save(TiXmlNode *parent) const
 
 bool CSmartPlaylistRule::Save(CVariant &obj) const
 {
-  if (obj.isNull() || m_parameter.empty())
+  if (obj.isNull() || (m_parameter.empty() && m_operator != OPERATOR_TRUE && m_operator != OPERATOR_FALSE))
     return false;
 
   CVariant rule(CVariant::VariantTypeObject);
@@ -682,9 +695,22 @@ CStdString CSmartPlaylistRule::GetWhereClause(const CDatabase &db, const CStdStr
     }
   }
   
-  // FieldInProgress does not have any values in m_parameter, it works on the operator
-  if (m_field == FieldInProgress && (strType == "movies" || strType == "episodes"))
-    return "idFile " + negate + " in (select idFile from bookmark where type = 1)";
+  // boolean operators don't have any values in m_parameter, they work on the operator
+  if (m_operator == OPERATOR_FALSE || m_operator == OPERATOR_TRUE)
+  {
+    if (strType == "movies")
+    {
+      if (m_field == FieldInProgress)
+        return "movieview.idFile " + negate + " in (select idFile from bookmark where type = 1)";
+      else if (m_field == FieldTrailer)
+        return negate + GetField(m_field, strType) + "!= ''";
+    }
+    else if (strType == "episodes")
+    {
+      if (m_field == FieldInProgress)
+        return "episodeview.idFile " + negate + " IN (select idFile from bookmark where type = 1)";
+    }
+  }
 
   // now the query parameter
   CStdString wholeQuery;
@@ -758,8 +784,6 @@ CStdString CSmartPlaylistRule::GetWhereClause(const CDatabase &db, const CStdStr
         query = "idMovie" + negate + " in (select idMovie from studiolinkmovie join studio on studio.idStudio=studiolinkmovie.idStudio where studio.strStudio" + parameter + ")";
       else if (m_field == FieldCountry)
         query = "idMovie" + negate + " in (select idMovie from countrylinkmovie join country on country.idCountry=countrylinkmovie.idCountry where country.strCountry" + parameter + ")";
-      else if (m_field == FieldTrailer)
-        query = negate + GetField(m_field, strType) + "!= ''";
       else if ((m_field == FieldLastPlayed || m_field == FieldDateAdded) && (m_operator == OPERATOR_LESS_THAN || m_operator == OPERATOR_BEFORE || m_operator == OPERATOR_NOT_IN_THE_LAST))
         query = GetField(m_field, strType) + " is NULL or " + GetField(m_field, strType) + parameter;
       else if (m_field == FieldSet)
@@ -1030,8 +1054,8 @@ bool CSmartPlaylist::LoadFromXML(TiXmlElement *root, const CStdString &encoding)
   while (ruleElement)
   {
     CSmartPlaylistRule rule;
-    rule.Load(ruleElement, encoding);
-    m_playlistRules.push_back(rule);
+    if (rule.Load(ruleElement, encoding))
+      m_playlistRules.push_back(rule);
 
     ruleElement = ruleElement->NextSiblingElement("rule");
   }
