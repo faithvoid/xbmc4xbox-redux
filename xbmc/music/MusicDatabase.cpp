@@ -3217,15 +3217,17 @@ bool CMusicDatabase::GetSongsNav(const CStdString& strBaseDir, CFileItemList& it
   if (idAlbum == -1 && idArtist == -1 && idGenre == -1)
   {
     int iLIMIT = 5000;    // chunk size
+    int itemsSize = 0;
     for (int i=0;;i+=iLIMIT)
     {
       musicUrl.AddOption("limit", iLIMIT);
       musicUrl.AddOption("offset", i);
       Filter filter;
-      if (!GetSongsByWhere(musicUrl.ToString(), filter, items, sortDescription))
-        return items.Size() > 0;
+      GetSongsByWhere(musicUrl.ToString(), filter, items, sortDescription);
+      if (itemsSize == items.Size())
+        return true;
+      itemsSize = items.Size();
     }
-    return true;
   }
 #endif
   if (idArtist > 0)
