@@ -284,7 +284,7 @@ string ByEpisodeNumber(SortAttribute attributes, const SortItem &values)
     num = ((uint64_t)values.find(FieldSeason)->second.asInteger() << 32) + (values.find(FieldEpisodeNumber)->second.asInteger() << 16);
 
   CStdString label;
-  label.Format("%"PRIu64" %s", num, values.find(FieldFilename)->second.asString().c_str());
+  label.Format("%"PRIu64" %s", num, ByLabel(attributes, values).c_str());
   return label;
 }
 
