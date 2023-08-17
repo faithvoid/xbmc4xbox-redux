@@ -279,6 +279,8 @@
 #define ACTION_INCREASE_PAR           219
 #define ACTION_DECREASE_PAR           220
 
+#define ACTION_FILTER                 233
+
 // Window ID defines to make the code a bit more readable
 #define WINDOW_INVALID                     9999
 #define WINDOW_HOME                       10000
@@ -348,11 +350,16 @@
 #define WINDOW_DIALOG_FULLSCREEN_INFO     10142
 #define WINDOW_DIALOG_SLIDER              10145
 #define WINDOW_DIALOG_TEXT_VIEWER         10147
+#define WINDOW_DIALOG_MEDIA_FILTER        10152
 
 #define WINDOW_MUSIC_PLAYLIST             10500
 #define WINDOW_MUSIC_FILES                10501
 #define WINDOW_MUSIC_NAV                  10502
 #define WINDOW_MUSIC_PLAYLIST_EDITOR      10503
+
+// PVR related Window and Dialog ID's
+#define WINDOW_DIALOG_PVR_TIMER_SETTING   10604
+// PVR_WINDOW VIEWS = 10694-10699
 
 //#define WINDOW_VIRTUAL_KEYBOARD           11000
 #define WINDOW_DIALOG_SELECT              12000
