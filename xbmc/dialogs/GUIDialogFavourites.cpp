@@ -20,11 +20,18 @@
 
 #include "dialogs/GUIDialogFavourites.h"
 #include "dialogs/GUIDialogContextMenu.h"
-#include "Favourites.h"
+#include "dialogs/GUIDialogFileBrowser.h"
+#include "filesystem/Directory.h"
+#include "filesystem/FavouritesDirectory.h"
 #include "GUIWindowManager.h"
 #include "GUIDialogKeyboard.h"
+#include "filesystem/File.h"
 #include "FileItem.h"
 #include "LocalizeStrings.h"
+#include "settings/Settings.h"
+#include "storage/MediaManager.h"
+
+using namespace XFILE;
 
 #define FAVOURITES_LIST 450
 
@@ -77,7 +84,7 @@ bool CGUIDialogFavourites::OnMessage(CGUIMessage &message)
 
 void CGUIDialogFavourites::OnInitWindow()
 {
-  CFavourites::Load(*m_favourites);
+  XFILE::CDirectory::GetDirectory("favourites://", *m_favourites);
   UpdateList();
   CGUIWindow::OnInitWindow();
 }
@@ -121,6 +128,7 @@ void CGUIDialogFavourites::OnPopupMenu(int item)
   }
   choices.Add(3, 15015);
   choices.Add(4, 118);
+  choices.Add(5, 20019);
   
   int button = CGUIDialogContextMenu::ShowAndGetChoice(choices);
 
@@ -135,6 +143,8 @@ void CGUIDialogFavourites::OnPopupMenu(int item)
     OnDelete(item);
   else if (button == 4)
     OnRename(item);
+  else if (button == 5)
+    OnSetThumb(item);
 }
 
 void CGUIDialogFavourites::OnMoveItem(int item, int amount)
@@ -145,7 +155,7 @@ void CGUIDialogFavourites::OnMoveItem(int item, int amount)
   if (nextItem < 0) nextItem += m_favourites->Size();
 
   m_favourites->Swap(item, nextItem);
-  CFavourites::Save(*m_favourites);
+  CFavouritesDirectory::Save(*m_favourites);
 
   CGUIMessage message(GUI_MSG_ITEM_SELECT, GetID(), FAVOURITES_LIST, nextItem);
   OnMessage(message);
@@ -158,7 +168,7 @@ void CGUIDialogFavourites::OnDelete(int item)
   if (item < 0 || item >= m_favourites->Size())
     return;
   m_favourites->Remove(item);
-  CFavourites::Save(*m_favourites);
+  CFavouritesDirectory::Save(*m_favourites);
 
   CGUIMessage message(GUI_MSG_ITEM_SELECT, GetID(), FAVOURITES_LIST, item < m_favourites->Size() ? item : item - 1);
   OnMessage(message);
@@ -175,8 +185,43 @@ void CGUIDialogFavourites::OnRename(int item)
   if (CGUIDialogKeyboard::ShowAndGetInput(label, g_localizeStrings.Get(16008), false))
     (*m_favourites)[item]->SetLabel(label);
 
-  CFavourites::Save(*m_favourites);
+  CFavouritesDirectory::Save(*m_favourites);
 
+  UpdateList();
+}
+
+void CGUIDialogFavourites::OnSetThumb(int item)
+{
+  if (item < 0 || item >= m_favourites->Size())
+    return;
+
+  CFileItemPtr pItem = (*m_favourites)[item];
+
+  CFileItemList items;
+
+  // Current
+  if (pItem->HasThumbnail())
+  {
+    CFileItemPtr current(new CFileItem("thumb://Current", false));
+    current->SetThumbnailImage(pItem->GetThumbnailImage());
+    current->SetLabel(g_localizeStrings.Get(20016));
+    items.Add(current);
+  }
+
+  // None
+  CFileItemPtr none(new CFileItem("thumb://None", false));
+  none->SetIconImage(pItem->GetIconImage());
+  none->SetLabel(g_localizeStrings.Get(20018));
+  items.Add(none);
+
+  CStdString thumb;
+  VECSOURCES sources;
+  g_mediaManager.GetLocalDrives(sources);
+  if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(1030), thumb))
+    return;
+
+  (*m_favourites)[item]->SetThumbnailImage(thumb);
+  CFavouritesDirectory::Save(*m_favourites);
   UpdateList();
 }
 

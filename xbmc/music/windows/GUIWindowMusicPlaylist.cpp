@@ -32,7 +32,7 @@
 #include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
 #include "dialogs/GUIDialogKeyboard.h"
-#include "Favourites.h"
+#include "filesystem/FavouritesDirectory.h"
 #include "LocalizeStrings.h"
 #include "utils/log.h"
 
@@ -532,9 +532,15 @@ void CGUIWindowMusicPlayList::GetContextButtons(int itemNumber, CContextButtons 
     }
     else
     { // aren't in a move
+      // check what players we have, if we have multiple display play with option
+      VECPLAYERCORES vecCores;
+      CPlayerCoreFactory::GetPlayers(*item, vecCores);
+      if (vecCores.size() > 1)
+        buttons.Add(CONTEXT_BUTTON_PLAY_WITH, 15213); // Play With...
+
       if (!item->IsLastFM() && !item->IsShoutCast())
         buttons.Add(CONTEXT_BUTTON_SONG_INFO, 658); // Song Info
-      if (CFavourites::IsFavourite(item.get(), GetID()))
+      if (XFILE::CFavouritesDirectory::IsFavourite(item.get(), GetID()))
         buttons.Add(CONTEXT_BUTTON_ADD_FAVOURITE, 14077);     // Remove Favourite
       else
         buttons.Add(CONTEXT_BUTTON_ADD_FAVOURITE, 14076);     // Add To Favourites;
@@ -560,6 +566,21 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
 {
   switch (button)
   {
+  case CONTEXT_BUTTON_PLAY_WITH:
+    {
+      CFileItemPtr item;
+      if (itemNumber >= 0 && itemNumber < m_vecItems->Size())
+        item = m_vecItems->Get(itemNumber);
+      if (!item)
+        break;
+
+      VECPLAYERCORES vecCores;  
+      CPlayerCoreFactory::GetPlayers(*item, vecCores);
+      g_application.m_eForcedNextPlayer = CPlayerCoreFactory::SelectPlayerDialog(vecCores);
+      if( g_application.m_eForcedNextPlayer != EPC_NONE )
+        OnClick(itemNumber);
+      return true;
+    }
   case CONTEXT_BUTTON_MOVE_ITEM:
     m_movingFrom = itemNumber;
     return true;
@@ -588,7 +609,7 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
   case CONTEXT_BUTTON_ADD_FAVOURITE:
     {
       CFileItemPtr item = m_vecItems->Get(itemNumber);
-      CFavourites::AddOrRemove(item.get(), GetID());
+      XFILE::CFavouritesDirectory::AddOrRemove(item.get(), GetID());
       return true;
     }
 
