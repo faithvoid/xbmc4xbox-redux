@@ -140,4 +140,5 @@ protected:
 
   CSmartPlaylist m_filter;
   bool m_canFilterAdvanced;
+  bool m_itemsLoaded;
 };
