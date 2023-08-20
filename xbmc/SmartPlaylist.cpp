@@ -412,6 +412,7 @@ vector<Field> CSmartPlaylistRule::GetFields(const CStdString &type)
     fields.push_back(FieldDateAdded);
     fields.push_back(FieldLastPlayed);
     fields.push_back(FieldInProgress);
+    fields.push_back(FieldTag);
   }
   else if (type == "episodes")
   {
@@ -483,6 +484,7 @@ vector<Field> CSmartPlaylistRule::GetFields(const CStdString &type)
     fields.push_back(FieldDirector);
     fields.push_back(FieldStudio);
     fields.push_back(FieldPlot);
+    fields.push_back(FieldTag);
     fields.push_back(FieldDateAdded);
     isVideo = true;
   }
@@ -867,6 +869,8 @@ CStdString CSmartPlaylistRule::GetWhereClause(const CDatabase &db, const CStdStr
         query = GetField(FieldId, strType) + negate + " IN (SELECT idMVideo FROM directorlinkmusicvideo JOIN actors ON actors.idActor=directorlinkmusicvideo.idDirector WHERE actors.strActor" + parameter + ")";
       else if ((m_field == FieldLastPlayed || m_field == FieldDateAdded) && (m_operator == OPERATOR_LESS_THAN || m_operator == OPERATOR_BEFORE || m_operator == OPERATOR_NOT_IN_THE_LAST))
         query = GetField(m_field, strType) + " IS NULL OR " + GetField(m_field, strType) + parameter;
+      else if (m_field == FieldTag)
+        query = GetField(FieldId, strType) + negate + " IN (SELECT idMedia FROM taglinks JOIN tag ON tag.idTag = taglinks.idTag WHERE tag.strTag" + parameter + " AND taglinks.media_type = 'musicvideo')";
     }
     else if (strType == "tvshows")
     {
@@ -884,6 +888,8 @@ CStdString CSmartPlaylistRule::GetWhereClause(const CDatabase &db, const CStdStr
         query = GetField(FieldId, strType) + negate + " IN (SELECT idShow FROM tvshowview WHERE " + GetField(m_field, strType) + parameter + ")";
       else if ((m_field == FieldLastPlayed || m_field == FieldDateAdded) && (m_operator == OPERATOR_LESS_THAN || m_operator == OPERATOR_BEFORE || m_operator == OPERATOR_NOT_IN_THE_LAST))
         query = GetField(m_field, strType) + " IS NULL OR " + GetField(m_field, strType) + parameter;
+      else if (m_field == FieldTag)
+        query = GetField(FieldId, strType) + negate + " IN (SELECT idMedia FROM taglinks JOIN tag ON tag.idTag = taglinks.idTag WHERE tag.strTag" + parameter + " AND taglinks.media_type = 'tvshow')";
     }
     else if (strType == "episodes")
     {
