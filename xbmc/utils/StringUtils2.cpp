@@ -229,6 +229,54 @@ string StringUtils2::Format(const char *fmt, ...)
   return str;
 }
 
+string StringUtils2::FormatV(const char *fmt, va_list args)
+{
+  if (!fmt || !fmt[0])
+    return "";
+
+  int size = FORMAT_BLOCK_SIZE;
+  va_list argCopy;
+
+  while (1) 
+  {
+    char *cstr = reinterpret_cast<char*>(malloc(sizeof(char) * size));
+    if (!cstr)
+      return "";
+
+    va_copy(argCopy, args);
+#ifdef _XBOX
+    int nActual = _vsnprintf(cstr, size, fmt, argCopy);
+#else
+    int nActual = vsnprintf(cstr, size, fmt, argCopy);
+#endif
+    va_end(argCopy);
+
+    if (nActual > -1 && nActual < size) // We got a valid result
+    {
+      std::string str(cstr, nActual);
+      free(cstr);
+      return str;
+    }
+    free(cstr);
+#ifndef TARGET_WINDOWS
+    if (nActual > -1)                   // Exactly what we will need (glibc 2.1)
+      size = nActual + 1;
+    else                                // Let's try to double the size (glibc 2.0)
+      size *= 2;
+#else  // TARGET_WINDOWS
+    va_copy(argCopy, args);
+    size = _vscprintf(fmt, argCopy);
+    va_end(argCopy);
+    if (size < 0)
+      return "";
+    else
+      size++; // increment for null-termination
+#endif // TARGET_WINDOWS
+  }
+
+  return ""; // unreachable
+}
+
 wstring StringUtils2::Format(const wchar_t *fmt, ...)
 {
   va_list args;

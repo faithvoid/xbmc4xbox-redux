@@ -52,6 +52,7 @@ public:
   \return Formatted string
   */
   static std::string Format(PRINTF_FORMAT_STRING const char *fmt, ...) PARAM1_PRINTF_FORMAT;
+  static std::string FormatV(PRINTF_FORMAT_STRING const char *fmt, va_list args);
   static std::wstring Format(PRINTF_FORMAT_STRING const wchar_t *fmt, ...);
   static std::wstring FormatV(PRINTF_FORMAT_STRING const wchar_t *fmt, va_list args);
   static void ToUpper(std::string &str);
