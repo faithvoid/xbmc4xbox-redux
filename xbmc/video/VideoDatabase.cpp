@@ -5804,7 +5804,9 @@ bool CVideoDatabase::GetMoviesByWhere(const CStdString& strBaseDir, const Filter
       }
 
       CVideoDbUrl setUrl;
-      setUrl.FromString("videodb://1/7/");
+      if (!setUrl.FromString("videodb://1/7/"))
+        return false;
+
       setUrl.AddOptions(videoUrl.GetOptionsString());
       GetSetsByWhere(setUrl.ToString(), setsFilter, setItems, true);
 
