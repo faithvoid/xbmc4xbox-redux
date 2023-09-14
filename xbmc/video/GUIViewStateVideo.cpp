@@ -523,7 +523,7 @@ CGUIViewStateVideoMovies::CGUIViewStateVideoMovies(const CFileItemList& items) :
   AddSortMethod(SORT_METHOD_MPAA_RATING, 20074, LABEL_MASKS("%T", "%O"));  // Title, MPAA | empty, empty
   AddSortMethod(SORT_METHOD_YEAR, 562, LABEL_MASKS("%T", "%Y", "%T", "%Y"));  // Title, Year | Title, Year
 
-  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
+  if (items.IsSmartPlayList() || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%T", "%R", "%T", "%R"));  // Title, Rating | Title, Rating
   else
   {
@@ -567,7 +567,7 @@ CGUIViewStateVideoMusicVideos::CGUIViewStateVideoMusicVideos(const CFileItemList
   CStdString strTrackRight=g_guiSettings.GetString("musicfiles.trackformatright");
   AddSortMethod(SORT_METHOD_TRACKNUM, 554, LABEL_MASKS(strTrackLeft, strTrackRight));  // Userdefined, Userdefined | empty, empty
   
-  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
+  if (items.IsSmartPlayList() || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%A - %T", "%Y"));  // Artist - Title, Year | empty, empty
   else
   {
@@ -593,7 +593,7 @@ CGUIViewStateVideoTVShows::CGUIViewStateVideoTVShows(const CFileItemList& items)
     AddSortMethod(SORT_METHOD_VIDEO_SORT_TITLE, 556, LABEL_MASKS("%T", "%M", "%T", "%M"));  // Title, #Episodes | Title, #Episodes
   AddSortMethod(SORT_METHOD_YEAR, 562, LABEL_MASKS("%T", "%Y", "%T", "%Y"));  // Title, Year | Title, Year
 
-  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
+  if (items.IsSmartPlayList() || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%T", "%M", "%T", "%M"));  // Title, #Episodes | Title, #Episodes
   else
   {
@@ -635,7 +635,7 @@ CGUIViewStateVideoEpisodes::CGUIViewStateVideoEpisodes(const CFileItemList& item
     AddSortMethod(SORT_METHOD_DATE, 552, LABEL_MASKS("%Z - %H. %T","%J"));  // TvShow - Order. Title, Date | empty, empty
   }
 
-  if (items.IsSmartPlayList() || items.GetProperty("library.filter").asBoolean())
+  if (items.IsSmartPlayList() || items.IsLibraryFolder())
     AddPlaylistOrder(items, LABEL_MASKS("%Z - %H. %T", "%R"));  // TvShow - Order. Title, Rating | empty, empty
   else
   {

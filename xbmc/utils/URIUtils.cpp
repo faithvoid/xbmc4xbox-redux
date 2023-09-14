@@ -755,6 +755,12 @@ bool URIUtils::IsLastFM(const CStdString& strFile)
   return strFile.Left(7).Equals("lastfm:");
 }
 
+bool URIUtils::IsLibraryFolder(const CStdString& strFile)
+{
+  CURL url(strFile);
+  return url.GetProtocol().Equals("library");
+}
+
 bool URIUtils::IsDOSPath(const CStdString &path)
 {
   if (path.size() > 1 && path[1] == ':' && isalpha(path[0]))

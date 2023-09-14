@@ -100,6 +100,7 @@ public:
   bool IsInternetStream() const;
   bool IsPlayList() const;
   bool IsSmartPlayList() const;
+  bool IsLibraryFolder() const;
   bool IsPythonScript() const;
   bool IsXBE() const;
   bool IsPlugin() const;

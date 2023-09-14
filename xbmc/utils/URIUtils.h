@@ -84,6 +84,7 @@ public:
   static bool IsVideoDb(const CStdString& strFile);
   static bool IsVTP(const CStdString& strFile);
   static bool IsZIP(const CStdString& strFile);
+  static bool IsLibraryFolder(const CStdString& strFile);
 
   static void AddSlashAtEnd(CStdString& strFolder);
   static bool HasSlashAtEnd(const CStdString& strFile);
