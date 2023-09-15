@@ -145,7 +145,7 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, c
     {
       // need to clear the cache (in case the directory fetch fails)
       // and (re)fetch the folder
-      if (hints.flags & DIR_FLAG_BYPASS_CACHE)
+      if (!(hints.flags & DIR_FLAG_BYPASS_CACHE))
         g_directoryCache.ClearDirectory(realPath);
 
       pDirectory->SetFlags(hints.flags);
@@ -195,7 +195,7 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, c
       }
 
       // cache the directory, if necessary
-      if (hints.flags & DIR_FLAG_BYPASS_CACHE)
+      if (!(hints.flags & DIR_FLAG_BYPASS_CACHE))
         g_directoryCache.SetDirectory(realPath, items, pDirectory->GetCacheType(strPath));
     }
 
