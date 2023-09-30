@@ -69,14 +69,20 @@ public:
   void ShowPrevious();
   void Select(const CStdString& strPicture);
   const CFileItemList &GetSlideShowContents();
+  void GetSlideShowContents(CFileItemList &list);
   const CFileItemPtr GetCurrentSlide();
   void RunSlideShow(const CStdString &strPath, bool bRecursive = false,
                     bool bRandom = false, bool bNotRandom = false,
-                    SORT_METHOD method = SORT_METHOD_LABEL,
-                    SortOrder order = SortOrderAscending, const CStdString &strExtensions="");
+                    const CStdString &beginSlidePath="", bool startSlideShow = true,
+                    SortBy method = SortByLabel,
+                    SortOrder order = SortOrderAscending,
+                    SortAttribute sortAttributes = SortAttributeNone,
+                    const CStdString &strExtensions="");
   void AddFromPath(const CStdString &strPath, bool bRecursive,
-                   SORT_METHOD method=SORT_METHOD_LABEL, 
-                   SortOrder order = SortOrderAscending, const CStdString &strExtensions="");
+                   SortBy method = SortByLabel, 
+                   SortOrder order = SortOrderAscending,
+                   SortAttribute sortAttributes = SortAttributeNone,
+                   const CStdString &strExtensions="");
   void StartSlideShow(bool screensaver=false);
   bool InSlideShow() const;
   virtual bool OnMessage(CGUIMessage& message);
@@ -87,20 +93,31 @@ public:
   int NumSlides() const;
   int CurrentSlide() const;
   void Shuffle();
+  int GetDirection() const { return m_iDirection; }
 private:
   typedef std::set<CStdString> path_set;  // set to track which paths we're adding
   void AddItems(const CStdString &strPath, path_set *recursivePaths,
-                SORT_METHOD method = SORT_METHOD_LABEL,
-                SortOrder order = SortOrderAscending);
+                SortBy method = SortByLabel,
+                SortOrder order = SortOrderAscending,
+                SortAttribute sortAttributes = SortAttributeNone);
   void RenderPause();
   void RenderErrorMessage();
   void Rotate();
   void Zoom(int iZoom);
   void Move(float fX, float fY);
   void GetCheckedSize(float width, float height, int &maxWidth, int &maxHeight);
+  int  GetNextSlide();
+
+  void AnnouncePlayerPlay(const CFileItemPtr& item);
+  void AnnouncePlayerPause(const CFileItemPtr& item);
+  void AnnouncePlayerStop(const CFileItemPtr& item);
+  void AnnouncePlaylistRemove(int pos);
+  void AnnouncePlaylistClear();
+  void AnnouncePlaylistAdd(const CFileItemPtr& item, int pos);
 
   int m_iCurrentSlide;
   int m_iNextSlide;
+  int m_iDirection;
   int m_iRotate;
   int m_iZoomFactor;
 

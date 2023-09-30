@@ -38,6 +38,8 @@
 #include "utils/SingleLock.h"
 #include "utils/log.h"
 #include "playlists/PlayList.h"
+#include "interfaces/AnnouncementManager.h"
+#include "pictures/PictureInfoTag.h"
 
 #ifdef _XBOX
 #define RELOAD_ON_ZOOM
@@ -149,6 +151,52 @@ CGUIWindowSlideShow::~CGUIWindowSlideShow(void)
   delete m_slides;
 }
 
+void CGUIWindowSlideShow::AnnouncePlayerPlay(const CFileItemPtr& item)
+{
+  CVariant param;
+  param["player"]["speed"] = 1;
+  param["player"]["playerid"] = PLAYLIST_PICTURE;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Player, "xbmc", "OnPlay", item, param);
+}
+
+void CGUIWindowSlideShow::AnnouncePlayerPause(const CFileItemPtr& item)
+{
+  CVariant param;
+  param["player"]["speed"] = 0;
+  param["player"]["playerid"] = PLAYLIST_PICTURE;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Player, "xbmc", "OnPause", item, param);
+}
+
+void CGUIWindowSlideShow::AnnouncePlayerStop(const CFileItemPtr& item)
+{
+  CVariant param;
+  param["player"]["playerid"] = PLAYLIST_PICTURE;
+  param["end"] = true;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Player, "xbmc", "OnStop", item, param);
+}
+
+void CGUIWindowSlideShow::AnnouncePlaylistRemove(int pos)
+{
+  CVariant data;
+  data["playlistid"] = PLAYLIST_PICTURE;
+  data["position"] = pos;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Playlist, "xbmc", "OnRemove", data);
+}
+
+void CGUIWindowSlideShow::AnnouncePlaylistClear()
+{
+  CVariant data;
+  data["playlistid"] = PLAYLIST_PICTURE;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Playlist, "xbmc", "OnClear", data);
+}
+
+void CGUIWindowSlideShow::AnnouncePlaylistAdd(const CFileItemPtr& item, int pos)
+{
+  CVariant data;
+  data["playlistid"] = PLAYLIST_PICTURE;
+  data["position"] = pos;
+  ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Playlist, "xbmc", "OnAdd", item, data);
+}
 
 bool CGUIWindowSlideShow::IsPlaying() const
 {
@@ -171,8 +219,10 @@ void CGUIWindowSlideShow::Reset()
   m_iCurrentSlide = 0;
   m_iNextSlide = 1;
   m_iCurrentPic = 0;
+  m_iDirection = 1;
   CSingleLock lock(m_slideSection);
   m_slides->Clear();
+  AnnouncePlaylistClear();
   m_Resolution = g_graphicsContext.GetVideoResolution();
 }
 
@@ -217,6 +267,13 @@ void CGUIWindowSlideShow::OnDeinitWindow(int nextWindowID)
 void CGUIWindowSlideShow::Add(const CFileItem *picture)
 {
   CFileItemPtr item(new CFileItem(*picture));
+  if (!item->HasVideoInfoTag() && !item->HasPictureInfoTag())
+  {
+    // item without tag; assume it is a picture and force tag generation
+    item->GetPictureInfoTag();
+  }
+  AnnouncePlaylistAdd(item, m_slides->Size());
+
   m_slides->Add(item);
 }
 
@@ -229,6 +286,7 @@ void CGUIWindowSlideShow::ShowNext()
   if (m_iNextSlide >= m_slides->Size())
     m_iNextSlide = 0;
 
+  m_iDirection   = 1;
   m_bLoadNextPic = true;
 }
 
@@ -240,6 +298,7 @@ void CGUIWindowSlideShow::ShowPrevious()
   m_iNextSlide = m_iCurrentSlide - 1;
   if (m_iNextSlide < 0)
     m_iNextSlide = m_slides->Size() - 1;
+  m_iDirection   = -1;
   m_bLoadNextPic = true;
 }
 
@@ -255,6 +314,7 @@ void CGUIWindowSlideShow::Select(const CStdString& strPicture)
       m_iNextSlide = m_iCurrentSlide + 1;
       if (m_iNextSlide >= m_slides->Size())
         m_iNextSlide = 0;
+      m_iDirection    = 1;
       return ;
     }
   }
@@ -263,6 +323,12 @@ void CGUIWindowSlideShow::Select(const CStdString& strPicture)
 const CFileItemList &CGUIWindowSlideShow::GetSlideShowContents()
 {
   return *m_slides;
+}
+
+void CGUIWindowSlideShow::GetSlideShowContents(CFileItemList &list)
+{
+  for (int index = 0; index < m_slides->Size(); index++)
+    list.Add(CFileItemPtr(new CFileItem(*m_slides->Get(index))));
 }
 
 const CFileItemPtr CGUIWindowSlideShow::GetCurrentSlide()
@@ -280,6 +346,7 @@ bool CGUIWindowSlideShow::InSlideShow() const
 void CGUIWindowSlideShow::StartSlideShow(bool screensaver)
 {
   m_bSlideShow = true;
+  m_iDirection = 1;
   m_bScreensaver = screensaver;
 }
 
@@ -333,12 +400,14 @@ void CGUIWindowSlideShow::Render()
       {
         CLog::Log(LOGERROR, "Error loading the current image %s", m_slides->Get(m_iCurrentSlide)->GetPath().c_str());
         m_iCurrentSlide = m_iNextSlide;
+        m_iNextSlide    = GetNextSlide();
         ShowNext();
         m_bErrorMessage = false;
       }
       else if (m_bLoadNextPic)
       {
         m_iCurrentSlide = m_iNextSlide;
+        m_iNextSlide    = GetNextSlide();
         m_bErrorMessage = false;
       }
       // else just drop through - there's nothing we can do (error message will be displayed)
@@ -397,7 +466,7 @@ void CGUIWindowSlideShow::Render()
   }
   else
   {
-    if ((bSlideShow || m_bLoadNextPic) && m_Image[m_iCurrentPic].IsLoaded() && !m_Image[1 - m_iCurrentPic].IsLoaded() && !m_pBackgroundLoader->IsLoading() && !m_bWaitForNextPic)
+    if (m_iNextSlide != m_iCurrentSlide && m_Image[m_iCurrentPic].IsLoaded() && !m_Image[1 - m_iCurrentPic].IsLoaded() && !m_pBackgroundLoader->IsLoading() && !m_bWaitForNextPic)
     { // load the next image
       CLog::Log(LOGDEBUG, "Loading the next image %s", m_slides->Get(m_iNextSlide)->GetPath().c_str());
       int maxWidth, maxHeight;
@@ -429,9 +498,7 @@ void CGUIWindowSlideShow::Render()
     // play movie...
     g_playlistPlayer.Play(0);
     m_iCurrentSlide = m_iNextSlide;
-    m_iNextSlide++;
-    if (m_iNextSlide >= m_slides->Size())
-      m_iNextSlide = 0;
+    m_iNextSlide    = GetNextSlide();
   }
   // Check if we should be transistioning immediately
   if (m_bLoadNextPic)
@@ -471,13 +538,11 @@ void CGUIWindowSlideShow::Render()
     m_Image[m_iCurrentPic].Close();
     if (m_Image[1 - m_iCurrentPic].IsLoaded())
       m_iCurrentPic = 1 - m_iCurrentPic;
+
     m_iCurrentSlide = m_iNextSlide;
-    if (bSlideShow)
-    {
-      m_iNextSlide++;
-      if (m_iNextSlide >= m_slides->Size())
-        m_iNextSlide = 0;
-    }
+    m_iNextSlide    = GetNextSlide();
+    AnnouncePlayerPlay(m_slides->Get(m_iCurrentSlide));
+
 //    m_iZoomFactor = 1;
     m_iRotate = 0;
   }
@@ -490,6 +555,16 @@ void CGUIWindowSlideShow::Render()
   RenderErrorMessage();
 
   CGUIWindow::Render();
+}
+
+int CGUIWindowSlideShow::GetNextSlide()
+{
+  if(m_slides->Size() <= 1)
+    return m_iCurrentSlide;
+  if(m_bSlideShow || m_iDirection >= 0)
+    return (m_iCurrentSlide + 1                   ) % m_slides->Size();
+  else
+    return (m_iCurrentSlide - 1 + m_slides->Size()) % m_slides->Size();
 }
 
 bool CGUIWindowSlideShow::OnAction(const CAction &action)
@@ -515,6 +590,8 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
   case ACTION_PREVIOUS_MENU:
   case ACTION_NAV_BACK:
   case ACTION_STOP:
+    if (m_bSlideShow && m_slides->Size())
+      AnnouncePlayerStop(m_slides->Get(m_iCurrentSlide));
     g_windowManager.PreviousWindow();
     break;
   case ACTION_NEXT_PICTURE:
@@ -549,7 +626,16 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
 
   case ACTION_PAUSE:
     if (m_bSlideShow)
+    {
       m_bPause = !m_bPause;
+      if (m_slides->Size())
+      {
+        if (m_bPause)
+          AnnouncePlayerPause(m_slides->Get(m_iCurrentSlide));
+        else
+          AnnouncePlayerPlay(m_slides->Get(m_iCurrentSlide));
+      }
+    }
     break;
 
   case ACTION_PLAYER_PLAY:
@@ -559,7 +645,11 @@ bool CGUIWindowSlideShow::OnAction(const CAction &action)
       m_bPause = false;
     }
     else if (m_bPause)
+    {
       m_bPause = false;
+      if (m_slides->Size())
+        AnnouncePlayerPlay(m_slides->Get(m_iCurrentSlide));
+    }
     break;
 
   case ACTION_ZOOM_OUT:
@@ -644,14 +734,27 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
       return true;
     }
     break;
+
+  case GUI_MSG_SHOW_PICTURE:
+    {
+      CStdString strFile = message.GetStringParam();
+      Reset();
+      CFileItem item(strFile, false);
+      Add(&item);
+      RunSlideShow("", false, false, true, "", false);
+    }
+    break;
+
   case GUI_MSG_START_SLIDESHOW:
     {
       CStdString strFolder = message.GetStringParam();
       unsigned int iParams = message.GetParam1();
+      std::string beginSlidePath = message.GetStringParam(1);
       //decode params
       bool bRecursive = false;
       bool bRandom = false;
       bool bNotRandom = false;
+      bool bPause = false;
       if (iParams > 0)
       {
         if ((iParams & 1) == 1)
@@ -660,8 +763,10 @@ bool CGUIWindowSlideShow::OnMessage(CGUIMessage& message)
           bRandom = true;
         if ((iParams & 4) == 4)
           bNotRandom = true;
+        if ((iParams & 8) == 8)
+          bPause = true;
       }
-      RunSlideShow(strFolder, bRecursive, bRandom, bNotRandom);
+      RunSlideShow(strFolder, bRecursive, bRandom, bNotRandom, beginSlidePath, !bPause);
     }
     break;
     case GUI_MSG_PLAYLISTPLAYER_STOPPED:
@@ -823,7 +928,8 @@ int CGUIWindowSlideShow::CurrentSlide() const
 
 void CGUIWindowSlideShow::AddFromPath(const CStdString &strPath,
                                       bool bRecursive, 
-                                      SORT_METHOD method, SortOrder order, const CStdString &strExtensions)
+                                      SortBy method, SortOrder order, SortAttribute sortAttributes,
+                                      const CStdString &strExtensions)
 {
   if (strPath!="")
   {
@@ -833,23 +939,28 @@ void CGUIWindowSlideShow::AddFromPath(const CStdString &strPath,
     if (bRecursive)
     {
       path_set recursivePaths;
-      AddItems(strPath, &recursivePaths, method, order);
+      AddItems(strPath, &recursivePaths, method, order, sortAttributes);
     }
     else
-      AddItems(strPath, NULL, method, order);
+      AddItems(strPath, NULL, method, order, sortAttributes);
   }
 }
 
 void CGUIWindowSlideShow::RunSlideShow(const CStdString &strPath, 
-                                       bool bRecursive /* = false */, bool bRandom /* = false */, 
-                                       bool bNotRandom /* = false */, SORT_METHOD method /* = SORT_METHOD_LABEL */, 
-                                       SortOrder order /* = SortOrderAscending */, const CStdString &strExtensions)
+                                       bool bRecursive /* = false */, bool bRandom /* = false */,
+                                       bool bNotRandom /* = false */, const CStdString &beginSlidePath /* = "" */,
+                                       bool startSlideShow /* = true */, SortBy method /* = SortByLabel */, 
+                                       SortOrder order /* = SortOrderAscending */, SortAttribute sortAttributes /* = SortAttributeNone */,
+                                       const CStdString &strExtensions)
 {
   // stop any video
   if (g_application.IsPlayingVideo())
     g_application.StopPlaying();
 
-  AddFromPath(strPath, bRecursive, method, order, strExtensions);
+  AddFromPath(strPath, bRecursive, method, order, sortAttributes, strExtensions);
+
+  if (!NumSlides())
+    return;
 
   // mutually exclusive options
   // if both are set, clear both and use the gui setting
@@ -860,12 +971,23 @@ void CGUIWindowSlideShow::RunSlideShow(const CStdString &strPath,
   if ((!bNotRandom && g_guiSettings.GetBool("slideshow.shuffle")) || bRandom)
     Shuffle();
 
-  StartSlideShow();
-  if (NumSlides())
-    g_windowManager.ActivateWindow(WINDOW_SLIDESHOW);
+  if (!beginSlidePath.IsEmpty())
+    Select(beginSlidePath);
+
+  if (startSlideShow)
+    StartSlideShow();
+  else 
+  {
+    CVariant param;
+    param["player"]["speed"] = 0;
+    param["player"]["playerid"] = PLAYLIST_PICTURE;
+    ANNOUNCEMENT::CAnnouncementManager::Announce(ANNOUNCEMENT::Player, "xbmc", "OnPlay", GetCurrentSlide(), param);
+  }
+
+  g_windowManager.ActivateWindow(WINDOW_SLIDESHOW);
 }
 
-void CGUIWindowSlideShow::AddItems(const CStdString &strPath, path_set *recursivePaths, SORT_METHOD method, SortOrder order)
+void CGUIWindowSlideShow::AddItems(const CStdString &strPath, path_set *recursivePaths, SortBy method, SortOrder order, SortAttribute sortAttributes)
 {
   // check whether we've already added this path
   if (recursivePaths)
@@ -882,7 +1004,7 @@ void CGUIWindowSlideShow::AddItems(const CStdString &strPath, path_set *recursiv
   if (!CDirectory::GetDirectory(strPath, items, m_strExtensions.IsEmpty()?g_settings.m_pictureExtensions:m_strExtensions,DIR_FLAG_NO_FILE_DIRS,true))
     return;
 
-  items.Sort(method, order);
+  items.Sort(method, order, sortAttributes);
 
   // need to go into all subdirs
   for (int i = 0; i < items.Size(); i++)
