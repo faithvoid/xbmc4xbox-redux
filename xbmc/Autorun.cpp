@@ -247,7 +247,7 @@ bool CAutorun::RunDisc(IDirectory* pDir, const CStdString& strDrive, int& nAdded
           CDirectory::GetDirectory(pItem->GetPath(), items, ".mpg");
           if (items.Size())
           {
-            items.Sort(SortBySize, SortOrderDescending);
+            items.Sort(SortByLabel, SortOrderDescending);
             g_playlistPlayer.ClearPlaylist(PLAYLIST_VIDEO);
             g_playlistPlayer.Add(PLAYLIST_VIDEO, items);
             g_playlistPlayer.SetCurrentPlaylist(PLAYLIST_VIDEO);
