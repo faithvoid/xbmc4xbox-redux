@@ -19,13 +19,17 @@
  */
 
 #include "dialogs/GUIDialogBusy.h"
+#include "guilib/GUIProgressControl.h"
 #include "guilib/GUIWindowManager.h"
+
+#define PROGRESS_CONTROL 10
 
 CGUIDialogBusy::CGUIDialogBusy(void)
   : CGUIDialog(WINDOW_DIALOG_BUSY, "DialogBusy.xml"), m_bLastVisible(false)
 {
   m_loadType = LOAD_ON_GUI_INIT;
   m_bModal = true;
+  m_progress = 0;
 }
 
 CGUIDialogBusy::~CGUIDialogBusy(void)
@@ -39,6 +43,7 @@ void CGUIDialogBusy::Show_Internal()
   m_bModal = true;
   m_bLastVisible = true;
   m_dialogClosing = false;
+  m_progress = 0;
   g_windowManager.RouteToWindow(this);
 
   // active this window...
@@ -50,6 +55,16 @@ void CGUIDialogBusy::DoRender(unsigned int currentTime)
 {
   bool visible = g_windowManager.GetTopMostModalDialogID() == WINDOW_DIALOG_BUSY;
   m_bLastVisible = visible;
+
+  // update the progress control if available
+  const CGUIControl *control = GetControl(PROGRESS_CONTROL);
+  if (control && control->GetControlType() == CGUIControl::GUICONTROL_PROGRESS)
+  {
+    CGUIProgressControl *progress = (CGUIProgressControl *)control;
+    progress->SetPercentage(m_progress);
+    progress->SetVisible(m_progress > 0);
+  }
+
   CGUIDialog::DoRender(currentTime);
 }
 
@@ -70,4 +85,9 @@ bool CGUIDialogBusy::OnAction(const CAction &action)
   }
   else
     return CGUIDialog::OnAction(action);
+}
+
+void CGUIDialogBusy::SetProgress(float percent)
+{
+  m_progress = percent;
 }

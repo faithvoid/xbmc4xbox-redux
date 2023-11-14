@@ -127,10 +127,6 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, c
 
 bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, const CHints &hints, bool allowThreads)
 {
-#ifdef _XBOX
-  if(URIUtils::IsPlugin(strPath))
-    allowThreads = false;
-#endif
   try
   {
     CStdString realPath = URIUtils::SubstitutePath(strPath);
@@ -167,11 +163,19 @@ bool CDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items, c
             {
               CSingleLock lock(g_graphicsContext);
 
+              // update progress
+              float progress = pDirectory->GetProgress();
+              if (progress > 0)
+                dialog->SetProgress(progress);
+
               if(dialog->IsCanceled())
               {
                 cancel = true;
+                pDirectory->CancelDirectory();
                 break;
               }
+
+              lock.Leave(); // prevent an occasional deadlock on exit
               g_windowManager.ProcessRenderLoop(false);
             }
             if(dialog)
