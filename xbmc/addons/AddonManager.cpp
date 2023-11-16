@@ -611,6 +611,8 @@ bool CAddonMgr::PlatformSupportsAddon(const cp_plugin_info_t *plugin) const
       if (platforms[i] == "osx")
 #elif defined(TARGET_DARWIN_IOS)
       if (platforms[i] == "ios")
+#elif defined(_XBOX)
+      if (platforms[i] == "xbox")
 #endif
         return true;
     }
