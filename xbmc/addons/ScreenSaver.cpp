@@ -21,6 +21,16 @@
 #include "ScreenSaver.h"
 #include "settings/Settings.h"
 
+#ifdef HAS_PYTHON
+#include "lib/libPython/XBPython.h"
+#include "utils/AlarmClock.h"
+
+// What sound does a python screensaver make?
+#define PYTHON_ALARM "sssssscreensaver"
+
+#define PYTHON_SCRIPT_TIMEOUT 5 // seconds
+#endif
+
 namespace ADDON
 {
 
@@ -31,6 +41,17 @@ namespace ADDON
 
 bool CScreenSaver::CreateScreenSaver()
 {
+#ifdef HAS_PYTHON
+  if (URIUtils::GetExtension(LibPath()).Equals(".py", false))
+  {
+    // Don't allow a previously-scheduled alarm to kill our new screensaver
+    g_alarmClock.Stop(PYTHON_ALARM);
+
+    if (!g_pythonParser.StopScript(LibPath()))
+      g_pythonParser.evalFile(LibPath(), AddonPtr(new CScreenSaver(Props())));
+    return true;
+  }
+#endif
  // pass it the screen width,height
  // and the name of the screensaver
   int iWidth = g_graphicsContext.GetWidth();
@@ -71,6 +92,13 @@ void CScreenSaver::GetInfo(SCR_INFO *info)
 
 void CScreenSaver::Destroy()
 {
+#ifdef HAS_PYTHON
+  if (URIUtils::GetExtension(LibPath()).Equals(".py", false))
+  {
+    g_alarmClock.Start(PYTHON_ALARM, PYTHON_SCRIPT_TIMEOUT, "StopScript(" + LibPath() + ")", true, false);
+    return;
+  }
+#endif
   // Release what was allocated in method CScreenSaver::CreateScreenSaver.
   if (m_pInfo)
   {

@@ -112,6 +112,7 @@ const BUILT_IN commands[] = {
   { "ReplaceWindow",              true,   "Replaces the current window with the new one" },
   { "TakeScreenshot",             false,  "Takes a Screenshot" },
   { "RunScript",                  true,   "Run the specified script" },
+  { "StopScript",                 true,   "Stop the script by ID or path, if running" },
   { "RunXBE",                     true,   "Run the specified executeable" },
   { "RunPlugin",                  true,   "Run the specified plugin" },
   { "Extract",                    true,   "Extracts the specified archive" },
@@ -339,6 +340,19 @@ int CBuiltins::Execute(const CStdString& execString)
       scriptpath = script->LibPath();
 
     g_pythonParser.evalFile(scriptpath, argv,script);
+  }
+  else if (execute.Equals("stopscript"))
+  {
+#ifdef HAS_PYTHON
+    CStdString scriptpath(params[0]);
+
+    // Test to see if the param is an addon ID
+    AddonPtr script;
+    if (CAddonMgr::Get().GetAddon(params[0], script))
+      scriptpath = script->LibPath();
+
+    g_pythonParser.StopScript(scriptpath);
+#endif
   }
   else if (execute.Equals("resolution"))
   {
@@ -860,8 +874,8 @@ int CBuiltins::Execute(const CStdString& execString)
         loop = true;
     }
 
-    if( g_alarmClock.isRunning() )
-      g_alarmClock.stop(params[0]);
+    if( g_alarmClock.IsRunning() )
+      g_alarmClock.Stop(params[0]);
 
     g_alarmClock.Start(params[0], seconds, params[1], silent, loop);
   }
@@ -878,7 +892,7 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("cancelalarm"))
   {
-    g_alarmClock.stop(parameter);
+    g_alarmClock.Stop(parameter);
   }
   else if (execute.Equals("playdvd"))
   {
