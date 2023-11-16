@@ -88,6 +88,7 @@ namespace ADDON
     virtual const CStdString ID() const =0;
     virtual const CStdString Name() const =0;
     virtual bool Enabled() const =0;
+    virtual bool IsInUse() const =0;
     virtual const AddonVersion Version() const =0;
     virtual const AddonVersion MinVersion() const =0;
     virtual const CStdString Summary() const =0;

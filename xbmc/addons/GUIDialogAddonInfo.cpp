@@ -139,11 +139,14 @@ void CGUIDialogAddonInfo::UpdateControls()
   if (isInstalled)
     GrabRollbackVersions();
 
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_INSTALL, (!isSystem && (m_item->GetProperty("Addon.Broken").empty() || isInstalled)));
+  // TODO: System addons should be able to be disabled
+  bool canDisable = isInstalled && !isSystem && !m_localAddon->IsInUse();
+  bool canInstall = !isInstalled && m_item->GetProperty("Addon.Broken").empty();
+
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_INSTALL, canDisable || canInstall);
   SET_CONTROL_LABEL(CONTROL_BTN_INSTALL, isInstalled ? 24037 : 24038);
 
-  // TODO: System addons should be able to be disabled
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_ENABLE, isInstalled && !isSystem);
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_ENABLE, canDisable);
   SET_CONTROL_LABEL(CONTROL_BTN_ENABLE, isEnabled ? 24021 : 24022);
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_UPDATE, isUpdatable);

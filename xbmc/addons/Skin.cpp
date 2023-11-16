@@ -271,4 +271,10 @@ const INFO::CSkinVariableString* CSkinInfo::CreateSkinVariable(const CStdString&
   return m_includes.CreateSkinVariable(name, context);
 }
 
+bool CSkinInfo::IsInUse() const
+{
+  // Could extend this to prompt for reverting to the standard skin perhaps
+  return g_guiSettings.GetString("lookandfeel.skin") == ID();
+}
+
 } /*namespace ADDON*/
