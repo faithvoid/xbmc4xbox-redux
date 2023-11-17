@@ -142,6 +142,7 @@ void CGUIDialogAddonInfo::UpdateControls()
   // TODO: System addons should be able to be disabled
   bool canDisable = isInstalled && !isSystem && !m_localAddon->IsInUse();
   bool canInstall = !isInstalled && m_item->GetProperty("Addon.Broken").empty();
+  bool isRepo = (isInstalled && m_localAddon->Type() == ADDON_REPOSITORY) || (m_addon && m_addon->Type() == ADDON_REPOSITORY);
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_INSTALL, canDisable || canInstall);
   SET_CONTROL_LABEL(CONTROL_BTN_INSTALL, isInstalled ? 24037 : 24038);
@@ -151,7 +152,7 @@ void CGUIDialogAddonInfo::UpdateControls()
 
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_UPDATE, isUpdatable);
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_SETTINGS, isInstalled && m_localAddon->HasSettings());
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_CHANGELOG, m_addon->Type() != ADDON_REPOSITORY);
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_CHANGELOG, !isRepo);
   CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_ROLLBACK, m_rollbackVersions.size() > 1);
 }
 
@@ -310,6 +311,7 @@ bool CGUIDialogAddonInfo::SetItem(const CFileItemPtr& item)
 
   // grab the local addon, if it's available
   m_localAddon.reset();
+  m_addon.reset();
   if (CAddonMgr::Get().GetAddon(item->GetProperty("Addon.ID").asString(), m_localAddon)) // sets m_addon if installed regardless of enabled state
     m_item->SetProperty("Addon.Enabled", "true");
   else
@@ -377,20 +379,6 @@ void CGUIDialogAddonInfo::OnJobComplete(unsigned int jobID, bool success,
   g_windowManager.SendThreadMessage(msg);
 }
 
-bool SplitFileName(CStdString& ID, CStdString& version,
-                                  const CStdString& filename)
-{
-  // TODO: this function should be moved to CAddonVersion class once it's added
-  int dpos = filename.rfind("-");
-  if (dpos < 0)
-    return false;
-  ID = filename.Mid(0,dpos);
-  version = filename.Mid(dpos+1);
-  version = version.Mid(0,version.size()-4);
-
-  return true;
-}
-
 void CGUIDialogAddonInfo::GrabRollbackVersions()
 {
   CFileItemList items;
@@ -401,7 +389,7 @@ void CGUIDialogAddonInfo::GrabRollbackVersions()
     if (items[i]->m_bIsFolder)
       continue;
     CStdString ID, version;
-    SplitFileName(ID,version,items[i]->GetLabel());
+    AddonVersion::SplitFileName(ID,version,items[i]->GetLabel());
     if (ID.Equals(m_localAddon->ID()))
       m_rollbackVersions.push_back(version);
   }

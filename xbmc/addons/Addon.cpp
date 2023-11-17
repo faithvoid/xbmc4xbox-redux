@@ -159,6 +159,19 @@ CStdString AddonVersion::Print() const
   return CStdString(out);
 }
 
+bool AddonVersion::SplitFileName(CStdString& ID, CStdString& version,
+                                  const CStdString& filename)
+{
+  int dpos = filename.rfind("-");
+  if (dpos < 0)
+    return false;
+  ID = filename.Mid(0,dpos);
+  version = filename.Mid(dpos+1);
+  version = version.Mid(0,version.size()-4);
+
+  return true;
+}
+
 #define EMPTY_IF(x,y) \
   { \
     CStdString fan=CAddonMgr::Get().GetExtValue(metadata->configuration, x); \

@@ -54,6 +54,9 @@ public:
   bool operator<=(const AddonVersion &rhs) const;
   CStdString Print() const;
   const char *c_str() const { return str.c_str(); };
+
+  static bool SplitFileName(CStdString& ID, CStdString& version,
+                            const CStdString& filename);
 private:
   CStdString str;
 };
