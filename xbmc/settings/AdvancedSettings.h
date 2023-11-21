@@ -221,6 +221,8 @@ class CAdvancedSettings
     int m_curllowspeedtime;
     int m_curlretries;
 
+    bool m_splashImage;
+
     int m_playlistRetries;
     int m_playlistTimeout;
     bool m_bVirtualShares; 

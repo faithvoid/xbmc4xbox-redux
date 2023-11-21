@@ -207,6 +207,8 @@ CAdvancedSettings::CAdvancedSettings()
   m_curllowspeedtime = 20;
   m_curlretries = 2;
 
+  m_splashImage = true;
+
   m_playlistRetries = 100;
   m_playlistTimeout = 20; // 20 seconds timeout
   m_bVirtualShares = true;
@@ -445,6 +447,8 @@ bool CAdvancedSettings::Load()
   XMLUtils::GetBoolean(pRootElement, "nodvdrom", m_noDVDROM);
   XMLUtils::GetBoolean(pRootElement, "disablemodchipdetection", m_DisableModChipDetection);
   XMLUtils::GetBoolean(pRootElement, "powersave", m_bPowerSave);
+
+  XMLUtils::GetBoolean(pRootElement, "splash", m_splashImage);
 
   XMLUtils::GetInt(pRootElement, "songinfoduration", m_songInfoDuration, 0, INT_MAX);
   XMLUtils::GetInt(pRootElement, "busydialogdelay", m_busyDialogDelay, 0, 5000);

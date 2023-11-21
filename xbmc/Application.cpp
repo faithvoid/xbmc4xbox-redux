@@ -1167,8 +1167,21 @@ HRESULT CApplication::Create(HWND hWnd)
   // set GUI res and force the clear of the screen
   g_graphicsContext.SetVideoResolution(g_guiSettings.m_LookAndFeelResolution, TRUE, true);
 
-  m_splash = new CSplash("Q:\\media\\splash.png");
-  m_splash->Start();
+  if (g_advancedSettings.m_splashImage)
+  {
+    CStdString strUserSplash = "special://home/media/Splash.png";
+    if (CFile::Exists(strUserSplash))
+    {
+      CLog::Log(LOGINFO, "load user splash image: %s", CSpecialProtocol::TranslatePath(strUserSplash).c_str());
+      m_splash = new CSplash(strUserSplash);
+    }
+    else
+    {
+      CLog::Log(LOGINFO, "load default splash image: %s", CSpecialProtocol::TranslatePath("special://xbmc/media/Splash.png").c_str());
+      m_splash = new CSplash("special://xbmc/media/Splash.png");
+    }
+    m_splash->Start();
+  }
 
   int iResolution = g_graphicsContext.GetVideoResolution();
   CLog::Log(LOGINFO, "GUI format %ix%i %s",
