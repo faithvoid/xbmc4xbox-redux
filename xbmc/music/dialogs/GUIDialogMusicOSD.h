@@ -34,6 +34,7 @@ public:
   CGUIDialogMusicOSD(void);
   virtual ~CGUIDialogMusicOSD(void);
   virtual bool OnMessage(CGUIMessage &message);
+  virtual bool OnAction(const CAction &action);
   virtual void FrameMove();
 protected:
   virtual bool OnMouseEvent(const CPoint &point, const CMouseEvent &event);
