@@ -38,7 +38,8 @@ using namespace MUSIC_INFO;
 #define CONTROL_VIS          2
 
 CGUIWindowVisualisation::CGUIWindowVisualisation(void)
-    : CGUIWindow(WINDOW_VISUALISATION, "MusicVisualisation.xml")
+    : CGUIWindow(WINDOW_VISUALISATION, "MusicVisualisation.xml"),
+      m_initTimer(true), m_lockedTimer(true)
 {
   m_bShowPreset = false;
   m_loadType = KEEP_IN_MEMORY;
