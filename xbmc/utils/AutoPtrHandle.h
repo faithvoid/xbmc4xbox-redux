@@ -20,7 +20,7 @@
  *
  */
 
-#include "system.h"
+#include "system.h" // for HANDLE and SOCKET
 
 namespace AUTOPTR
 {

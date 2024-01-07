@@ -18,8 +18,9 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-#include "system.h"
 #include <vector>
+#include <stdint.h>
+
 #include "MediaSource.h"
 #ifdef HAS_XBOX_HARDWARE
 #include "xbox/custom_launch_params.h"

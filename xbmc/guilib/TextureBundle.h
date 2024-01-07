@@ -23,6 +23,7 @@
 #include "utils/StdString.h"
 #include "gui3d.h"
 
+#include <stdint.h>
 #include <map>
 
 class CAutoTexBuffer;
@@ -31,9 +32,9 @@ class CTextureBundle
 {
   struct FileHeader_t
   {
-    DWORD Offset;
-    DWORD UnpackedSize;
-    DWORD PackedSize;
+    uint32_t Offset;
+    uint32_t UnpackedSize;
+    uint32_t PackedSize;
   };
 
   HANDLE m_hFile;
@@ -47,7 +48,7 @@ class CTextureBundle
   bool m_themeBundle;
 
   bool OpenBundle();
-  HRESULT LoadFile(const CStdString& Filename, CAutoTexBuffer& UnpackedBuf);
+  bool LoadFile(const CStdString& Filename, CAutoTexBuffer& UnpackedBuf);
 
 public:
   CTextureBundle(void);
@@ -61,7 +62,7 @@ public:
   bool PreloadFile(const CStdString& Filename);
   static CStdString Normalize(const CStdString &name);
 
-  HRESULT LoadTexture(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8* ppTexture,
+  bool LoadTexture(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8* ppTexture,
                       LPDIRECT3DPALETTE8* ppPalette);
 
   int LoadAnim(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8** ppTextures,

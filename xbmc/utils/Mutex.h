@@ -24,7 +24,7 @@
 //
 // by Bobbin007 in 2003
 
-#include "system.h"
+#include "system.h" // for HANDLE
 
 class CMutex
 {

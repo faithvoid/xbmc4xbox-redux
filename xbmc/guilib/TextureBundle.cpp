@@ -348,11 +348,8 @@ bool CTextureBundle::PreloadFile(const CStdString& Filename)
   return false;
 }
 
-HRESULT CTextureBundle::LoadFile(const CStdString& Filename, CAutoTexBuffer& UnpackedBuf)
+bool CTextureBundle::LoadFile(const CStdString& Filename, CAutoTexBuffer& UnpackedBuf)
 {
-  if (Filename == "-")
-    return 0;
-
   CStdString name = Normalize(Filename);
   if (m_CurFileHeader[0] != m_FileHeaders.end() && m_CurFileHeader[0]->first == name)
     m_LoadIdx = 0;
@@ -362,34 +359,34 @@ HRESULT CTextureBundle::LoadFile(const CStdString& Filename, CAutoTexBuffer& Unp
   {
     m_LoadIdx = m_PreloadIdx;
     if (!PreloadFile(Filename))
-      return E_FAIL;
+      return false;
   }
 
   if (!m_PreLoadBuffer[m_LoadIdx])
-    return E_OUTOFMEMORY;
+    return false;
   if (!UnpackedBuf.Set((BYTE*)XPhysicalAlloc(m_CurFileHeader[m_LoadIdx]->second.UnpackedSize, MAXULONG_PTR, 128, PAGE_READWRITE)))
   {
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     CLog::Log(LOGERROR, "Out of memory loading texture: %s (need %lu bytes, have %lu bytes)", name.c_str(),
               m_CurFileHeader[m_LoadIdx]->second.UnpackedSize, stat.dwAvailPhys);
-    return E_OUTOFMEMORY;
+    return false;
   }
 
   DWORD n;
   if (!GetOverlappedResult(m_hFile, &m_Ovl[m_LoadIdx], &n, TRUE) || n < m_CurFileHeader[m_LoadIdx]->second.PackedSize)
   {
     CLog::Log(LOGERROR, "Error loading texture: %s: %x", Filename.c_str(), GetLastError());
-    return E_FAIL;
+    return false;
   }
 
   lzo_uint s = m_CurFileHeader[m_LoadIdx]->second.UnpackedSize;
-  HRESULT hr = S_OK;
+  bool success = true;
   if (lzo1x_decompress(m_PreLoadBuffer[m_LoadIdx], m_CurFileHeader[m_LoadIdx]->second.PackedSize, UnpackedBuf, &s, NULL) != LZO_E_OK ||
       s != m_CurFileHeader[m_LoadIdx]->second.UnpackedSize)
   {
     CLog::Log(LOGERROR, "Error loading texture: %s: Decompression error", Filename.c_str());
-    hr = E_FAIL;
+    success = false;
   }
 
   try
@@ -406,7 +403,7 @@ HRESULT CTextureBundle::LoadFile(const CStdString& Filename, CAutoTexBuffer& Unp
 
   // switch on writecombine on memory and flush the cache for the gpu
   // it's about 3 times faster to load in cached ram then do this than to load in wc ram. :)
-  if (hr == S_OK)
+  if (success)
   {
 #ifdef _XBOX
     // this causes xbmc to crash when swtiching back to gui from pal60, not really needed anyway as nothing should be writing to texture ram.
@@ -418,18 +415,17 @@ HRESULT CTextureBundle::LoadFile(const CStdString& Filename, CAutoTexBuffer& Unp
 #endif
   }
 
-  return hr;
+  return success;
 }
 
-HRESULT CTextureBundle::LoadTexture(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8* ppTexture,
+bool CTextureBundle::LoadTexture(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8* ppTexture,
                                     LPDIRECT3DPALETTE8* ppPalette)
 {
   *ppTexture = NULL; *ppPalette = NULL;
 
   CAutoTexBuffer UnpackedBuf;
-  HRESULT r = LoadFile(Filename, UnpackedBuf);
-  if (r != S_OK)
-    return r;
+  if (!LoadFile(Filename, UnpackedBuf))
+    return false;
 
   D3DTexture* pTex = (D3DTexture*)(new char[sizeof(D3DTexture) + sizeof(DWORD)]);
   D3DPalette* pPal = 0;
@@ -493,13 +489,13 @@ HRESULT CTextureBundle::LoadTexture(LPDIRECT3DDEVICE8 pDevice, const CStdString&
   (*ppTexture)->GetLevelDesc(0, &desc);
   pInfo->Format = desc.Format;
 
-  return S_OK;
+  return true;
 
 PackedLoadError:
   CLog::Log(LOGERROR, "Error loading texture: %s: Invalid data", Filename.c_str());
   delete [] pTex;
   if (pPal) delete pPal;
-  return E_FAIL;
+  return false;
 }
 int CTextureBundle::LoadAnim(LPDIRECT3DDEVICE8 pDevice, const CStdString& Filename, D3DXIMAGE_INFO* pInfo, LPDIRECT3DTEXTURE8** ppTextures,
                              LPDIRECT3DPALETTE8* ppPalette, int& nLoops, int** ppDelays)
