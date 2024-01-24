@@ -36,7 +36,6 @@
 #include "pictures/GUIWindowSlideShow.h"
 #include "windows/GUIMediaWindow.h"
 #include "windows/GUIWindowFileManager.h"
-#include "GUIButtonScroller.h"
 #include "filesystem/Directory.h"
 #include "filesystem/VirtualDirectory.h"
 #include "utils/UdpClient.h"
@@ -1817,24 +1816,9 @@ int CXbmcHttp::xbmcGetGUIStatus()
         if (((CGUIButtonControl *)pControl)->HasClickActions())
           output += closeTag+openTag+"Execution:" + ((CGUIButtonControl *)pControl)->GetClickActions().GetFirstAction();
       }
-      else if (pControl->GetControlType() == CGUIControl::GUICONTROL_BUTTONBAR)
-      {
-        output += closeTag+openTag+"Type:ButtonBar"+closeTag+openTag+"Description:" + strTmp;
-        CStdString button;
-        button.Format("%d",((CGUIButtonScroller *)pControl)->GetActiveButton());
-        output += closeTag+openTag+"ActiveButton:" + button;
-      }
       else if (pControl->GetControlType() == CGUIControl::GUICONTROL_SPIN)
       {
         output += closeTag+openTag+"Type:Spin"+closeTag+openTag+"Description:" + strTmp;
-      }
-      else if (pControl->GetControlType() == CGUIControl::GUICONTROL_THUMBNAIL)
-      {
-        output += closeTag+openTag+"Type:ThumbNail"+closeTag+openTag+"Description:" + strTmp;
-      }
-      else if (pControl->GetControlType() == CGUIControl::GUICONTROL_LIST)
-      {
-        output += closeTag+openTag+"Type:List"+closeTag+openTag+"Description:" + strTmp;
       }
     }
   }

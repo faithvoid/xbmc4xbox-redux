@@ -47,7 +47,6 @@
 #include "xbox/XKHDD.h"
 #endif
 #include "SystemInfo.h"
-#include "GUIButtonScroller.h"
 #include "GUITextBox.h"
 #include "GUIControlGroupList.h"
 #include "GUIPassword.h"
@@ -1122,12 +1121,6 @@ int CGUIInfoManager::TranslateSingleString(const CStdString &strCondition)
     {
       return AddMultiInfo(GUIInfo(WINDOW_PROPERTY, WINDOW_DIALOG_PLUGIN_SETTINGS, ConditionalStringParameter(prop.param(0))));
     }*/
-    else if (cat.name == "buttonscroller" && prop.name == "hasfocus")
-    {
-      int controlID = atoi(prop.param(0));
-      if (controlID)
-        return AddMultiInfo(GUIInfo(BUTTON_SCROLLER_HAS_ICON, controlID, 0));
-    }
   }
   else if (info.size() == 3)
   {
@@ -2645,17 +2638,6 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, int contextWindow, c
           CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
           if (window)
             bReturn = (window->GetFocusedControlID() == (int)info.GetData1());
-        }
-        break;
-      case BUTTON_SCROLLER_HAS_ICON:
-        {
-          CGUIWindow *window = GetWindowWithCondition(contextWindow, 0);
-          if (window)
-          {
-            CGUIControl *pControl = window->GetFocusedControl();
-            if (pControl && pControl->GetControlType() == CGUIControl::GUICONTROL_BUTTONBAR)
-              bReturn = ((CGUIButtonScroller *)pControl)->GetActiveButtonID() == (int)info.GetData1();
-          }
         }
         break;
       case WINDOW_NEXT:
