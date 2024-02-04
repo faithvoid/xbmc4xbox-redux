@@ -31,7 +31,6 @@ public:
 protected:
   virtual VECSOURCES& GetSources();
   virtual CStdString GetLockType();
-  virtual bool UnrollArchives();
   virtual int GetPlaylist();
   virtual CStdString GetExtensions();
 };

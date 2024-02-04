@@ -54,7 +54,6 @@ public:
   const CStdString& GetPlaylistDirectory();
   void SetPlaylistDirectory(const CStdString& strDirectory);
   bool IsCurrentPlaylistDirectory(const CStdString& strDirectory);
-  virtual bool UnrollArchives();
   virtual bool AutoPlayNextItem();
   virtual CStdString GetLockType();
   virtual CStdString GetExtensions();

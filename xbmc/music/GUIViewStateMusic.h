@@ -30,7 +30,6 @@ public:
 protected:
   virtual VECSOURCES& GetSources();
   virtual int GetPlaylist();
-  virtual bool UnrollArchives();
   virtual bool AutoPlayNextItem();
   virtual CStdString GetLockType();
   virtual CStdString GetExtensions();
