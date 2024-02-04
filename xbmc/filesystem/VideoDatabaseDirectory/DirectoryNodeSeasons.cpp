@@ -23,6 +23,7 @@
 #include "video/VideoDatabase.h"
 #include "video/VideoDbUrl.h"
 #include "settings/GUISettings.h"
+#include "settings/MediaSettings.h"
 #include "FileItem.h"
 #include "utils/Variant.h"
 #include "LocalizeStrings.h"
@@ -77,6 +78,18 @@ bool CDirectoryNodeSeasons::GetContent(CFileItemList& items) const
   if (items.GetObjectCount() == 2 && iFlatten == 1)
     if (items[0]->GetVideoInfoTag()->m_iSeason == 0 || items[1]->GetVideoInfoTag()->m_iSeason == 0)
       bFlatten = true; // flatten if one season + specials
+
+  if (iFlatten > 0 && !bFlatten && CMediaSettings::Get().GetWatchedMode("tvshows") == WatchedModeUnwatched)
+  {
+    int count = 0;
+    for(int i = 0; i < items.Size(); i++) 
+    {
+      if (items[i]->GetProperty("unwatchedepisodes").asInteger() != 0 && items[i]->GetVideoInfoTag()->m_iSeason != 0)
+        count++;
+    }
+    bFlatten = (count < 2); // flatten if there is only 1 unwatched season (not counting specials)
+  }
+
   if (bFlatten)
   { // flatten if one season or flatten always
     items.Clear();
