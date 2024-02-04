@@ -131,13 +131,22 @@ extern "C" void __stdcall update_emu_environ()
   // Use a proxy, if the GUI was configured as such
   if (g_guiSettings.GetBool("network.usehttpproxy")
       && !g_guiSettings.GetString("network.httpproxyserver").empty()
-      && !g_guiSettings.GetString("network.httpproxyport").empty())
+      && !g_guiSettings.GetString("network.httpproxyport").empty()
+      && g_guiSettings.GetInt("network.httpproxytype") == 0)
   {
-    const CStdString &strProxyServer = g_guiSettings.GetString("network.httpproxyserver");
-    const CStdString &strProxyPort = g_guiSettings.GetString("network.httpproxyport");
-    // Should we check for valid strings here? should HTTPS_PROXY use https://?
-    dll_putenv( "HTTP_PROXY=http://" + strProxyServer + ":" + strProxyPort );
-    dll_putenv( "HTTPS_PROXY=http://" + strProxyServer + ":" + strProxyPort );
+    CStdString strProxy;
+    if (g_guiSettings.GetString("network.httpproxyusername") &&
+        g_guiSettings.GetString("network.httpproxypassword"))
+    {
+      strProxy.Format("%s:%s@", g_guiSettings.GetString("network.httpproxyusername").c_str(),
+                                g_guiSettings.GetString("network.httpproxypassword").c_str());
+    }
+
+    strProxy += g_guiSettings.GetString("network.httpproxyserver");
+    strProxy += ":" + g_guiSettings.GetString("network.httpproxyport");
+
+    dll_putenv(("HTTP_PROXY=http://" +strProxy).c_str());
+    dll_putenv(("HTTPS_PROXY=http://" +strProxy).c_str());
   }
   else
   {
