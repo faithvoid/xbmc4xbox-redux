@@ -19,8 +19,7 @@
  *
  */
 
-#include "settings/Settings.h" // for VECSOURCES
-#include "URL.h"
+#include "MediaSource.h" // for VECSOURCES
 
 class CNetworkLocation
 {

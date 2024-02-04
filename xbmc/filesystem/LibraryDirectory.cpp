@@ -22,15 +22,15 @@
 #include "LibraryDirectory.h"
 #include "Directory.h"
 #include "SmartPlayList.h"
+#include "profiles/ProfilesManager.h"
 #include "SmartPlaylistDirectory.h"
 #include "utils/URIUtils.h"
 #include "utils/StringUtils.h"
-#include "guilib/XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "guilib/GUIControlFactory.h" // for label parsing
 #include "guilib/TextureManager.h"
 #include "FileItem.h"
 #include "File.h"
-#include "settings/Settings.h"
 #include "URL.h"
 #include "GUIInfoManager.h"
 #include "utils/log.h"
@@ -174,7 +174,7 @@ bool CLibraryDirectory::Exists(const char* strPath)
 std::string CLibraryDirectory::GetNode(const std::string &path)
 {
   CURL url(path);
-  CStdString libDir = URIUtils::AddFileToFolder(g_settings.GetLibraryFolder(), url.GetHostName() + "/");
+  CStdString libDir = URIUtils::AddFileToFolder(CProfilesManager::Get().GetLibraryFolder(), url.GetHostName() + "/");
   if (!CDirectory::Exists(libDir))
     libDir = URIUtils::AddFileToFolder("special://xbmc/system/library/", url.GetHostName() + "/");
 

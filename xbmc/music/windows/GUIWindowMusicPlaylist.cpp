@@ -18,10 +18,9 @@
  *
  */
 
-#include "music/windows/GUIWindowMusicPlaylist.h"
+#include "GUIWindowMusicPlaylist.h"
 #include "dialogs/GUIDialogSmartPlaylistEditor.h"
 #include "Util.h"
-#include "utils/URIUtils.h"
 #include "playlists/PlayListM3U.h"
 #include "Application.h"
 #include "PlayListPlayer.h"
@@ -29,12 +28,17 @@
 #include "music/LastFmManager.h"
 #include "utils/LabelFormatter.h"
 #include "music/tags/MusicInfoTag.h"
-#include "GUIWindowManager.h"
+#include "guilib/GUIWindowManager.h"
 #include "GUIUserMessages.h"
 #include "dialogs/GUIDialogKeyboard.h"
 #include "filesystem/FavouritesDirectory.h"
-#include "LocalizeStrings.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/Settings.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSettings.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/log.h"
+#include "utils/URIUtils.h"
 
 using namespace PLAYLIST;
 
@@ -136,7 +140,7 @@ bool CGUIWindowMusicPlayList::OnMessage(CGUIMessage& message)
         if (!g_partyModeManager.IsEnabled())
         {
           g_playlistPlayer.SetShuffle(PLAYLIST_MUSIC, !(g_playlistPlayer.IsShuffled(PLAYLIST_MUSIC)));
-          g_settings.m_bMyMusicPlaylistShuffle = g_playlistPlayer.IsShuffled(PLAYLIST_MUSIC);
+          CMediaSettings::Get().SetMusicPlaylistShuffled(g_playlistPlayer.IsShuffled(PLAYLIST_MUSIC));
           g_settings.Save();
           UpdateButtons();
           Refresh();
@@ -186,7 +190,7 @@ bool CGUIWindowMusicPlayList::OnMessage(CGUIMessage& message)
           g_playlistPlayer.SetRepeat(PLAYLIST_MUSIC, PLAYLIST::REPEAT_NONE);
 
         // save settings
-        g_settings.m_bMyMusicPlaylistRepeat = g_playlistPlayer.GetRepeat(PLAYLIST_MUSIC) == PLAYLIST::REPEAT_ALL;
+        CMediaSettings::Get().SetMusicPlaylistRepeat(g_playlistPlayer.GetRepeat(PLAYLIST_MUSIC) == PLAYLIST::REPEAT_ALL);
         g_settings.Save();
 
         UpdateButtons();
@@ -523,7 +527,7 @@ void CGUIWindowMusicPlayList::GetContextButtons(int itemNumber, CContextButtons 
     { // aren't in a move
       // check what players we have, if we have multiple display play with option
       VECPLAYERCORES vecCores;
-      CPlayerCoreFactory::GetPlayers(*item, vecCores);
+      CPlayerCoreFactory::Get().GetPlayers(*item, vecCores);
       if (vecCores.size() > 1)
         buttons.Add(CONTEXT_BUTTON_PLAY_WITH, 15213); // Play With...
 
@@ -564,8 +568,8 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
         break;
 
       VECPLAYERCORES vecCores;  
-      CPlayerCoreFactory::GetPlayers(*item, vecCores);
-      g_application.m_eForcedNextPlayer = CPlayerCoreFactory::SelectPlayerDialog(vecCores);
+      CPlayerCoreFactory::Get().GetPlayers(*item, vecCores);
+      g_application.m_eForcedNextPlayer = CPlayerCoreFactory::Get().SelectPlayerDialog(vecCores);
       if( g_application.m_eForcedNextPlayer != EPC_NONE )
         OnClick(itemNumber);
       return true;
@@ -608,7 +612,7 @@ bool CGUIWindowMusicPlayList::OnContextButton(int itemNumber, CONTEXT_BUTTON but
 
   case CONTEXT_BUTTON_EDIT_PARTYMODE:
   {
-    CStdString playlist = g_settings.GetUserDataItem("PartyMode.xsp");
+    CStdString playlist = CProfilesManager::Get().GetUserDataItem("PartyMode.xsp");
     if (CGUIDialogSmartPlaylistEditor::EditPlaylist(playlist))
     {
       // apply new rules

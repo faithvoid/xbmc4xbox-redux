@@ -18,22 +18,24 @@
  *
  */
 
-#include "music/windows/GUIWindowMusicSongs.h"
+#include "GUIWindowMusicSongs.h"
 #include "Util.h"
-#include "utils/URIUtils.h"
 #include "GUIInfoManager.h"
 #include "Application.h"
 #include "CueDocument.h"
 #include "GUIPassword.h"
-#include "music/dialogs/GUIDialogMusicScan.h"
 #include "dialogs/GUIDialogYesNo.h"
-#include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
+#include "GUIWindowManager.h"
 #include "FileItem.h"
+#include "profiles/ProfilesManager.h"
 #include "filesystem/SpecialProtocol.h"
 #include "filesystem/Directory.h"
-#include "LocalizeStrings.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/log.h"
+#include "utils/URIUtils.h"
 
 using namespace MEDIA_DETECT;
 
@@ -80,7 +82,7 @@ bool CGUIWindowMusicSongs::OnMessage(CGUIMessage& message)
 
       // is this the first time the window is opened?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().IsEmpty())
-        message.SetStringParam(g_settings.m_defaultMusicSource);
+        message.SetStringParam(CMediaSourceSettings::Get().GetDefaultSource("music"));
 
       return CGUIWindowMusicBase::OnMessage(message);
     }
@@ -175,16 +177,15 @@ void CGUIWindowMusicSongs::OnScan(int iItem)
 
 void CGUIWindowMusicSongs::DoScan(const CStdString &strPath)
 {
-  CGUIDialogMusicScan *musicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-  if (musicScan && musicScan->IsScanning())
+  if (g_application.IsMusicScanning())
   {
-    musicScan->StopScanning();
+    g_application.StopMusicScan();
     return;
   }
 
   // Start background loader
   int iControl=GetFocusedControlID();
-  if (musicScan) musicScan->StartScanning(strPath);
+  g_application.StartMusicScan(strPath);
   SET_CONTROL_FOCUS(iControl, 0);
   UpdateButtons();
 
@@ -200,7 +201,7 @@ bool CGUIWindowMusicSongs::GetDirectory(const CStdString &strDirectory, CFileIte
   items.FilterCueItems();
 
   CStdString label;
-  if (items.GetLabel().IsEmpty() && m_rootDir.IsSource(items.GetPath(), g_settings.GetSourcesFromType("music"), &label)) 
+  if (items.GetLabel().IsEmpty() && m_rootDir.IsSource(items.GetPath(), CMediaSourceSettings::Get().GetSources("music"), &label)) 
     items.SetLabel(label);
 
   return true;
@@ -270,8 +271,7 @@ void CGUIWindowMusicSongs::UpdateButtons()
     CONTROL_ENABLE(CONTROL_BTNSCAN);
   }
 
-  CGUIDialogMusicScan *musicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-  if (musicScan && musicScan->IsScanning())
+  if (g_application.IsMusicScanning())
   {
     SET_CONTROL_LABEL(CONTROL_BTNSCAN, 14056); // Stop Scan
   }
@@ -342,7 +342,7 @@ void CGUIWindowMusicSongs::GetContextButtons(int itemNumber, CContextButtons &bu
 
       // enable CDDB lookup if the current dir is CDDA
       if (CDetectDVDMedia::IsDiscInDrive() && m_vecItems->IsCDDA() && 
-         (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
+         (CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
       {
         buttons.Add(CONTEXT_BUTTON_CDDB, 16002);
       }
@@ -359,19 +359,15 @@ void CGUIWindowMusicSongs::GetContextButtons(int itemNumber, CContextButtons &bu
     }
 
     // Add the scan button(s)
-    CGUIDialogMusicScan *pScanDlg = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-    if (g_guiSettings.GetBool("musiclibrary.enabled") && pScanDlg)
+    if (g_application.IsMusicScanning())
+      buttons.Add(CONTEXT_BUTTON_STOP_SCANNING, 13353); // Stop Scanning
+    else if (!inPlaylists && !m_vecItems->IsInternetStream()           &&
+             !item->IsLastFM() && !item->IsShoutCast()                 &&
+             !item->GetPath().Equals("add") && !item->IsParentFolder() &&
+             !item->IsPlugin()                                         &&
+            (CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
     {
-      if (pScanDlg->IsScanning())
-        buttons.Add(CONTEXT_BUTTON_STOP_SCANNING, 13353);	// Stop Scanning
-      else if (!inPlaylists && !m_vecItems->IsInternetStream()           && 
-               !item->IsLastFM() && !item->IsShoutCast()                 && 
-               !item->GetPath().Equals("add") && !item->IsParentFolder() &&
-               !item->IsPluginRoot() && !item->IsPlugin()                &&
-              (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser))
-      {
-        buttons.Add(CONTEXT_BUTTON_SCAN, 13352);
-      }
+      buttons.Add(CONTEXT_BUTTON_SCAN, 13352);
     }
     if (item->IsPlugin() || item->GetPath().Left(9).Equals("script://") || m_vecItems->IsPlugin())
       buttons.Add(CONTEXT_BUTTON_PLUGIN_SETTINGS, 1045);

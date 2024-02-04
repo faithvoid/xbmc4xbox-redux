@@ -22,7 +22,7 @@
 \brief
 */
 #pragma once
-#include "Database.h"
+#include "dbwrappers/Database.h"
 #include "music/Album.h"
 #include "addons/Scraper.h"
 #include "utils/StringUtils.h"
@@ -97,7 +97,7 @@ public:
   virtual bool CommitTransaction();
   void EmptyCache();
   void Clean();
-  int  Cleanup(CGUIDialogProgress *pDlgProgress);
+  int  Cleanup(CGUIDialogProgress *pDlgProgress=NULL);
   void DeleteAlbumInfo();
   bool LookupCDDBInfo(bool bRequery=false);
   void DeleteCDDBInfo();

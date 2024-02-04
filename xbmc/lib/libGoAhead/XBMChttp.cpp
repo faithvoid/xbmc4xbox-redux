@@ -44,10 +44,17 @@
 #include "playlists/PlayList.h"
 #include "music/tags/MusicInfoTag.h"
 #include "pictures/PictureInfoTag.h"
+#include "settings/Settings.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/DisplaySettings.h"
+#include "settings/MediaSettings.h"
+#include "settings/MediaSourceSettings.h"
+#include "settings/SkinSettings.h"
 #include "utils/URIUtils.h"
 #include "LocalizeStrings.h"
 #include "utils/log.h"
+#include "utils/SystemInfo.h"
 
 #ifdef _WIN32PC
 extern "C" FILE *fopen_utf8(const char *_Filename, const char *_Mode);
@@ -260,11 +267,11 @@ CStdString CXbmcHttp::procMask(CStdString mask)
 {
   mask=mask.ToLower();
   if(mask=="[music]")
-    return g_settings.m_musicExtensions;
+    return g_advancedSettings.m_musicExtensions;
   if(mask=="[video]")
-    return g_settings.m_videoExtensions;
+    return g_advancedSettings.m_videoExtensions;
   if(mask=="[pictures]")
-    return g_settings.m_pictureExtensions;
+    return g_advancedSettings.m_pictureExtensions;
   if(mask=="[files]")
     return "";
   return mask;
@@ -664,25 +671,25 @@ int CXbmcHttp::xbmcGetMediaLocation(int numParas, CStdString paras[])
   {
   case MUSIC:
     {
-      pShares = &g_settings.m_musicSources;
-      strMask = g_settings.m_musicExtensions;
+      pShares = CMediaSourceSettings::Get().GetSources("music");
+      strMask = g_advancedSettings.m_musicExtensions;
     }
     break;
   case VIDEO:
     {
-      pShares = &g_settings.m_videoSources;
-      strMask = g_settings.m_videoExtensions;
+      pShares = CMediaSourceSettings::Get().GetSources("video");;
+      strMask = g_advancedSettings.m_videoExtensions;
     }
     break;
   case PICTURES:
     {
-      pShares = &g_settings.m_pictureSources;
-      strMask = g_settings.m_pictureExtensions;
+      pShares = CMediaSourceSettings::Get().GetSources("pictures");
+      strMask = g_advancedSettings.m_pictureExtensions;
     }
     break;
   case FILES:
     {
-      pShares = &g_settings.m_fileSources;
+      pShares = CMediaSourceSettings::Get().GetSources("files");
       strMask = "";
     }
     break;
@@ -904,31 +911,31 @@ int CXbmcHttp::xbmcGetSources(int numParas, CStdString paras[])
     case MUSIC:
       {
         strType = "music";
-        pShares = &g_settings.m_musicSources;
+        pShares = CMediaSourceSettings::Get().GetSources("music");
       }
       break;
     case VIDEO:
       {
         strType = "video";
-        pShares = &g_settings.m_videoSources;
+        pShares = CMediaSourceSettings::Get().GetSources("video");
       }
       break;
     case PICTURES:
       {
         strType = "pictures";
-        pShares = &g_settings.m_pictureSources;
+        pShares = CMediaSourceSettings::Get().GetSources("pictures");
       }
       break;
     case FILES:
       {
         strType = "files";
-        pShares = &g_settings.m_fileSources;
+        pShares = CMediaSourceSettings::Get().GetSources("files");
       }
       break;
     case PROGRAMS:
       {
         strType = "programs";
-        pShares = &g_settings.m_programSources;
+        pShares = CMediaSourceSettings::Get().GetSources("programs");
       }
       break;
     }
@@ -1653,7 +1660,7 @@ int CXbmcHttp::xbmcSeekPercentage(int numParas, CStdString paras[], bool relativ
 
 int CXbmcHttp::xbmcMute()
 {
-  g_application.Mute();
+  g_application.ToggleMute();
   return SetResponse(openTag+"OK");
 }
 
@@ -2683,59 +2690,51 @@ int CXbmcHttp::xbmcSTSetting(int numParas, CStdString paras[])
       if (paras[i]=="myvideowatchmode")
       {
         CGUIWindow *window = g_windowManager.GetWindow(WINDOW_VIDEO_NAV);
-        int watchMode = (window) ? g_settings.GetWatchMode(((CGUIMediaWindow *)window)->CurrentDirectory().GetContent()) : VIDEO_SHOW_ALL;
+        int watchMode = (window) ? CMediaSettings::Get().GetWatchedMode(((CGUIMediaWindow *)window)->CurrentDirectory().GetContent()) : WatchedModeAll;
         tmp.Format("%i", watchMode);
       }
       else if (paras[i]=="mymusicstartwindow")
-        tmp.Format("%i",g_settings.m_iMyMusicStartWindow);
+        tmp.Format("%i",g_guiSettings.GetInt("mymusic.startwindow"));
       else if (paras[i]=="videostartwindow")
-        tmp.Format("%i",g_settings.m_iVideoStartWindow);
+        tmp.Format("%i",g_guiSettings.GetInt("myvideos.startwindow"));
       else if (paras[i]=="myvideostack")
-        tmp.Format("%i",g_settings.m_videoStacking ? 1 : 0);
+        tmp.Format("%i",g_guiSettings.GetBool("myvideos.stackvideos") ? 1 : 0);
       else if (paras[i]=="additionalsubtitledirectorychecked")
-        tmp.Format("%i",g_settings.iAdditionalSubtitleDirectoryChecked);
+        tmp.Format("%i",CMediaSettings::Get().GetAdditionalSubtitleDirectoryChecked());
       else if (paras[i]=="httpapibroadcastport")
-        tmp.Format("%i",g_settings.m_HttpApiBroadcastPort);
+        tmp.Format("%i",g_guiSettings.GetInt("services.httpapibroadcastport"));
       else if (paras[i]=="httpapibroadcastlevel")
-        tmp.Format("%i",g_settings.m_HttpApiBroadcastLevel);
+        tmp.Format("%i",g_guiSettings.GetInt("services.httpapibroadcastlevel"));
       else if (paras[i]=="volumelevel")
-        tmp.Format("%i",g_settings.m_nVolumeLevel);
+        tmp.Format("%i",g_application.GetVolume(false));
       else if (paras[i]=="dynamicrangecompressionlevel")
-        tmp.Format("%i",g_settings.m_dynamicRangeCompressionLevel);
-      else if (paras[i]=="premutevolumelevel")
-        tmp.Format("%i",g_settings.m_iPreMuteVolumeLevel);
+        tmp.Format("%i",g_application.GetDynamicRangeCompressionLevel());
       else if (paras[i]=="systemtimetotalup")
-        tmp.Format("%i",g_settings.m_iSystemTimeTotalUp);
+        tmp.Format("%i",g_sysinfo.GetTotalUptime());
       else if (paras[i]=="mute")
-        tmp = (g_settings.m_bMute==0) ? "False" : "True";
+        tmp = (g_application.IsMuted()==0) ? "False" : "True";
       else if (paras[i]=="myvideonavflatten")
-        tmp = (g_settings.m_bMyVideoNavFlatten==0) ? "False" : "True";
+        tmp = (g_guiSettings.GetBool("myvideos.flatten")==0) ? "False" : "True";
       else if (paras[i]=="myvideoplaylistshuffle")
-        tmp = (g_settings.m_bMyVideoPlaylistShuffle==0) ? "False" : "True";
+        tmp = (CMediaSettings::Get().IsVideoPlaylistShuffled()==0) ? "False" : "True";
       else if (paras[i]=="myvideoplaylistrepeat")
-        tmp = (g_settings.m_bMyVideoPlaylistRepeat==0) ? "False" : "True";
-      else if (paras[i]=="mymusicisscanning")
-        tmp = (g_settings.m_bMyMusicIsScanning==0) ? "False" : "True";
+        tmp = (CMediaSettings::Get().DoesVideoPlaylistRepeat()==0) ? "False" : "True";
       else if (paras[i]=="mymusicplaylistshuffle")
-        tmp = (g_settings.m_bMyMusicPlaylistShuffle==0) ? "False" : "True";
+        tmp = (CMediaSettings::Get().IsMusicPlaylistShuffled()==0) ? "False" : "True";
       else if (paras[i]=="mymusicplaylistrepeat")
-        tmp = (g_settings.m_bMyMusicPlaylistRepeat==0) ? "False" : "True";
-      else if (paras[i]=="mymusicsongthumbinvis")
-        tmp = (g_settings.m_bMyMusicSongThumbInVis==0) ? "False" : "True";
-      else if (paras[i]=="mymusicsonginfoinvis")
-        tmp = (g_settings.m_bMyMusicSongInfoInVis==0) ? "False" : "True";
+        tmp = (CMediaSettings::Get().DoesMusicPlaylistRepeat()==0) ? "False" : "True";
       else if (paras[i]=="zoomamount")
-        tmp.Format("%f", g_settings.m_fZoomAmount);
+        tmp.Format("%f", CDisplaySettings::Get().GetZoomAmount());
       else if (paras[i]=="pixelratio")
-        tmp.Format("%f", g_settings.m_fPixelRatio);
+        tmp.Format("%f", CDisplaySettings::Get().GetPixelRatio());
       else if (paras[i]=="pictureextensions")
-        tmp = g_settings.m_pictureExtensions;
+        tmp = g_advancedSettings.m_pictureExtensions;
       else if (paras[i]=="musicextensions")
-        tmp = g_settings.m_musicExtensions;
+        tmp = g_advancedSettings.m_musicExtensions;
       else if (paras[i]=="videoextensions")
-        tmp = g_settings.m_videoExtensions;
+        tmp = g_advancedSettings.m_videoExtensions;
       else if (paras[i]=="logfolder")
-        tmp = g_settings.m_logFolder;
+        tmp = g_advancedSettings.m_logFolder;
       else
         tmp = "Error:Unknown setting " + paras[i];
       strInfo += openTag + tmp;
@@ -2784,11 +2783,11 @@ int CXbmcHttp::xbmcConfig(int numParas, CStdString paras[])
   {
     //getoption has been deprecated so the following is just to prevent (my) legacy client code breaking (to be removed later)
     if (paras[1]=="pictureextensions")
-      response=openTag+g_settings.m_pictureExtensions;
+      response=openTag+g_advancedSettings.m_pictureExtensions;
     else if (paras[1]=="videoextensions")
-      response=openTag+g_settings.m_videoExtensions;
+      response=openTag+g_advancedSettings.m_videoExtensions;
     else if (paras[1]=="musicextensions")
-      response=openTag+g_settings.m_musicExtensions;
+      response=openTag+g_advancedSettings.m_musicExtensions;
     else
       response=openTag+"Error:Function is deprecated";
     //ret=XbmcWebsHttpAPIConfigGetOption(response, argc, argv);
@@ -2890,13 +2889,13 @@ int CXbmcHttp::xbmcSpinDownHardDisk(int numParas, CStdString paras[])
 
 bool CXbmcHttp::xbmcBroadcast(CStdString message, int level)
 {
-  if  (g_settings.m_HttpApiBroadcastLevel>=level)
+  if  (g_guiSettings.GetInt("services.httpapibroadcastlevel")>=level)
   {
     if (!pUdpBroadcast)
       pUdpBroadcast = new CUdpBroadcast();
     CStdString msg;
     msg.Format(openBroadcast+message+";%i"+closeBroadcast, level);
-    return pUdpBroadcast->broadcast(msg, g_settings.m_HttpApiBroadcastPort);
+    return pUdpBroadcast->broadcast(msg, g_guiSettings.GetInt("services.httpapibroadcastport"));
   }
   else
     return true;
@@ -2912,7 +2911,7 @@ int CXbmcHttp::xbmcBroadcast(int numParas, CStdString paras[])
     if (numParas>1)
       succ=pUdpBroadcast->broadcast(paras[0], atoi(paras[1]));
     else
-      succ=pUdpBroadcast->broadcast(paras[0], g_settings.m_HttpApiBroadcastPort);
+      succ=pUdpBroadcast->broadcast(paras[0], g_guiSettings.GetInt("services.httpapibroadcastport"));
     if (succ)
       return SetResponse(openTag+"OK");
     else
@@ -2926,9 +2925,9 @@ int CXbmcHttp::xbmcSetBroadcast(int numParas, CStdString paras[])
 {
   if (numParas>0)
   {
-    g_settings.m_HttpApiBroadcastLevel=atoi(paras[0]);
+    g_guiSettings.SetInt("services.httpapibroadcastlevel", atoi(paras[0]));
     if (numParas>1)
-      g_settings.m_HttpApiBroadcastPort=atoi(paras[1]);
+      g_guiSettings.SetInt("services.httpapibroadcastport", atoi(paras[1]));
     return SetResponse(openTag+"OK");
   }
   else
@@ -2938,7 +2937,7 @@ int CXbmcHttp::xbmcSetBroadcast(int numParas, CStdString paras[])
 int CXbmcHttp::xbmcGetBroadcast()
 {
   CStdString tmp;
-  tmp.Format("%i;%i", g_settings.m_HttpApiBroadcastLevel,g_settings.m_HttpApiBroadcastPort);
+  tmp.Format("%i;%i", g_guiSettings.GetInt("services.httpapibroadcastlevel"),g_guiSettings.GetInt("services.httpapibroadcastport"));
   return SetResponse(openTag+tmp);
 }
 
@@ -2952,8 +2951,8 @@ int CXbmcHttp::xbmcGetSkinSetting(int numParas, CStdString paras[])
   {
     if (atoi(paras[0]) == 0)
     {
-      int string = g_settings.TranslateSkinBool(paras[1]);
-      bool value = g_settings.GetSkinBool(string);
+      int string = CSkinSettings::Get().TranslateBool(paras[1]);
+      bool value = CSkinSettings::Get().GetBool(string);
       if (value==false)
         return SetResponse(openTag+"False");
       else
@@ -2961,8 +2960,8 @@ int CXbmcHttp::xbmcGetSkinSetting(int numParas, CStdString paras[])
     }
     else
     {
-      int string = g_settings.TranslateSkinString(paras[1]);
-      CStdString value = g_settings.GetSkinString(string);
+      int string = CSkinSettings::Get().TranslateString(paras[1]);
+      CStdString value = CSkinSettings::Get().GetString(string);
       return SetResponse(openTag+value);
     }
   }
@@ -3097,7 +3096,6 @@ int CXbmcHttp::xbmcSetLogLevel(int numParas, CStdString paras[])
   else
   {
     g_advancedSettings.m_logLevel=atoi(paras[0]);
-    CLog::SetLogLevel(g_advancedSettings.m_logLevel);
     return SetResponse(openTag+"OK");
   }
 }

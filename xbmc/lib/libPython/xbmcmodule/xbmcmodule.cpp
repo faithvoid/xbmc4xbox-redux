@@ -38,12 +38,14 @@
 #include "Util.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
-#include "settings/Settings.h"
+#include "settings/GUISettings.h"
+#include "settings/AdvancedSettings.h"
 #include "TextureManager.h"
 #include "LangInfo.h"
 #include "SectionLoader.h"
 #include "utils/URIUtils.h"
 #include "CharsetConverter.h"
+#include "LocalizeStrings.h"
 #include "utils/log.h"
 #include "utils/FileUtils.h"
 #include "pythreadstate.h"
@@ -56,12 +58,6 @@
 using namespace std;
 using namespace XFILE;
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 #if defined(__GNUG__) && (__GNUC__>4) || (__GNUC__==4 && __GNUC_MINOR__>=2)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -697,9 +693,6 @@ namespace PYXBMC
     if (!PyXBMCGetUnicodeString(strText, pObjectText, 1)) return NULL;
 
     CStdString strPath;
-    if (URIUtils::IsDOSPath(strText))
-      strText = CSpecialProtocol::ReplaceOldPath(strText, 0);
-
     strPath = CSpecialProtocol::TranslatePath(strText);
 
     return Py_BuildValue((char*)"s", strPath.c_str());
@@ -866,11 +859,11 @@ namespace PYXBMC
 
     CStdString result;
     if (strcmpi(media, "video") == 0)
-      result = g_settings.m_videoExtensions;
+      result = g_advancedSettings.m_videoExtensions;
     else if (strcmpi(media, "music") == 0)
-      result = g_settings.m_musicExtensions;
+      result = g_advancedSettings.m_musicExtensions;
     else if (strcmpi(media, "picture") == 0)
-      result = g_settings.m_pictureExtensions;
+      result = g_advancedSettings.m_pictureExtensions;
     else
     {
       PyErr_SetString(PyExc_ValueError, "media = (video, music, picture)");

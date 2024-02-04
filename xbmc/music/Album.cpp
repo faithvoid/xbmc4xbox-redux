@@ -18,9 +18,11 @@
  *
  */
 
+#include "Album.h"
 #include "settings/AdvancedSettings.h"
-#include "music/Album.h"
-#include "XMLUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/XMLUtils.h"
+#include "FileItem.h"
 
 using namespace std;
 using namespace MUSIC_INFO;
@@ -115,7 +117,7 @@ bool CAlbum::Save(TiXmlNode *node, const CStdString &tag, const CStdString& strP
   XMLUtils::SetString(album,        "type", strType);
   if (!thumbURL.m_xml.empty())
   {
-    TiXmlDocument doc;
+    CXBMCTinyXML doc;
     doc.Parse(thumbURL.m_xml); 
     const TiXmlNode* thumb = doc.FirstChild("thumb");
     while (thumb)

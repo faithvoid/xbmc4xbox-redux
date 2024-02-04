@@ -23,6 +23,7 @@
 #include "md5.h"
 #include "xbox/XKEEPROM.h"
 #include "InfoLoader.h"
+#include "settings/ISubSettings.h"
 
 #define KB  (1024)          // 1 KiloByte (1KB)   1024 Byte (2^10 Byte)
 #define MB  (1024*KB)       // 1 MegaByte (1MB)   1024 KB (2^10 KB)
@@ -36,125 +37,185 @@
 #define SMARTXX_LED_CYCLE      4
 
 #define MAX_KNOWN_ATTRIBUTES  46
+
 struct Bios
 {
  char Name[50];
  char Signature[33];
 };
 
-class CSysInfo : public CInfoLoader
+class CSysData
 {
-  public:
-    CSysInfo(void);
-    virtual ~CSysInfo();
+public:
+  CSysData()
+  {
+    Reset();
+  };
 
-    char MD5_Sign[32 + 1];
+  void Reset()
+  {
+#ifdef _XBOX
+    xboxBios = "";
+    xboxModChip = "";
 
-    bool GetDVDInfo(CStdString& strDVDModel, CStdString& strDVDFirmware);
-    bool GetHDDInfo(CStdString& strHDDModel, CStdString& strHDDSerial,CStdString& strHDDFirmware,CStdString& strHDDpw,CStdString& strHDDLockState);
-    bool GetRefurbInfo(CStdString& rfi_FirstBootTime, CStdString& rfi_PowerCycleCount);
-
-    bool CreateBiosBackup();
-    bool CreateEEPROMBackup();
-    void WriteTXTInfoFile();
-
-    CStdString SmartXXModCHIP();
-    CStdString GetAVPackInfo();
-    CStdString GetVideoEncoder();
-    CStdString GetMPlayerVersion();
-    CStdString GetKernelVersion();
-#if defined(_LINUX) && !defined(__APPLE__)
-    CStdString GetLinuxDistro();
+    HDDModel = "";
+    HDDSerial = "";
+    HDDFirmware = "";
+    HDDpw = "";
+    HDDLockState = "";
+    DVDModel = ""; 
+    DVDFirmware = "";
 #endif
-#ifdef _LINUX
-    CStdString GetUnameVersion();
-#endif    
-    CStdString GetUserAgent();
-    CStdString GetSystemUpTime(bool bTotalUptime);
-    CStdString GetCPUFreqInfo();
-    CStdString GetXBVerInfo();
-    CStdString GetUnits(int iFrontPort);
-    CStdString GetMACAddress();
-    CStdString GetXBOXSerial();
-    CStdString GetXBProduceInfo();
-    CStdString GetVideoXBERegion();
-    CStdString GetDVDZone();
-    CStdString GetXBLiveKey();
-    CStdString GetHDDKey();
-    CStdString GetModChipInfo();
-    CStdString GetBIOSInfo();
-    CStdString GetInternetState();
-    CStdString GetTrayState();
-    bool GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree, int& iTotalUsed, int& iPercentFree, int& iPercentUsed);
-    CStdString GetHddSpaceInfo(int& percent, int drive, bool shortText=false);
-    CStdString GetHddSpaceInfo(int drive, bool shortText=false);
 
-    CStdString m_XboxBios;
-    CStdString m_XboxModChip;
-    CStdString m_mplayerversion;
-    CStdString m_kernelversion;
-    CStdString m_cpufrequency;
-    CStdString m_xboxversion;
-    CStdString m_avpackinfo;
-    CStdString m_videoencoder;
-    CStdString m_xboxserial;
-    CStdString m_hddlockkey;
-    CStdString m_hddbootdate;
-    CStdString m_hddcyclecount;
-    CStdString m_macadress;
-    CStdString m_videoxberegion;
-    CStdString m_videodvdzone;
-    CStdString m_produceinfo;
-    CStdString m_InternetState;
-    CStdString m_systemtotaluptime;
-    CStdString m_systemuptime;
+    haveInternetState = false;
+    internetState = "";
+  };
 
-    CStdString m_HDDModel, m_HDDSerial,m_HDDFirmware,m_HDDpw,m_HDDLockState;
-    CStdString m_DVDModel, m_DVDFirmware;
+  bool haveInternetState;
+  CStdString systemUptime;
+  CStdString systemTotalUptime;
+  CStdString internetState;
+  CStdString videoEncoder;
+  CStdString cpuFrequency;
+  CStdString kernelVersion;
+  CStdString macAddress;
 
-    bool m_bInternetState;
-    bool m_bRequestDone;
-    bool m_bSmartSupported;
-    bool m_bSmartEnabled;
+#ifdef _XBOX
+  // info specific to xbox
+  CStdString xboxBios;
+  CStdString xboxModChip;
+  CStdString mplayerversion;
+  CStdString xboxversion;
+  CStdString avpackinfo;
+  CStdString xboxserial;
+  CStdString hddlockkey;
+  CStdString hddbootdate;
+  CStdString hddcyclecount;
+  CStdString videoxberegion;
+  CStdString videodvdzone;
+  CStdString produceinfo;
 
-    bool m_hddRequest;
-    bool m_dvdRequest;
+  CStdString HDDModel;
+  CStdString HDDSerial;
+  CStdString HDDFirmware;
+  CStdString HDDpw;
+  CStdString HDDLockState;
+  signed char HDDTemp;
 
-    signed char byHddTemp;
+  CStdString DVDModel;
+  CStdString DVDFirmware;
+#endif
+};
 
-  private:
-    #define XBOX_BIOS_ID_INI_FILE "Q:\\System\\SystemInfo\\BiosIDs.ini"
-    #define XBOX_BIOS_BACKUP_FILE "Q:\\System\\SystemInfo\\BIOSBackup.bin"
-    #define XBOX_EEPROM_BIN_BACKUP_FILE "Q:\\System\\SystemInfo\\EEPROMBackup.bin"
-    #define XBOX_EEPROM_CFG_BACKUP_FILE "Q:\\System\\SystemInfo\\EEPROMBackup.cfg"
-    #define XBOX_XBMC_TXT_INFOFILE "Q:\\System\\SystemInfo\\XBMCSystemInfo.txt"
-    #define SYSINFO_TMP_SIZE 256
-    #define XDEVICE_TYPE_IR_REMOTE  (&XDEVICE_TYPE_IR_REMOTE_TABLE)
-    #define DEBUG_KEYBOARD
-    #define DEBUG_MOUSE
+class CSysInfoJob : public CJob
+{
+public:
+  CSysInfoJob();
 
-    XKEEPROM* m_XKEEPROM;
-    XBOX_VERSION  m_XBOXVersion;
+  virtual bool DoWork();
+  const CSysData &GetData() const;
 
-    double GetCPUFrequency();
-    double RDTSC(void);
-    bool SystemUpTime(int iInputMinutes, int &iMinutes, int &iHours, int &iDays);
-    bool GetXBOXVersionDetected(CStdString& strXboxVer);
-    CStdString GetModCHIPDetected();
+private:
+  bool SystemUpTime(int iInputMinutes, int &iMinutes, int &iHours, int &iDays);
+  double GetCPUFrequency();
+  CStdString GetInternetState();
+  CStdString GetSystemUpTime(bool bTotalUptime);
+  CStdString GetCPUFreqInfo();
+  CStdString GetMACAddress();
+  CStdString GetVideoEncoder();
 
-    struct Bios * LoadBiosSigns();
-    bool CheckBios(CStdString& strDetBiosNa);
-    char* ReturnBiosName(char *buffer, char *str);
-    char* ReturnBiosSign(char *buffer, char *str);
-    char* CheckMD5 (struct Bios *Listone, char *Sign);
-    char* MD5Buffer(char *filename,long PosizioneInizio,int KBytes);
-    CStdString MD5BufferNew(char *filename,long PosizioneInizio,int KBytes);
+  CSysData m_info;
+};
 
-    void Reset();
+class CSysInfo : public CInfoLoader, public ISubSettings
+{
+public:
+  CSysInfo(void);
+  virtual ~CSysInfo();
+
+  virtual bool Load(const TiXmlNode *settings);
+  virtual bool Save(TiXmlNode *settings) const;
+
+  char MD5_Sign[32 + 1];
+
+  bool GetDVDInfo(CStdString& strDVDModel, CStdString& strDVDFirmware);
+  bool GetHDDInfo(CStdString& strHDDModel, CStdString& strHDDSerial,CStdString& strHDDFirmware,CStdString& strHDDpw,CStdString& strHDDLockState);
+  static bool GetRefurbInfo(CStdString& rfi_FirstBootTime, CStdString& rfi_PowerCycleCount);
+
+  bool CreateBiosBackup();
+  bool CreateEEPROMBackup();
+  void WriteTXTInfoFile();
+
+#ifdef _XBOX
+  static CStdString SmartXXModCHIP();
+  static CStdString GetAVPackInfo();
+  static CStdString GetMPlayerVersion();
+  CStdString GetUnits(int iFrontPort);
+  CStdString GetXBOXSerial();
+  CStdString GetXBProduceInfo();
+  CStdString GetVideoXBERegion();
+  CStdString GetDVDZone();
+  CStdString GetXBLiveKey();
+  CStdString GetHDDKey();
+  static CStdString GetModChipInfo();
+  CStdString GetBIOSInfo();
+  CStdString GetTrayState();
+#endif
+
+  CStdString GetUserAgent();
+  bool HasInternet() const;
+  static CStdString GetKernelVersion();
+  static CStdString GetXBVerInfo();
+  bool GetDiskSpace(const CStdString drive,int& iTotal, int& iTotalFree, int& iTotalUsed, int& iPercentFree, int& iPercentUsed);
+  CStdString GetHddSpaceInfo(int& percent, int drive, bool shortText=false);
+  CStdString GetHddSpaceInfo(int drive, bool shortText=false);
+
+  int GetTotalUptime() const { return m_iSystemTimeTotalUp; }
+  void SetTotalUptime(int uptime) { m_iSystemTimeTotalUp = uptime; }
+
+#ifdef _XBOX
+  bool m_bRequestDone;
+  bool m_bSmartSupported;
+  bool m_bSmartEnabled;
+
+  bool m_hddRequest;
+  bool m_dvdRequest;
+
+  #define XBOX_BIOS_ID_INI_FILE "Q:\\System\\SystemInfo\\BiosIDs.ini"
+  #define XBOX_BIOS_BACKUP_FILE "Q:\\System\\SystemInfo\\BIOSBackup.bin"
+  #define XBOX_EEPROM_BIN_BACKUP_FILE "Q:\\System\\SystemInfo\\EEPROMBackup.bin"
+  #define XBOX_EEPROM_CFG_BACKUP_FILE "Q:\\System\\SystemInfo\\EEPROMBackup.cfg"
+  #define XBOX_XBMC_TXT_INFOFILE "Q:\\System\\SystemInfo\\XBMCSystemInfo.txt"
+  #define SYSINFO_TMP_SIZE 256
+  #define XDEVICE_TYPE_IR_REMOTE  (&XDEVICE_TYPE_IR_REMOTE_TABLE)
+  #define DEBUG_KEYBOARD
+  #define DEBUG_MOUSE
+
+  XKEEPROM* m_XKEEPROM;
+  XBOX_VERSION  m_XBOXVersion;
+
+  static double RDTSC(void);
+  static bool GetXBOXVersionDetected(CStdString& strXboxVer);
+  static CStdString GetModCHIPDetected();
+
+  static struct Bios * LoadBiosSigns();
+  bool CheckBios(CStdString& strDetBiosNa);
+  static char* ReturnBiosName(char *buffer, char *str);
+  static char* ReturnBiosSign(char *buffer, char *str);
+  char* CheckMD5 (struct Bios *Listone, char *Sign);
+  char* MD5Buffer(char *filename,long PosizioneInizio,int KBytes);
+  static CStdString MD5BufferNew(char *filename,long PosizioneInizio,int KBytes);
+#endif
 
 protected:
-  virtual bool DoWork();
+  virtual CJob *GetJob() const;
   virtual CStdString TranslateInfo(int info) const;
+  virtual void OnJobComplete(unsigned int jobID, bool success, CJob *job);
+
+private:
+  CSysData m_info;
+  int m_iSystemTimeTotalUp; // Uptime in minutes!
+  void Reset();
 };
 
 extern CSysInfo g_sysinfo;

@@ -37,12 +37,15 @@
 #include "xbox/network.h"
 #include "utils/log.h"
 #include "GUIWindowManager.h"
-#include "settings/Settings.h"
+#include "settings/GUISettings.h"
+#include "settings/AdvancedSettings.h"
 #include "FileItem.h"
 #include "GUIDialog.h"
 #include "SectionLoader.h"
 #include "lib/libPython/xbmcmodule/GUIPythonWindowDialog.h"
 #include "lib/libPython/xbmcmodule/GUIPythonWindowXMLDialog.h"
+
+#include "playlists/PlayList.h"
 
 using namespace std;
 
@@ -313,10 +316,24 @@ case TMSG_POWERDOWN:
               }
             }
 
-            g_playlistPlayer.ClearPlaylist(playlist);
-            g_playlistPlayer.Add(playlist, (*list));
-            g_playlistPlayer.SetCurrentPlaylist(playlist);
-            g_playlistPlayer.Play();
+            //For single item lists try PlayMedia. This covers some more cases where a playlist is not appropriate
+            //It will fall through to PlayFile
+            if (list->Size() == 1 && !(*list)[0]->IsPlayList())
+              g_application.PlayMedia(*((*list)[0]), playlist);
+            else
+            {
+              // Handle "shuffled" option if present
+              if (list->HasProperty("shuffled") && list->GetProperty("shuffled").isBoolean())
+                g_playlistPlayer.SetShuffle(playlist, list->GetProperty("shuffled").asBoolean(), false);
+              // Handle "repeat" option if present
+              if (list->HasProperty("repeat") && list->GetProperty("repeat").isInteger())
+                g_playlistPlayer.SetRepeat(playlist, (PLAYLIST::REPEAT_STATE)list->GetProperty("repeat").asInteger(), false);
+
+              g_playlistPlayer.ClearPlaylist(playlist);
+              g_playlistPlayer.Add(playlist, (*list));
+              g_playlistPlayer.SetCurrentPlaylist(playlist);
+              g_playlistPlayer.Play(pMsg->dwParam1);
+            }
           }
 
           delete list;
@@ -355,7 +372,7 @@ case TMSG_POWERDOWN:
           else
             URIUtils::CreateArchivePath(strPath, "rar", pMsg->strParam.c_str(), "");
 
-          CUtil::GetRecursiveListing(strPath, items, g_settings.m_pictureExtensions);
+          CUtil::GetRecursiveListing(strPath, items, g_advancedSettings.m_pictureExtensions);
           if (items.Size() > 0)
           {
             for (int i=0;i<items.Size();++i)
@@ -386,7 +403,7 @@ case TMSG_POWERDOWN:
 
         CFileItemList items;
         CStdString strPath = pMsg->strParam;
-        CStdString extensions = g_settings.m_pictureExtensions;
+        CStdString extensions = g_advancedSettings.m_pictureExtensions;
         if (pMsg->dwParam1)
           extensions += "|.tbn";
         CUtil::GetRecursiveListing(strPath, items, extensions);
@@ -505,6 +522,35 @@ case TMSG_POWERDOWN:
       g_playlistPlayer.PlayPrevious();
       break;
 
+    case TMSG_PLAYLISTPLAYER_ADD:
+      if(pMsg->lpVoid)
+      {
+        CFileItemList *list = (CFileItemList *)pMsg->lpVoid;
+
+        g_playlistPlayer.Add(pMsg->dwParam1, (*list));
+        delete list;
+      }
+      break;
+
+    case TMSG_PLAYLISTPLAYER_CLEAR:
+      g_playlistPlayer.ClearPlaylist(pMsg->dwParam1);
+      break;
+
+    case TMSG_PLAYLISTPLAYER_SHUFFLE:
+      g_playlistPlayer.SetShuffle(pMsg->dwParam1, pMsg->dwParam2 > 0);
+      break;
+
+    case TMSG_PLAYLISTPLAYER_GET_ITEMS:
+      if (pMsg->lpVoid)
+      {
+        PLAYLIST::CPlayList playlist = g_playlistPlayer.GetPlaylist(pMsg->dwParam1);
+        CFileItemList *list = (CFileItemList *)pMsg->lpVoid; //DO NOT DELETE THIS!
+
+        for (int i = 0; i < playlist.size(); i++)
+          list->Add(playlist[i]);
+      }
+      break;
+
     case TMSG_PLAYLISTPLAYER_INSERT:
       if (pMsg->lpVoid)
       {
@@ -605,6 +651,11 @@ case TMSG_POWERDOWN:
       }
       break;
 
+    case TMSG_VOLUME_SHOW:
+      {
+        CAction action((int)pMsg->dwParam1);
+        g_application.ShowVolumeBar(&action);
+      }
   }
 }
 
@@ -684,11 +735,11 @@ void CApplicationMessenger::MediaPlay(const CFileItem &item)
   MediaPlay(list);
 }
 
-void CApplicationMessenger::MediaPlay(const CFileItemList &list)
+void CApplicationMessenger::MediaPlay(const CFileItemList &list, int song)
 {
   ThreadMessage tMsg = {TMSG_MEDIA_PLAY};
   tMsg.lpVoid = (void *)new CFileItemList(list);
-  tMsg.dwParam1 = 0;
+  tMsg.dwParam1 = song;
   tMsg.dwParam2 = 1;
   SendMessage(tMsg, true);
 }
@@ -748,6 +799,45 @@ void CApplicationMessenger::PlayListPlayerNext()
 void CApplicationMessenger::PlayListPlayerPrevious()
 {
   ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_PREV};
+  SendMessage(tMsg, true);
+}
+
+void CApplicationMessenger::PlayListPlayerAdd(int playlist, const CFileItem &item)
+{
+  CFileItemList list;
+  list.Add(CFileItemPtr(new CFileItem(item)));
+
+  PlayListPlayerAdd(playlist, list);
+}
+
+void CApplicationMessenger::PlayListPlayerAdd(int playlist, const CFileItemList &list)
+{
+  ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_ADD};
+  tMsg.lpVoid = (void *)new CFileItemList(list);
+  tMsg.dwParam1 = playlist;
+  SendMessage(tMsg, true);
+}
+
+void CApplicationMessenger::PlayListPlayerClear(int playlist)
+{
+  ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_CLEAR};
+  tMsg.dwParam1 = playlist;
+  SendMessage(tMsg, true);
+}
+
+void CApplicationMessenger::PlayListPlayerShuffle(int playlist, bool shuffle)
+{
+  ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_SHUFFLE};
+  tMsg.dwParam1 = playlist;
+  tMsg.dwParam2 = shuffle ? 1 : 0;
+  SendMessage(tMsg, true);
+}
+
+void CApplicationMessenger::PlayListPlayerGetItems(int playlist, CFileItemList &list)
+{
+  ThreadMessage tMsg = {TMSG_PLAYLISTPLAYER_GET_ITEMS};
+  tMsg.dwParam1 = playlist;
+  tMsg.lpVoid = (void *)&list;
   SendMessage(tMsg, true);
 }
 
@@ -875,4 +965,11 @@ void CApplicationMessenger::SendAction(const CAction &action, int windowID, bool
   tMsg.dwParam1 = windowID;
   tMsg.lpVoid = new CAction(action);
   SendMessage(tMsg, waitResult);
+}
+
+void CApplicationMessenger::ShowVolumeBar(bool up)
+{
+  ThreadMessage tMsg = {TMSG_VOLUME_SHOW};
+  tMsg.dwParam1 = up ? ACTION_VOLUME_UP : ACTION_VOLUME_DOWN;
+  SendMessage(tMsg, false);
 }

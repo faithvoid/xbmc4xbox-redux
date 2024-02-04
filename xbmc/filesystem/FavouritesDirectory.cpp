@@ -18,17 +18,18 @@
  *
  */
 
-#include "utils/log.h"
 #include "FavouritesDirectory.h"
 #include "File.h"
 #include "Util.h"
-#include "utils/URIUtils.h"
-#include "Key.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
 #include "FileItem.h"
+#include "utils/XBMCTinyXML.h"
+#include "utils/log.h"
+#include "utils/URIUtils.h"
+#include "settings/AdvancedSettings.h"
 #include "video/VideoInfoTag.h"
 #include "URL.h"
-#include "settings/AdvancedSettings.h"
+#include "Key.h"
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
@@ -56,7 +57,7 @@ bool CFavouritesDirectory::Exists(const char* strPath)
   if (url.GetProtocol() == "favourites")
   {
     return XFILE::CFile::Exists("special://xbmc/system/favourites.xml") 
-        || XFILE::CFile::Exists(URIUtils::AddFileToFolder(g_settings.GetProfileUserDataFolder(), "favourites.xml"));
+        || XFILE::CFile::Exists(URIUtils::AddFileToFolder(CProfilesManager::Get().GetProfileUserDataFolder(), "favourites.xml"));
   }
   return XFILE::CFile::Exists(strPath); //directly load the given file
 }
@@ -71,7 +72,7 @@ bool CFavouritesDirectory::Load(CFileItemList &items)
     CFavouritesDirectory::LoadFavourites(favourites, items);
   else
     CLog::Log(LOGDEBUG, "CFavourites::Load - no system favourites found, skipping");
-  URIUtils::AddFileToFolder(g_settings.GetProfileUserDataFolder(), "favourites.xml", favourites);
+  URIUtils::AddFileToFolder(CProfilesManager::Get().GetProfileUserDataFolder(), "favourites.xml", favourites);
   if(XFILE::CFile::Exists(favourites))
     CFavouritesDirectory::LoadFavourites(favourites, items);
   else
@@ -82,7 +83,7 @@ bool CFavouritesDirectory::Load(CFileItemList &items)
 
 bool CFavouritesDirectory::LoadFavourites(const CStdString& strPath, CFileItemList& items)
 {
-  TiXmlDocument doc;
+  CXBMCTinyXML doc;
   if (!doc.LoadFile(strPath))
   {
     CLog::Log(LOGERROR, "Unable to load %s (row %i column %i)", strPath.c_str(), doc.Row(), doc.Column());
@@ -122,7 +123,7 @@ bool CFavouritesDirectory::LoadFavourites(const CStdString& strPath, CFileItemLi
 bool CFavouritesDirectory::Save(const CFileItemList &items)
 {
   CStdString favourites;
-  TiXmlDocument doc;
+  CXBMCTinyXML doc;
   TiXmlElement xmlRootElement("favourites");
   TiXmlNode *rootNode = doc.InsertEndChild(xmlRootElement);
   if (!rootNode) return false;
@@ -139,7 +140,7 @@ bool CFavouritesDirectory::Save(const CFileItemList &items)
     rootNode->InsertEndChild(favNode);
   }
 
-  URIUtils::AddFileToFolder(g_settings.GetProfileUserDataFolder(), "favourites.xml", favourites);
+  URIUtils::AddFileToFolder(CProfilesManager::Get().GetProfileUserDataFolder(), "favourites.xml", favourites);
   return doc.SaveFile(favourites);
 }
 

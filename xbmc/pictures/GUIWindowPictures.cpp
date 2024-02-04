@@ -36,6 +36,10 @@
 #include "filesystem/File.h"
 #include "playlists/PlayList.h"
 #include "LocalizeStrings.h"
+#include "settings/Settings.h"
+#include "settings/GUISettings.h"
+#include "settings/AdvancedSettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "utils/log.h"
 
 #define CONTROL_BTNVIEWASICONS      2
@@ -103,7 +107,7 @@ bool CGUIWindowPictures::OnMessage(CGUIMessage& message)
     {
       // is this the first time accessing this window?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().IsEmpty())
-        message.SetStringParam(g_settings.m_defaultPictureSource);
+        message.SetStringParam(CMediaSourceSettings::Get().GetDefaultSource("pictures"));
 
       m_dlgProgress = (CGUIDialogProgress*)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
 
@@ -302,7 +306,7 @@ bool CGUIWindowPictures::GetDirectory(const CStdString &strDirectory, CFileItemL
     return false;
 
   CStdString label;
-  if (items.GetLabel().IsEmpty() && m_rootDir.IsSource(items.GetPath(), g_settings.GetSourcesFromType("pictures"), &label)) 
+  if (items.GetLabel().IsEmpty() && m_rootDir.IsSource(items.GetPath(), CMediaSourceSettings::Get().GetSources("pictures"), &label))
     items.SetLabel(label);
 
   return true;
@@ -579,7 +583,7 @@ void CGUIWindowPictures::OnItemLoaded(CFileItem *pItem)
 
       CFileItemList items;
 
-      CDirectory::GetDirectory(strPath, items, g_settings.m_pictureExtensions, false, false);
+      CDirectory::GetDirectory(strPath, items, g_advancedSettings.m_pictureExtensions, false, false);
 
       // create the folder thumb by choosing 4 random thumbs within the folder and putting
       // them into one thumb.
@@ -598,7 +602,7 @@ void CGUIWindowPictures::OnItemLoaded(CFileItem *pItem)
       {
         if (pItem->IsCBZ() || pItem->IsCBR())
         {
-          CDirectory::GetDirectory(strPath, items, g_settings.m_pictureExtensions, false, false);
+          CDirectory::GetDirectory(strPath, items, g_advancedSettings.m_pictureExtensions, false, false);
           for (int i=0;i<items.Size();++i)
           {
             CFileItemPtr item = items[i];

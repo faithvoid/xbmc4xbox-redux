@@ -23,6 +23,7 @@
 #include "GUIWindowManager.h"
 #include "LocalizeStrings.h"
 #include "TextureManager.h"
+#include "settings/AdvancedSettings.h"
 #include "settings/Settings.h"
 #include "GUIControlFactory.h"
 #include "GUIControlGroup.h"
@@ -35,7 +36,7 @@
 #include "utils/SingleLock.h"
 #include "utils/TimeUtils.h"
 #include "input/ButtonTranslator.h"
-#include "XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "utils/Variant.h"
 
 using namespace std;
@@ -48,7 +49,6 @@ CGUIWindow::CGUIWindow(int id, const CStdString &xmlFile)
   m_saveLastControl = false;
   m_lastControlID = 0;
   m_overlayState = OVERLAY_STATE_PARENT_WINDOW;   // Use parent or previous window's state
-  m_coordsRes = g_guiSettings.m_LookAndFeelResolution;
   m_isDialog = false;
   m_needsScaling = true;
   m_windowLoaded = false;
@@ -77,7 +77,6 @@ bool CGUIWindow::Load(const CStdString& strFileName, bool bContainsPath)
   int64_t start;
   start = CurrentHostCounter();
 #endif
-  RESOLUTION resToUse = INVALID;
   const char* strLoadType;
   switch (m_loadType)
   {
@@ -93,17 +92,17 @@ bool CGUIWindow::Load(const CStdString& strFileName, bool bContainsPath)
     break;
   }
   CLog::Log(LOGINFO, "Loading skin file: %s, load type: %s", strFileName.c_str(), strLoadType);
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
   // Find appropriate skin folder + resolution to load from
   CStdString strPath;
   CStdString strLowerPath;
   if (bContainsPath)
     strPath = strFileName;
   else
-    strPath = g_SkinInfo->GetSkinPath(strFileName, &resToUse);
-
-  if (!bContainsPath)
-    m_coordsRes = resToUse;
+  {
+    strLowerPath =  g_SkinInfo->GetSkinPath(CStdString(strFileName).ToLower(), &m_coordsRes);
+    strPath = g_SkinInfo->GetSkinPath(strFileName, &m_coordsRes);
+  }
 
   bool ret = LoadXML(strPath.c_str(), strLowerPath.c_str());
 
@@ -121,7 +120,7 @@ bool CGUIWindow::LoadXML(const CStdString &strPath, const CStdString &strLowerPa
   // load window xml if we don't have it stored yet
   if (!m_windowXMLRootElement)
   {
-    TiXmlDocument xmlDoc;
+    CXBMCTinyXML xmlDoc;
     if ( !xmlDoc.LoadFile(strPath) && !xmlDoc.LoadFile(CStdString(strPath).ToLower()) && !xmlDoc.LoadFile(strLowerPath))
     {
       CLog::Log(LOGERROR, "unable to load:%s, Line %d\n%s", strPath.c_str(), xmlDoc.ErrorRow(), xmlDoc.ErrorDesc());
@@ -191,7 +190,7 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
     }
     else if (strValue == "animation" && pChild->FirstChild())
     {
-      FRECT rect = { 0, 0, (float)g_settings.m_ResInfo[m_coordsRes].iWidth, (float)g_settings.m_ResInfo[m_coordsRes].iHeight };
+      FRECT rect = { 0, 0, (float)m_coordsRes.iWidth, (float)m_coordsRes.iHeight };
       CAnimation anim;
       anim.Create(pChild, rect, GetID());
       m_animations.push_back(anim);
@@ -238,7 +237,7 @@ bool CGUIWindow::Load(TiXmlElement* pRootElement)
       {
         if (strcmpi(pControl->Value(), "control") == 0)
         {
-          FRECT rect = { 0, 0, (float)g_settings.m_ResInfo[m_coordsRes].iWidth, (float)g_settings.m_ResInfo[m_coordsRes].iHeight };
+          FRECT rect = { 0, 0, (float)m_coordsRes.iWidth, (float)m_coordsRes.iHeight };
           LoadControl(pControl, NULL, rect);
         }
         pControl = pControl->NextSiblingElement();
@@ -307,8 +306,8 @@ void CGUIWindow::OnWindowLoaded()
 
 void CGUIWindow::CenterWindow()
 {
-  m_posX = (g_settings.m_ResInfo[m_coordsRes].iWidth - GetWidth()) / 2;
-  m_posY = (g_settings.m_ResInfo[m_coordsRes].iHeight - GetHeight()) / 2;
+  m_posX = (m_coordsRes.iWidth - GetWidth()) / 2;
+  m_posY = (m_coordsRes.iHeight - GetHeight()) / 2;
 }
 
 void CGUIWindow::Render()
@@ -850,7 +849,7 @@ void CGUIWindow::SetDefaults()
   m_origins.clear();
   m_hasCamera = false;
   m_animationsEnabled = true;
-  m_hitRect.SetRect(0, 0, (float)g_settings.m_ResInfo[m_coordsRes].iWidth, (float)g_settings.m_ResInfo[m_coordsRes].iHeight);
+  m_hitRect.SetRect(0, 0, (float)m_coordsRes.iWidth, (float)m_coordsRes.iHeight);
   m_clearBackground = 0xff000000; // opaque black -> clear
 }
 

@@ -18,15 +18,17 @@
  *
  */
 
-#include "utils/log.h"
 #include "RSSDirectory.h"
 #include "FileItem.h"
 #include "CurlFile.h"
-#include "settings/Settings.h"
 #include "settings/AdvancedSettings.h"
-#include "utils/HTMLUtil.h"
-#include "video/VideoInfoTag.h"
+#include "settings/GUISettings.h"
 #include "utils/URIUtils.h"
+#include "utils/XBMCTinyXML.h"
+#include "utils/HTMLUtil.h"
+#include "utils/StringUtils.h"
+#include "video/VideoInfoTag.h"
+#include "utils/log.h"
 #include "utils/SingleLock.h"
 
 using namespace XFILE;
@@ -90,13 +92,13 @@ static bool IsPathToMedia(const CStdString& strPath )
 
   extension.ToLower();
 
-  if (g_settings.m_videoExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_videoExtensions.Find(extension) != -1)
     return true;
 
-  if (g_settings.m_musicExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_musicExtensions.Find(extension) != -1)
     return true;
 
-  if (g_settings.m_pictureExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_pictureExtensions.Find(extension) != -1)
     return true;
 
   return false;
@@ -114,7 +116,7 @@ static bool IsPathToThumbnail(const CStdString& strPath )
 
   extension.ToLower();
 
-  if (g_settings.m_pictureExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_pictureExtensions.Find(extension) != -1)
     return true;
 
   return false;
@@ -591,7 +593,7 @@ bool CRSSDirectory::GetDirectory(const CStdString& path, CFileItemList &items)
   }
   lock.Leave();
 
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
   if (!xmlDoc.LoadFile(strPath))
   {
     CLog::Log(LOGERROR,"failed to load xml from <%s>. error: <%d>", strPath.c_str(), xmlDoc.ErrorId());

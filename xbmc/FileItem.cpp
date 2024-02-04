@@ -19,10 +19,10 @@
  */
 
 #include "system.h"
-#include "utils/log.h"
 #include "FileItem.h"
-#include "Util.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/URIUtils.h"
+#include "Util.h"
 #include "pictures/Picture.h"
 #include "playlists/PlayListFactory.h"
 #include "Shortcut.h"
@@ -48,10 +48,11 @@
 #include "music/Album.h"
 #include "music/Song.h"
 #include "URL.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
-#include "LocalizeStrings.h"
 #include "utils/RegExp.h"
+#include "utils/log.h"
 #include "utils/Variant.h"
 #include "utils/CharsetConverter.h"
 
@@ -102,6 +103,20 @@ CFileItem::CFileItem(const CStdString &path, const CAlbum& album)
     SetProperty("rating", album.iRating);
 
   CMusicDatabase::SetPropertiesFromAlbum(*this,album);
+}
+
+CFileItem::CFileItem(const CMusicInfoTag& music)
+{
+  m_musicInfoTag = NULL;
+  m_videoInfoTag = NULL;
+  m_pictureInfoTag = NULL;
+  Reset();
+  SetLabel(music.GetTitle());
+  m_strPath = music.GetURL();
+  m_bIsFolder = URIUtils::HasSlashAtEnd(m_strPath);
+  *GetMusicInfoTag() = music;
+  FillInDefaultIcon();
+  SetCachedMusicThumb();
 }
 
 CFileItem::CFileItem(const CVideoInfoTag& movie)
@@ -440,7 +455,7 @@ void CFileItem::Serialize(CVariant& value)
   value["size"] = m_dwSize;
   value["DVDLabel"] = m_strDVDLabel;
   value["title"] = m_strTitle;
-  value["mimetype"] = m_mimetype;
+  value["mimetype"] = GetMimeType();
   value["extrainfo"] = m_extrainfo;
 
   if (m_musicInfoTag)
@@ -553,7 +568,7 @@ bool CFileItem::IsVideo() const
 
   extension.ToLower();
 
-  if (g_settings.m_videoExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_videoExtensions.Find(extension) != -1)
     return true;
 
   return false;
@@ -588,7 +603,7 @@ bool CFileItem::IsAudio() const
     return false;
 
   extension.ToLower();
-  if (g_settings.m_musicExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_musicExtensions.Find(extension) != -1)
     return true;
 
   return false;
@@ -1021,12 +1036,12 @@ void CFileItem::FillInDefaultIcon()
 
 CStdString CFileItem::GetCachedArtistThumb() const
 {
-  return GetCachedThumb("artist"+GetLabel(),g_settings.GetMusicArtistThumbFolder());
+  return GetCachedThumb("artist"+GetLabel(),CProfilesManager::Get().GetMusicArtistThumbFolder());
 }
 
 CStdString CFileItem::GetCachedProfileThumb() const
 {
-  return GetCachedThumb("profile"+m_strPath,URIUtils::AddFileToFolder(g_settings.GetUserDataFolder(),"Thumbnails\\Profiles"));
+  return GetCachedThumb("profile"+m_strPath,URIUtils::AddFileToFolder(CProfilesManager::Get().GetUserDataFolder(),"Thumbnails\\Profiles"));
 }
 
 CStdString CFileItem::GetCachedSeasonThumb() const
@@ -1035,12 +1050,12 @@ CStdString CFileItem::GetCachedSeasonThumb() const
   if (HasVideoInfoTag())
     seasonPath = GetVideoInfoTag()->m_strPath;
 
-  return GetCachedThumb("season"+seasonPath+GetLabel(),g_settings.GetVideoThumbFolder(),true);
+  return GetCachedThumb("season"+seasonPath+GetLabel(),CProfilesManager::Get().GetVideoThumbFolder(),true);
 }
 
 CStdString CFileItem::GetCachedActorThumb() const
 {
-  return GetCachedThumb("actor"+GetLabel(),g_settings.GetVideoThumbFolder(),true);
+  return GetCachedThumb("actor"+GetLabel(),CProfilesManager::Get().GetVideoThumbFolder(),true);
 }
 
 void CFileItem::SetCachedArtistThumb()
@@ -1897,7 +1912,7 @@ void CFileItemList::FilterCueItems()
                 else
                 { // try replacing the extension with one of our allowed ones.
                   CStdStringArray extensions;
-                  StringUtils::SplitString(g_settings.m_musicExtensions, "|", extensions);
+                  StringUtils::SplitString(g_advancedSettings.m_musicExtensions, "|", extensions);
                   for (unsigned int i = 0; i < extensions.size(); i++)
                   {
                     strMediaFile = URIUtils::ReplaceExtension(pItem->GetPath(), extensions[i]);
@@ -2067,7 +2082,7 @@ void CFileItemList::StackFolders()
           if (bMatch)
           {
             CFileItemList items;
-            CDirectory::GetDirectory(item->GetPath(),items,g_settings.m_videoExtensions);
+            CDirectory::GetDirectory(item->GetPath(),items,g_advancedSettings.m_videoExtensions);
             // optimized to only traverse listing once by checking for filecount
             // and recording last file item for later use
             int nFiles = 0;
@@ -2414,7 +2429,7 @@ void CFileItemList::SetCachedMusicThumbs()
 
 CStdString CFileItem::GetCachedPictureThumb() const
 {
-  return GetCachedThumb(m_strPath,g_settings.GetPicturesThumbFolder(),true);
+  return GetCachedThumb(m_strPath,CProfilesManager::Get().GetPicturesThumbFolder(),true);
 }
 
 void CFileItem::SetCachedMusicThumb()
@@ -2559,15 +2574,15 @@ void CFileItem::SetCachedPictureThumb()
 CStdString CFileItem::GetCachedVideoThumb() const
 {
   if (IsStack())
-    return GetCachedThumb(CStackDirectory::GetFirstStackedFile(m_strPath),g_settings.GetVideoThumbFolder(),true);
+    return GetCachedThumb(CStackDirectory::GetFirstStackedFile(m_strPath),CProfilesManager::Get().GetVideoThumbFolder(),true);
   else if (IsVideoDb() && HasVideoInfoTag())
   {
     if (m_bIsFolder && !GetVideoInfoTag()->m_strPath.IsEmpty())
-      return GetCachedThumb(GetVideoInfoTag()->m_strPath, g_settings.GetVideoThumbFolder(), true);
+      return GetCachedThumb(GetVideoInfoTag()->m_strPath, CProfilesManager::Get().GetVideoThumbFolder(), true);
     else if (!GetVideoInfoTag()->m_strFileNameAndPath.IsEmpty())
-      return GetCachedThumb(GetVideoInfoTag()->m_strFileNameAndPath, g_settings.GetVideoThumbFolder(), true);
+      return GetCachedThumb(GetVideoInfoTag()->m_strFileNameAndPath, CProfilesManager::Get().GetVideoThumbFolder(), true);
   }
-  return GetCachedThumb(m_strPath,g_settings.GetVideoThumbFolder(),true);
+  return GetCachedThumb(m_strPath,CProfilesManager::Get().GetVideoThumbFolder(),true);
 }
 
 CStdString CFileItem::GetCachedEpisodeThumb() const
@@ -2575,7 +2590,7 @@ CStdString CFileItem::GetCachedEpisodeThumb() const
   // get the locally cached thumb
   CStdString strCRC;
   strCRC.Format("%sepisode%i",GetVideoInfoTag()->m_strFileNameAndPath.c_str(),GetVideoInfoTag()->m_iEpisode);
-  return GetCachedThumb(strCRC,g_settings.GetVideoThumbFolder(),true);
+  return GetCachedThumb(strCRC,CProfilesManager::Get().GetVideoThumbFolder(),true);
 }
 
 void CFileItem::SetCachedVideoThumb()
@@ -2851,11 +2866,11 @@ CStdString CFileItem::GetLocalFanart() const
     return "";
 
   CFileItemList items;
-  CDirectory::GetDirectory(strDir, items, g_settings.m_pictureExtensions, DIR_FLAG_NO_FILE_DIRS | DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
+  CDirectory::GetDirectory(strDir, items, g_advancedSettings.m_pictureExtensions, DIR_FLAG_NO_FILE_DIRS | DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
   if (IsOpticalMediaFile())
   { // grab from the optical media parent folder as well - see GetUserVideoThumb
     CFileItemList moreItems;
-    CDirectory::GetDirectory(GetLocalMetadataPath(), moreItems, g_settings.m_pictureExtensions, DIR_FLAG_NO_FILE_DIRS | DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
+    CDirectory::GetDirectory(GetLocalMetadataPath(), moreItems, g_advancedSettings.m_pictureExtensions, DIR_FLAG_NO_FILE_DIRS | DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
     items.Append(moreItems);
   }
 
@@ -2908,7 +2923,7 @@ CStdString CFileItem::GetCachedFanart() const
     if (!HasVideoInfoTag())
       return "";
     if (!GetVideoInfoTag()->m_artist.empty())
-      return GetCachedThumb(StringUtils::Join(GetVideoInfoTag()->m_artist, g_advancedSettings.m_videoItemSeparator),g_settings.GetMusicFanartFolder());
+      return GetCachedThumb(StringUtils::Join(GetVideoInfoTag()->m_artist, g_advancedSettings.m_videoItemSeparator),CProfilesManager::Get().GetMusicFanartFolder());
     if (!m_bIsFolder && !GetVideoInfoTag()->m_strShowTitle.IsEmpty())
     {
       CVideoDatabase database;
@@ -2916,14 +2931,14 @@ CStdString CFileItem::GetCachedFanart() const
       int iShowId = database.GetTvShowId(GetVideoInfoTag()->m_strPath);
       CStdString showPath;
       database.GetFilePathById(iShowId,showPath,VIDEODB_CONTENT_TVSHOWS);
-      return GetCachedThumb(showPath,g_settings.GetVideoFanartFolder());
+      return GetCachedThumb(showPath,CProfilesManager::Get().GetVideoFanartFolder());
     }
-    return GetCachedThumb(m_bIsFolder ? GetVideoInfoTag()->m_strPath : GetVideoInfoTag()->m_strFileNameAndPath,g_settings.GetVideoFanartFolder());
+    return GetCachedThumb(m_bIsFolder ? GetVideoInfoTag()->m_strPath : GetVideoInfoTag()->m_strFileNameAndPath,CProfilesManager::Get().GetVideoFanartFolder());
   }
   if (HasMusicInfoTag())
-    return GetCachedThumb(StringUtils::Join(GetMusicInfoTag()->GetArtist(), g_advancedSettings.m_musicItemSeparator),g_settings.GetMusicFanartFolder());
+    return GetCachedThumb(StringUtils::Join(GetMusicInfoTag()->GetArtist(), g_advancedSettings.m_musicItemSeparator),CProfilesManager::Get().GetMusicFanartFolder());
 
-  return GetCachedThumb(m_strPath,g_settings.GetVideoFanartFolder());
+  return GetCachedThumb(m_strPath,CProfilesManager::Get().GetVideoFanartFolder());
 }
 
 CStdString CFileItem::GetCachedThumb(const CStdString &path, const CStdString &path2, bool split)
@@ -2965,7 +2980,7 @@ CStdString CFileItem::GetCachedProgramThumb() const
 
   CStdString thumb;
 
-  thumb.Format("%s\\%c\\%08x.tbn", g_settings.GetProgramsThumbFolder().c_str(), hex[0], (unsigned __int32)crc);
+  thumb.Format("%s\\%c\\%08x.tbn", CProfilesManager::Get().GetProgramsThumbFolder().c_str(), hex[0], (unsigned __int32)crc);
 
   return thumb;
 }
@@ -2976,7 +2991,7 @@ CStdString CFileItem::GetCachedGameSaveThumb() const
   URIUtils::GetExtension(m_strPath,extension);
   if (extension.Equals(".xbx")) // savemeta.xbx - cache thumb
   {
-    CStdString thumb = GetCachedThumb(m_strPath,g_settings.GetGameSaveThumbFolder());
+    CStdString thumb = GetCachedThumb(m_strPath,CProfilesManager::Get().GetGameSaveThumbFolder());
     CLog::Log(LOGDEBUG, "Thumb (%s)",thumb.c_str());
     if (!CFile::Exists(thumb))
     {
@@ -3006,7 +3021,7 @@ CStdString CFileItem::GetCachedGameSaveThumb() const
     CStdString fileName(URIUtils::GetFileName(fullPath));
 
     CStdString thumb;
-    thumb.Format("%s\\%s.tbn", g_settings.GetGameSaveThumbFolder().c_str(), fileName.c_str());
+    thumb.Format("%s\\%s.tbn", CProfilesManager::Get().GetGameSaveThumbFolder().c_str(), fileName.c_str());
     CLog::Log(LOGDEBUG, "Thumb (%s)",thumb.c_str());
     if (!CFile::Exists(thumb))
     {
@@ -3340,7 +3355,7 @@ CStdString CFileItem::FindTrailer() const
   CStdString strDir;
   URIUtils::GetDirectory(strFile, strDir);
   CFileItemList items;
-  CDirectory::GetDirectory(strDir, items, g_settings.m_videoExtensions, DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
+  CDirectory::GetDirectory(strDir, items, g_advancedSettings.m_videoExtensions, DIR_FLAG_READ_CACHE | DIR_FLAG_NO_FILE_INFO);
   URIUtils::RemoveExtension(strFile);
   strFile += "-trailer";
   CStdString strFile3 = URIUtils::AddFileToFolder(strDir, "movie-trailer");
@@ -3392,7 +3407,7 @@ CStdString CFileItem::FindTrailer() const
   return strTrailer;
 }
 
-VIDEODB_CONTENT_TYPE CFileItem::GetVideoContentType() const
+int CFileItem::GetVideoContentType() const
 {
   VIDEODB_CONTENT_TYPE type = VIDEODB_CONTENT_MOVIES;
   if (HasVideoInfoTag() && !GetVideoInfoTag()->m_strShowTitle.IsEmpty()) // tvshow

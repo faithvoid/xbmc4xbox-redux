@@ -22,7 +22,7 @@
 #include "pythreadstate.h"
 #include <wchar.h>
 #include "addons/Skin.h"
-#include "tinyXML/tinyxml.h"
+#include "utils/XBMCTinyXML.h"
 #include "Application.h"
 #include "ApplicationMessenger.h"
 #include "CharsetConverter.h"
@@ -30,14 +30,8 @@
 using namespace std;
 
 static int iPyXBMCGUILockRef = 0;
-static TiXmlDocument pySkinReferences; 
+static CXBMCTinyXML pySkinReferences;
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 namespace PYXBMC
 {

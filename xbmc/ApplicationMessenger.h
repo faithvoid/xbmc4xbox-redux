@@ -43,7 +43,10 @@ class CGUIDialog;
 #define TMSG_PLAYLISTPLAYER_PLAY  210
 #define TMSG_PLAYLISTPLAYER_NEXT  211
 #define TMSG_PLAYLISTPLAYER_PREV  212
-// 212-216 reserved
+#define TMSG_PLAYLISTPLAYER_ADD   213
+#define TMSG_PLAYLISTPLAYER_CLEAR 214
+#define TMSG_PLAYLISTPLAYER_SHUFFLE   215
+#define TMSG_PLAYLISTPLAYER_GET_ITEMS 216
 #define TMSG_PLAYLISTPLAYER_PLAY_SONG_ID 217
 #define TMSG_PLAYLISTPLAYER_INSERT 218
 #define TMSG_PLAYLISTPLAYER_REMOVE 219
@@ -74,6 +77,8 @@ class CGUIDialog;
 #define TMSG_GUI_DIALOG_CLOSE         606
 #define TMSG_GUI_ACTION               607
 
+#define TMSG_VOLUME_SHOW          900
+
 typedef struct
 {
   DWORD dwMessage;
@@ -101,7 +106,7 @@ public:
 
   void MediaPlay(std::string filename);
   void MediaPlay(const CFileItem &item);
-  void MediaPlay(const CFileItemList &item);
+  void MediaPlay(const CFileItemList &item, int song = 0);
   void MediaStop();
   void MediaPause();
   void MediaRestart(bool bWait);
@@ -111,6 +116,11 @@ public:
   void PlayListPlayerPlaySongId(int songId);
   void PlayListPlayerNext();
   void PlayListPlayerPrevious();
+  void PlayListPlayerAdd(int playlist, const CFileItem &item);
+  void PlayListPlayerAdd(int playlist, const CFileItemList &list);
+  void PlayListPlayerClear(int playlist);
+  void PlayListPlayerShuffle(int playlist, bool shuffle);
+  void PlayListPlayerGetItems(int playlist, CFileItemList &list);
   void PlayListPlayerInsert(int playlist, const CFileItem &item, int position); 
   void PlayListPlayerInsert(int playlist, const CFileItemList &list, int position);
   void PlayListPlayerRemove(int playlist, int position);
@@ -141,6 +151,9 @@ public:
   void Close(CGUIDialog *pDialog, bool forceClose, bool waitResult=true);
   void ActivateWindow(int windowID, const std::vector<CStdString> &params, bool swappingWindows);
   void SendAction(const CAction &action, int windowID = WINDOW_INVALID, bool waitResult=true);
+
+  void ShowVolumeBar(bool up);
+
 private:
   void ProcessMessage(ThreadMessage *pMsg);
 

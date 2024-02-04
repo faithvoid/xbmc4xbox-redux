@@ -18,15 +18,17 @@
 * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "system.h"
-#include "utils/log.h"
-#include "settings/Settings.h"
 #include <stdio.h>
+
+#include "system.h"
 #include "AsyncDirectSound.h"
-#include "MPlayer.h"
+#include "settings/AdvancedSettings.h"
+#include "settings/MediaSettings.h"
+#include "utils/log.h"
 #include "Application.h" // Karaoke patch (114097)
 #include "AudioContext.h"
 #include "CdgParser.h"
+#include "MPlayer.h"
 
 #define CALC_DELAY_START   0
 #define CALC_DELAY_STARTED 1
@@ -87,7 +89,7 @@ CASyncDirectSound::CASyncDirectSound(IAudioCallback* pCallback, int iChannels, u
   m_drcTable = NULL;
   m_drcAmount = 0;
   // TODO DRC
-  if (!bIsMusic && uiBitsPerSample == 16) SetDynamicRangeCompression((long)(g_settings.m_currentVideoSettings.m_VolumeAmplification * 100));
+  if (!bIsMusic && uiBitsPerSample == 16) SetDynamicRangeCompression((long)(CMediaSettings::Get().GetCurrentVideoSettings().m_VolumeAmplification * 100));
 
   bool bAudioOnAllSpeakers(false);
   g_audioContext.SetupSpeakerConfig(iChannels, bAudioOnAllSpeakers,bIsMusic);
@@ -211,7 +213,7 @@ CASyncDirectSound::CASyncDirectSound(IAudioCallback* pCallback, int iChannels, u
     m_pbSampleData[dwX] = m_pbSampleData[dwX - 1] + m_dwPacketSize;
 
   // set volume (from settings)
-  m_nCurrentVolume = g_settings.m_nVolumeLevel;
+  m_nCurrentVolume = g_application.GetVolume(false);
   m_pStream->SetVolume( m_nCurrentVolume );
 
   // Set the headroom of the stream to 0 (to allow the maximum volume)

@@ -434,25 +434,118 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\settings\AdvancedSettings.h">
 				</File>
 				<File
+					RelativePath=".\xbmc\settings\DisplaySettings.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\DisplaySettings.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\settings\GUISettings.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIWindowSettings.cpp">
+					RelativePath=".\xbmc\settings\ISetting.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIWindowSettingsCategory.cpp">
+					RelativePath=".\xbmc\settings\ISetting.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIWindowSettingsProfile.cpp">
+					RelativePath=".\xbmc\settings\ISettingCallback.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIWindowSettingsScreenCalibration.cpp">
+					RelativePath=".\xbmc\settings\ISettingCreator.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\ISettingsHandler.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\ISubSettings.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\MediaSettings.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\MediaSettings.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\MediaSourceSettings.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\MediaSourceSettings.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\Setting.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\Setting.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingAddon.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingAddon.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingCategoryAccess.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingCategoryAccess.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingConditions.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingConditions.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingControl.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingControl.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingDependency.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingDependency.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingPath.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingPath.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\settings\Settings.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\SettingsControls.cpp">
+					RelativePath=".\xbmc\settings\SettingSection.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingSection.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingsManager.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingsManager.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingUpdate.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingUpdate.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingVisibility.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingVisibility.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SkinSettings.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SkinSettings.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\settings\VideoSettings.cpp">
@@ -460,6 +553,50 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				<File
 					RelativePath=".\xbmc\settings\VideoSettings.h">
 				</File>
+				<Filter
+					Name="windows"
+					Filter="">
+					<File
+						RelativePath=".\xbmc\settings\windows\GUISettingControls.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUISettingControls.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettings.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettingsCategory.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettingsCategory.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettingsScreenCalibration.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\windows\GUIWindowSettingsScreenCalibration.h">
+					</File>
+				</Filter>
+				<Filter
+					Name="dialogs"
+					Filter="">
+					<File
+						RelativePath=".\xbmc\settings\dialogs\GUIDialogContentSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\dialogs\GUIDialogContentSettings.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\dialogs\GUIDialogSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\settings\dialogs\GUIDialogSettings.h">
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="GUI Music"
@@ -487,18 +624,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\music\dialogs\GUIDialogSongInfo.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\GUIViewControl.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\GUIViewControl.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\GUIViewState.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\GUIViewState.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\music\GUIViewStateMusic.cpp">
@@ -830,6 +955,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\utils\BitstreamStats.h">
 				</File>
 				<File
+					RelativePath=".\xbmc\utils\BooleanLogic.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\BooleanLogic.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\input\ButtonTranslator.cpp">
 				</File>
 				<File
@@ -864,12 +995,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\utils\DelayController.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\storage\DetectDVDType.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\network\DNSNameCache.cpp">
 				</File>
 				<File
 					RelativePath=".\xbmc\utils\DownloadQueue.cpp">
@@ -938,6 +1063,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\utils\InfoLoader.cpp">
 				</File>
 				<File
+					RelativePath=".\xbmc\utils\IRssObserver.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\IXmlDeserializable.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\utils\Job.h">
 				</File>
 				<File
@@ -995,9 +1126,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\utils\md5.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\storage\MediaManager.cpp">
-				</File>
-				<File
 					RelativePath=".\xbmc\MediaSource.cpp">
 				</File>
 				<File
@@ -1046,9 +1174,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\utils\POUtils.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\Profile.cpp">
-				</File>
-				<File
 					RelativePath=".\xbmc\utils\RecentlyAddedJob.cpp">
 				</File>
 				<File
@@ -1068,6 +1193,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\utils\RssFeed.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\RssManager.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\RssManager.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\utils\RssReader.cpp">
@@ -1202,6 +1333,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\XBInputEx.cpp">
 				</File>
 				<File
+					RelativePath=".\xbmc\utils\XBMCTinyXML.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\XBMCTinyXML.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\XBTF.h">
 				</File>
 				<File
@@ -1209,6 +1346,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\XBVideoConfig.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\XMLUtils.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\utils\XMLUtils.h">
 				</File>
 			</Filter>
 			<Filter
@@ -1225,12 +1368,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\video\Bookmark.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\Database.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\Database.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\DatabaseManager.cpp">
@@ -1271,12 +1408,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				<File
 					RelativePath=".\xbmc\video\VideoDbUrl.h">
 				</File>
-				<File
-					RelativePath=".\xbmc\ViewDatabase.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\ViewDatabase.h">
-				</File>
 			</Filter>
 			<Filter
 				Name="GUI Dialog"
@@ -1301,12 +1432,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogButtonMenu.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogContentSettings.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogContentSettings.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogContextMenu.cpp">
@@ -1342,12 +1467,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\dialogs\GUIDialogKeyboard.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIDialogLockSettings.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogLockSettings.h">
-				</File>
-				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogMediaFilter.cpp">
 				</File>
 				<File
@@ -1369,12 +1488,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\dialogs\GUIDialogMuteBug.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\network\GUIDialogNetworkSetup.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\network\GUIDialogNetworkSetup.h">
-				</File>
-				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogNumeric.cpp">
 				</File>
 				<File
@@ -1393,12 +1506,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\dialogs\GUIDialogPlayerControls.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\settings\GUIDialogProfileSettings.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogProfileSettings.h">
-				</File>
-				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogProgress.cpp">
 				</File>
 				<File
@@ -1409,12 +1516,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogSelect.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogSettings.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\settings\GUIDialogSettings.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogSlider.cpp">
@@ -1619,18 +1720,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\FileSystem\CDDAFile.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\FileSystem\cddb.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\FileSystem\cddb.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\FileSystem\cdioSupport.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\FileSystem\cdioSupport.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\FileSystem\CircularCache.cpp">
@@ -2726,14 +2815,42 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 			</Filter>
 			<Filter
-				Name="UPnP"
+				Name="network"
 				Filter="">
 				<File
-					RelativePath=".\xbmc\network\UPnP.cpp">
+					RelativePath=".\xbmc\network\cddb.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\network\UPnP.h">
+					RelativePath=".\xbmc\network\cddb.h">
 				</File>
+				<File
+					RelativePath=".\xbmc\network\DNSNameCache.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\network\DNSNameCache.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\network\GUIDialogNetworkSetup.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\network\GUIDialogNetworkSetup.h">
+				</File>
+				<Filter
+					Name="upnp"
+					Filter="">
+					<File
+						RelativePath=".\xbmc\network\upnp\UPnP.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\network\upnp\UPnP.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\network\upnp\UPnPSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\network\upnp\UPnPSettings.h">
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Interfaces"
@@ -2913,6 +3030,18 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\xbox\PlatformDefs.h">
 				</File>
 				<File
+					RelativePath=".\xbmc\xbox\stat_utf8.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\xbox\stat_utf8.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\xbox\stdio_utf8.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\xbox\stdio_utf8.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\xbox\strptime.cpp">
 				</File>
 				<File
@@ -2927,6 +3056,129 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\Atomics.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="view"
+				Filter="">
+				<File
+					RelativePath=".\xbmc\view\GUIViewControl.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\GUIViewControl.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\GUIViewState.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\GUIViewState.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\ViewDatabase.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\ViewDatabase.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\ViewState.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\ViewStateSettings.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\view\ViewStateSettings.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="profiles"
+				Filter="">
+				<File
+					RelativePath=".\xbmc\profiles\Profile.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\profiles\Profile.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\profiles\ProfilesManager.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\profiles\ProfilesManager.h">
+				</File>
+				<Filter
+					Name="dialogs"
+					Filter="">
+					<File
+						RelativePath=".\xbmc\profiles\dialogs\GUIDialogLockSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\profiles\dialogs\GUIDialogLockSettings.h">
+					</File>
+					<File
+						RelativePath=".\xbmc\profiles\dialogs\GUIDialogProfileSettings.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\profiles\dialogs\GUIDialogProfileSettings.h">
+					</File>
+				</Filter>
+				<Filter
+					Name="windows"
+					Filter="">
+					<File
+						RelativePath=".\xbmc\profiles\windows\GUIWindowSettingsProfile.cpp">
+					</File>
+					<File
+						RelativePath=".\xbmc\profiles\windows\GUIWindowSettingsProfile.h">
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="dbwrappers"
+				Filter="">
+				<File
+					RelativePath=".\xbmc\dbwrappers\Database.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\Database.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\dataset.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\dataset.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\qry_dat.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\qry_dat.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\sqlitedataset.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\dbwrappers\sqlitedataset.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="storage"
+				Filter="">
+				<File
+					RelativePath=".\xbmc\storage\cdioSupport.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\storage\cdioSupport.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\storage\DetectDVDType.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\storage\DetectDVDType.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\storage\MediaManager.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\storage\MediaManager.h">
 				</File>
 			</Filter>
 		</Filter>
@@ -3022,9 +3274,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				RelativePath=".\xbmc\utils\DelayController.h">
 			</File>
 			<File
-				RelativePath=".\xbmc\storage\DetectDVDType.h">
-			</File>
-			<File
 				RelativePath=".\xbmc\FileSystem\DirectoryHistory.h">
 			</File>
 			<File
@@ -3032,9 +3281,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 			</File>
 			<File
 				RelativePath=".\xbmc\pictures\DllImageLib.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\network\DNSNameCache.h">
 			</File>
 			<File
 				RelativePath=".\xbmc\utils\DownloadQueue.h">
@@ -3169,18 +3415,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				RelativePath=".\xbmc\windows\GUIWindowScreensaver.h">
 			</File>
 			<File
-				RelativePath=".\xbmc\settings\GUIWindowSettings.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\settings\GUIWindowSettingsCategory.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\settings\GUIWindowSettingsProfile.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\settings\GUIWindowSettingsScreenCalibration.h">
-			</File>
-			<File
 				RelativePath=".\xbmc\GUIWindowSettingsUICalibration.h">
 			</File>
 			<File
@@ -3286,9 +3520,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				RelativePath=".\xbmc\utils\md5.h">
 			</File>
 			<File
-				RelativePath=".\xbmc\storage\MediaManager.h">
-			</File>
-			<File
 				RelativePath=".\xbmc\utils\MemoryUnitManager.h">
 			</File>
 			<File
@@ -3373,9 +3604,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				RelativePath=".\xbmc\playlists\PlayListXML.h">
 			</File>
 			<File
-				RelativePath=".\xbmc\settings\Profile.h">
-			</File>
-			<File
 				RelativePath=".\xbmc\utils\RegExp.h">
 			</File>
 			<File
@@ -3392,9 +3620,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 			</File>
 			<File
 				RelativePath=".\xbmc\settings\Settings.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\settings\SettingsControls.h">
 			</File>
 			<File
 				RelativePath=".\xbmc\utils\SharedSection.h">
@@ -3476,9 +3701,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 			</File>
 			<File
 				RelativePath=".\xbmc\Util.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\ViewState.h">
 			</File>
 			<File
 				RelativePath=".\xbmc\utils\Weather.h">
@@ -5011,25 +5233,7 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				Name="sqlite"
 				Filter="">
 				<File
-					RelativePath=".\xbmc\lib\sqLite\dataset.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\lib\sqLite\dataset.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\lib\sqLite\qry_dat.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\lib\sqLite\qry_dat.h">
-				</File>
-				<File
 					RelativePath=".\xbmc\lib\sqLite\sqlite.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\lib\sqLite\sqlitedataset.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\lib\sqLite\sqlitedataset.h">
 				</File>
 			</Filter>
 			<Filter
@@ -5053,6 +5257,22 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\lib\jsoncpp\jsoncpp.cpp">
+				</File>
+			</Filter>
+			<Filter
+				Name="tinyxml"
+				Filter="">
+				<File
+					RelativePath=".\xbmc\lib\tinyxml\tinyxml.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\lib\tinyxml\tinyxml.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\lib\tinyxml\tinyxmlerror.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\lib\tinyxml\tinyxmlparser.cpp">
 				</File>
 			</Filter>
 		</Filter>

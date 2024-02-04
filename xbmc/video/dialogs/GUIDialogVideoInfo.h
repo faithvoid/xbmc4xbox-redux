@@ -20,10 +20,9 @@
  *
  */
 
-#include "GUIDialog.h"
-#include "GUIListItem.h"
-#include "video/windows/GUIWindowVideoBase.h"
-#include "ThumbLoader.h"
+#include "guilib/GUIDialog.h"
+#include "FileItem.h"
+#include "video/VideoDatabase.h"
 
 class CFileItem;
 
@@ -44,10 +43,9 @@ public:
   const CFileItemList& CurrentDirectory() const { return *m_castList; };
   virtual bool HasListItems() const { return true; };
 protected:
-  void Refresh();
+  virtual void OnInitWindow();
   void Update();
   void SetLabel(int iControl, const CStdString& strLabel);
-  VIDEODB_CONTENT_TYPE GetContentType(const CFileItem *pItem) const;
 
   // link cast to movies
   void ClearCastList();
@@ -65,6 +63,4 @@ protected:
   bool m_bRefresh;
   bool m_bRefreshAll;
   bool m_hasUpdatedThumb;
-  CGUIDialogProgress* m_dlgProgress;
-  CVideoThumbLoader m_loader;
 };

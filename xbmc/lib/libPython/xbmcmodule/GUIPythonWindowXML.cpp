@@ -31,6 +31,7 @@
 #include "filesystem/File.h"
 #include "TextureManager.h"
 #include "../XBPython.h"
+#include "settings/GUISettings.h"
 #include "LocalizeStrings.h"
 #include "utils/log.h"
 #include "utils/Variant.h"
@@ -55,7 +56,6 @@ CGUIPythonWindowXML::CGUIPythonWindowXML(int id, CStdString strXML, CStdString s
   m_threadState = NULL;
   m_actionEvent = CreateEvent(NULL, true, false, NULL);
   m_loadType = LOAD_ON_GUI_INIT;
-  m_coordsRes = PAL_4x3;
   m_scriptPath = strFallBackPath;
 }
 
@@ -338,7 +338,7 @@ bool CGUIPythonWindowXML::LoadXML(const CStdString &strPath, const CStdString &s
   }
   delete[] buffer;
 
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
   xmlDoc.Parse(xml.c_str());
 
   if (xmlDoc.Error())

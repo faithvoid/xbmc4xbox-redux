@@ -26,13 +26,13 @@
 #include "PlayListPlayer.h"
 #include "GUIPassword.h"
 #include "dialogs/GUIDialogFileBrowser.h"
-#include "settings/GUIDialogContentSettings.h"
+#include "settings/dialogs/GUIDialogContentSettings.h"
 #include "pictures/Picture.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/VideoDatabaseDirectory.h"
 #include "PartyModeManager.h"
 #include "playlists/PlayListFactory.h"
-#include "music/dialogs/GUIDialogMusicScan.h"
+#include "profiles/ProfilesManager.h"
 #include "video/VideoDatabase.h"
 #include "video/windows/GUIWindowVideoNav.h"
 #include "music/tags/MusicInfoTag.h"
@@ -45,7 +45,9 @@
 #include "GUIEditControl.h"
 #include "filesystem/File.h"
 #include "FileItem.h"
+#include "settings/Settings.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/GUISettings.h"
 #include "utils/URIUtils.h"
 #include "LocalizeStrings.h"
 #include "utils/LegacyPathTranslation.h"
@@ -104,7 +106,7 @@ bool CGUIWindowMusicNav::OnMessage(CGUIMessage& message)
     {
       // is this the first time the window is opened?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().IsEmpty())
-        message.SetStringParam(g_settings.m_defaultMusicLibSource);
+        message.SetStringParam(g_guiSettings.GetString("mymusic.defaultlibview"));
 
       DisplayEmptyDatabaseMessage(false); // reset message state
 
@@ -419,7 +421,6 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
 {
   CGUIWindowMusicBase::GetContextButtons(itemNumber, buttons);
 
-  CGUIDialogMusicScan *musicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
   CFileItemPtr item;
   if (itemNumber >= 0 && itemNumber < m_vecItems->Size())
     item = m_vecItems->Get(itemNumber);
@@ -486,9 +487,9 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
          nodetype == NODE_TYPE_OVERVIEW ||
          nodetype == NODE_TYPE_TOP100))
     {
-      if (!item->GetPath().Equals(g_settings.m_defaultMusicLibSource))
+      if (!item->GetPath().Equals(g_guiSettings.GetString("mymusic.defaultlibview")))
         buttons.Add(CONTEXT_BUTTON_SET_DEFAULT, 13335); // set default
-      if (strcmp(g_settings.m_defaultMusicLibSource, ""))
+      if (strcmp(g_guiSettings.GetString("mymusic.defaultlibview"), ""))
         buttons.Add(CONTEXT_BUTTON_CLEAR_DEFAULT, 13403); // clear default
     }
     NODE_TYPE childtype = dir.GetDirectoryChildType(item->GetPath());
@@ -528,8 +529,7 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
         buttons.Add(CONTEXT_BUTTON_MARK_UNWATCHED, 16104); //Mark as UnWatched
       else
         buttons.Add(CONTEXT_BUTTON_MARK_WATCHED, 16103);   //Mark as Watched
-      if ((g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) &&
-          !item->IsPluginRoot() && !item->IsPlugin())
+      if ((CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !item->IsPlugin())
       {
         buttons.Add(CONTEXT_BUTTON_RENAME, 16105);
         buttons.Add(CONTEXT_BUTTON_DELETE, 646);
@@ -544,9 +544,9 @@ void CGUIWindowMusicNav::GetContextButtons(int itemNumber, CContextButtons &butt
   }
   // noncontextual buttons
 
-  if (musicScan && musicScan->IsScanning())
+  if (g_application.IsMusicScanning())
     buttons.Add(CONTEXT_BUTTON_STOP_SCANNING, 13353);     // Stop Scanning
-  else if (musicScan)
+   else
     buttons.Add(CONTEXT_BUTTON_UPDATE_LIBRARY, 653);
 
   CGUIWindowMusicBase::GetNonContextButtons(buttons);
@@ -620,19 +620,17 @@ bool CGUIWindowMusicNav::OnContextButton(int itemNumber, CONTEXT_BUTTON button)
 
   case CONTEXT_BUTTON_UPDATE_LIBRARY:
     {
-      CGUIDialogMusicScan *scanner = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-      if (scanner)
-        scanner->StartScanning("");
+      g_application.StartMusicScan("");
       return true;
     }
 
   case CONTEXT_BUTTON_SET_DEFAULT:
-    g_settings.m_defaultMusicLibSource = GetQuickpathName(item->GetPath());
+    g_guiSettings.SetString("mymusic.defaultlibview", GetQuickpathName(item->GetPath()));
     g_settings.Save();
     return true;
 
   case CONTEXT_BUTTON_CLEAR_DEFAULT:
-    g_settings.m_defaultMusicLibSource.Empty();
+    g_guiSettings.SetString("mymusic.defaultlibview", "");
     g_settings.Save();
     return true;
 

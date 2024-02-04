@@ -418,9 +418,6 @@
 			<File
 				RelativePath=".\VisibleEffect.cpp">
 			</File>
-			<File
-				RelativePath=".\XMLUtils.cpp">
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -694,9 +691,6 @@
 			<File
 				RelativePath=".\VisibleEffect.h">
 			</File>
-			<File
-				RelativePath=".\XMLUtils.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="common"
@@ -724,28 +718,6 @@
 			</File>
 			<File
 				RelativePath=".\common\XBoxMouse.h">
-			</File>
-		</Filter>
-		<Filter
-			Name="tinyXML"
-			Filter="">
-			<File
-				RelativePath=".\tinyXML\tinystr.cpp">
-			</File>
-			<File
-				RelativePath=".\tinyXML\tinystr.h">
-			</File>
-			<File
-				RelativePath=".\tinyXML\tinyxml.cpp">
-			</File>
-			<File
-				RelativePath=".\tinyXML\tinyxml.h">
-			</File>
-			<File
-				RelativePath=".\tinyXML\tinyxmlerror.cpp">
-			</File>
-			<File
-				RelativePath=".\tinyXML\tinyxmlparser.cpp">
 			</File>
 		</Filter>
 		<Filter

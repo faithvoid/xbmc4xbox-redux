@@ -18,12 +18,14 @@
  *
  */
 
+#include "SlideShowPicture.h"
 #include "system.h"
-#include "pictures/SlideShowPicture.h"
 #include "cores/ssrc.h"         // for M_PI
 #include "GUIInfoManager.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
+#include "settings/GUISettings.h"
 #include "utils/log.h"
 
 using namespace std;
@@ -406,12 +408,12 @@ void CSlideShowPic::Render()
   // calculate where we should render (and how large it should be)
   // calculate aspect ratio correction factor
   RESOLUTION iRes = g_graphicsContext.GetVideoResolution();
-  float fOffsetX = (float)g_settings.m_ResInfo[iRes].Overscan.left;
-  float fOffsetY = (float)g_settings.m_ResInfo[iRes].Overscan.top;
-  float fScreenWidth = (float)g_settings.m_ResInfo[iRes].Overscan.right - g_settings.m_ResInfo[iRes].Overscan.left;
-  float fScreenHeight = (float)g_settings.m_ResInfo[iRes].Overscan.bottom - g_settings.m_ResInfo[iRes].Overscan.top;
+  float fOffsetX = (float)CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.left;
+  float fOffsetY = (float)CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.top;
+  float fScreenWidth = (float)CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.right - CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.left;
+  float fScreenHeight = (float)CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.bottom - CDisplaySettings::Get().GetResolutionInfo(iRes).Overscan.top;
 
-  float fPixelRatio = g_settings.m_ResInfo[iRes].fPixelRatio;
+  float fPixelRatio = CDisplaySettings::Get().GetResolutionInfo(iRes).fPixelRatio;
 
   // Rotate the image as needed
   float x[4];

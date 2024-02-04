@@ -2993,7 +2993,46 @@ msgctxt "#1050"
 msgid "Singles"
 msgstr ""
 
-#empty strings from id 1051 to 1199
+msgctxt "#1051"
+msgid "Enter web address"
+msgstr ""
+
+#empty strings from id 1052 to 1179
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1180"
+msgid "Proxy type"
+msgstr ""
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1181"
+msgid "HTTP"
+msgstr ""
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1182"
+msgid "SOCKS4"
+msgstr ""
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1183"
+msgid "SOCKS4A"
+msgstr ""
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1184"
+msgid "SOCKS5"
+msgstr ""
+
+#: xbmc/settings/GUISettings.cpp
+msgctxt "#1185"
+msgid "SOCKS5 with remote dns resolving"
+msgstr ""
+
+#empty strings from id 1186 to 1189
+#strings 1186 to 1189 reserved for more proxy types
+
+#empty strings from id 1190 to 1199
 
 msgctxt "#1200"
 msgid "SMB client"
@@ -7913,7 +7952,9 @@ msgctxt "#21450"
 msgid "- Edit"
 msgstr ""
 
-#empty string id 21451
+msgctxt "#21451"
+msgid "Internet connection required."
+msgstr ""
 
 msgctxt "#21452"
 msgid "Get More..."
@@ -9144,8 +9185,46 @@ msgctxt "#33083"
 msgid "Enable custom script button"
 msgstr ""
 
-#empty strings from id 33084 to 34004
+#empty strings from id 33084 to 39999
+
+msgctxt "#34000"
+msgid "Lame"
+msgstr ""
+
+msgctxt "#34001"
+msgid "Vorbis"
+msgstr ""
+
+msgctxt "#34002"
+msgid "Wav"
+msgstr ""
+
+#empty strings from id 34003 to 34004
 
 msgctxt "#34005"
 msgid "Flac"
+msgstr ""
+
+msgctxt "#34006"
+msgid "LCD - HD44780"
+msgstr ""
+
+msgctxt "#34007"
+msgid "LCD - KS0073"
+msgstr ""
+
+msgctxt "#34008"
+msgid "VFD"
+msgstr ""
+
+msgctxt "#34009"
+msgid "SmartXX"
+msgstr ""
+
+msgctxt "#34010"
+msgid "Xenium"
+msgstr ""
+
+msgctxt "#34011"
+msgid "Xecuter3"
 msgstr ""

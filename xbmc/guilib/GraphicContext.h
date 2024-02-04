@@ -38,23 +38,25 @@
 
 #include "common/Mouse.h"
 
+#include "utils/GlobalsHandling.h"
+
 /*!
  \ingroup graphics
  \brief
  */
 enum RESOLUTION {
-  INVALID = -1,
-  HDTV_1080i = 0,
-  HDTV_720p = 1,
-  HDTV_480p_4x3 = 2,
-  HDTV_480p_16x9 = 3,
-  NTSC_4x3 = 4,
-  NTSC_16x9 = 5,
-  PAL_4x3 = 6,
-  PAL_16x9 = 7,
-  PAL60_4x3 = 8,
-  PAL60_16x9 = 9,
-  AUTORES = 10
+  RES_INVALID = -1,
+  RES_HDTV_1080i = 0,
+  RES_HDTV_720p = 1,
+  RES_HDTV_480p_4x3 = 2,
+  RES_HDTV_480p_16x9 = 3,
+  RES_NTSC_4x3 = 4,
+  RES_NTSC_16x9 = 5,
+  RES_PAL_4x3 = 6,
+  RES_PAL_16x9 = 7,
+  RES_PAL60_4x3 = 8,
+  RES_PAL60_16x9 = 9,
+  RES_AUTORES = 10
 };
 
 enum VIEW_TYPE { VIEW_TYPE_NONE = 0,
@@ -95,7 +97,20 @@ struct RESOLUTION_INFO
   int iSubtitles;
   DWORD dwFlags;
   float fPixelRatio;
-  char strMode[11];
+  CStdString strMode;
+public:
+  RESOLUTION_INFO(int width = 1280, int height = 720, float aspect = 0, const CStdString &mode = "")
+  {
+    iWidth = width;
+    iHeight = height;
+    fPixelRatio = aspect ? ((float)width)/height / aspect : 1.0f;
+    strMode = mode;
+    dwFlags = iSubtitles = 0;
+  }
+  float DisplayRatio() const
+  {
+    return iWidth * fPixelRatio / iHeight;
+  }
 };
 
 /*!
@@ -131,7 +146,7 @@ public:
   void SetCalibrating(bool bOnOff);
   void GetAllowedResolutions(std::vector<RESOLUTION> &res, bool bAllowPAL60 = false);
   bool IsValidResolution(RESOLUTION res);
-  void SetVideoResolution(RESOLUTION &res, BOOL NeedZ = FALSE, bool forceClear = false);
+  void SetVideoResolution(RESOLUTION res, BOOL NeedZ = FALSE, bool forceClear = false);
   RESOLUTION GetVideoResolution() const;
   void SetScreenFilters(bool useFullScreenFilters);
   void ResetOverscan(RESOLUTION res, OVERSCAN &overscan);
@@ -144,8 +159,9 @@ public:
   void Clear(color_t color = 0);
 
   // output scaling
-  void SetRenderingResolution(RESOLUTION res, bool needsScaling);  ///< Sets scaling up for rendering
-  void SetScalingResolution(RESOLUTION res, bool needsScaling);    ///< Sets scaling up for skin loading etc.
+  const RESOLUTION_INFO &GetResInfo() const;
+  void SetRenderingResolution(const RESOLUTION_INFO &res, bool needsScaling);  ///< Sets scaling up for rendering
+  void SetScalingResolution(const RESOLUTION_INFO &res, bool needsScaling);    ///< Sets scaling up for skin loading etc.
   float GetScalingPixelRatio() const;
 
   void InvertFinalCoords(float &x, float &y) const;
@@ -246,7 +262,7 @@ protected:
 private:
   void UpdateCameraPosition(const CPoint &camera);
   void UpdateFinalTransform(const TransformMatrix &matrix);
-  RESOLUTION m_windowResolution;
+  RESOLUTION_INFO m_windowResolution;
   float m_guiScaleX;
   float m_guiScaleY;
   std::stack<CPoint> m_cameras;
@@ -264,5 +280,7 @@ private:
  \ingroup graphics
  \brief
  */
-extern CGraphicContext g_graphicsContext;
+
+XBMC_GLOBAL(CGraphicContext,g_graphicsContext);
+
 #endif

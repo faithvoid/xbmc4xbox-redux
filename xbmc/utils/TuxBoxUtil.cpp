@@ -22,23 +22,23 @@
 // GeminiServer
 //
 #include "TuxBoxUtil.h"
-#include "Util.h"
-#include "utils/URIUtils.h"
+#include "URIUtils.h"
 #include "filesystem/CurlFile.h"
 #include "dialogs/GUIDialogContextMenu.h"
 #include "Application.h"
 #include "ApplicationMessenger.h"
 #include "GUIInfoManager.h"
 #include "video/VideoInfoTag.h"
-#include "GUIWindowManager.h"
+#include "guilib/GUIWindowManager.h"
 #include "dialogs/GUIDialogOK.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "filesystem/File.h"
 #include "URL.h"
 #include "settings/AdvancedSettings.h"
 #include "FileItem.h"
-#include "LocalizeStrings.h"
-#include "utils/log.h"
+#include "guilib/LocalizeStrings.h"
+#include "utils/XBMCTinyXML.h"
+#include "log.h"
 
 using namespace XFILE;
 using namespace std;
@@ -55,6 +55,8 @@ CTuxBoxService::~CTuxBoxService()
 CTuxBoxUtil::CTuxBoxUtil(void)
 {
   sCurSrvData.requested_audio_channel = 0;
+  sZapstream.initialized = false;
+  sZapstream.available = false;
 }
 CTuxBoxUtil::~CTuxBoxUtil(void)
 {
@@ -764,7 +766,7 @@ bool CTuxBoxUtil::GetHttpXML(CURL url,CStdString strRequestType)
       }
 
       // parse returned xml
-      TiXmlDocument doc;
+      CXBMCTinyXML doc;
       TiXmlElement *XMLRoot=NULL;
       strTmp.Replace("></",">-</"); //FILL EMPTY ELEMENTS WITH "-"!
       doc.Parse(strTmp.c_str());
@@ -827,9 +829,9 @@ bool CTuxBoxUtil::StreamInformations(TiXmlElement *pRootElement)
 
   TiXmlNode *pNode = NULL;
   TiXmlNode *pIt = NULL;
-  CStdString strRoot = pRootElement->Value();
-  if(pRootElement !=NULL)
+  if(pRootElement != NULL)
   {
+    CStdString strRoot = pRootElement->Value();
     pNode = pRootElement->FirstChild("frontend");
     if (pNode)
     {
@@ -1519,7 +1521,7 @@ CStdString CTuxBoxUtil::GetPicon(CStdString strServiceName)
     piconPath = "special://xbmc/userdata/PictureIcon/Picon/";
     defaultPng = piconPath+"tuxbox.png";
     piconXML = "special://xbmc/userdata/PictureIcon/picon.xml";
-    TiXmlDocument piconDoc;
+    CXBMCTinyXML piconDoc;
 
     if (!CFile::Exists(piconXML))
     { 

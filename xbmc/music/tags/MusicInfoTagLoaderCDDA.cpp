@@ -19,11 +19,11 @@
  */
 
 #include "system.h"
-#include "music/tags/MusicInfoTagLoaderCDDA.h"
-#include "filesystem/cddb.h"
+#include "MusicInfoTagLoaderCDDA.h"
+#include "network/cddb.h"
+#include "MusicInfoTag.h"
 #include "storage/DetectDVDType.h"
-#include "music/tags/MusicInfoTag.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
 #include "utils/log.h"
 
 using namespace MEDIA_DETECT;
@@ -52,7 +52,7 @@ bool CMusicInfoTagLoaderCDDA::Load(const CStdString& strFileName, CMusicInfoTag&
 
     // Prepare cddb
     Xcddb cddb;
-    cddb.setCacheDir(g_settings.GetCDDBFolder());
+    cddb.setCacheDir(CProfilesManager::Get().GetCDDBFolder());
 
     int iTrack = atoi(strFileName.substr(13, strFileName.size() - 13 - 5).c_str());
 

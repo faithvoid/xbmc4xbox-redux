@@ -33,11 +33,13 @@
 #include "URL.h"
 #include "filesystem/File.h"
 #include "FileItem.h"
+#include "profiles/ProfilesManager.h"
 #include "video/VideoInfoTag.h"
 #include "storage/MediaManager.h"
 #include "filesystem/Directory.h"
 #include "utils/AsyncFileCopy.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "LocalizeStrings.h"
 #include "utils/log.h"
 
@@ -312,7 +314,7 @@ void CGUIDialogMusicInfo::Update()
   }
 
   // disable the GetThumb button if the user isn't allowed it
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_THUMB, g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser);
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_THUMB, CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser);
 
   if (!m_album.artist.empty() && CLastFmManager::GetInstance()->IsLastFmEnabled())
   {
@@ -501,7 +503,7 @@ void CGUIDialogMusicInfo::OnGetThumb()
   
   CStdString result;
   bool flip=false;
-  VECSOURCES sources(g_settings.m_musicSources);
+  VECSOURCES sources(*CMediaSourceSettings::Get().GetSources("music"));
   g_mediaManager.GetLocalDrives(sources);
   if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(1030), result, &flip))
     return;   // user cancelled
@@ -519,7 +521,6 @@ void CGUIDialogMusicInfo::OnGetThumb()
 
   if (result.Left(14).Equals("thumb://Remote"))
   {
-    CStdString strFile;
     CFileItem chosen(result, false);
     CStdString thumb = chosen.GetCachedPictureThumb();
     if (CFile::Exists(thumb))
@@ -560,7 +561,7 @@ void CGUIDialogMusicInfo::OnGetFanart()
 {
   CFileItemList items;
 
-  CStdString cachedThumb(CFileItem::GetCachedThumb(m_artist.strArtist,g_settings.GetMusicFanartFolder()));
+  CStdString cachedThumb(CFileItem::GetCachedThumb(m_artist.strArtist,CProfilesManager::Get().GetMusicFanartFolder()));
   if (CFile::Exists(cachedThumb))
   {
     CFileItemPtr itemCurrent(new CFileItem("fanart://Current",false));
@@ -618,7 +619,7 @@ void CGUIDialogMusicInfo::OnGetFanart()
   }
   
   CStdString result;
-  VECSOURCES sources(g_settings.m_musicSources);
+  VECSOURCES sources(*CMediaSourceSettings::Get().GetSources("music"));
   g_mediaManager.GetLocalDrives(sources);
   bool flip=false;
   if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(20437), result, &flip, 20445))
@@ -675,10 +676,9 @@ void CGUIDialogMusicInfo::OnSearch(const CFileItem* pItem)
   if (idAlbum != -1)
   {
     CAlbum album;
-    CStdString strPath;
-
     if (database.GetAlbumInfo(idAlbum,album,&album.songs))
     {
+      CStdString strPath;
       database.GetAlbumPath(idAlbum,strPath);
       SetAlbum(album,strPath);
       Update();

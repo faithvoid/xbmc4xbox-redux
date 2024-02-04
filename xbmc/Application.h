@@ -35,10 +35,6 @@ namespace ADDON
   typedef boost::shared_ptr<IAddon> AddonPtr;
 }
 
-#include "dialogs/GUIDialogSeekBar.h"
-#include "dialogs/GUIDialogKaiToast.h"
-#include "dialogs/GUIDialogVolumeBar.h"
-#include "dialogs/GUIDialogMuteBug.h"
 #include "windows/GUIWindowPointer.h"   // Mouse pointer
 
 #include "xbox/Network.h"
@@ -47,12 +43,33 @@ namespace ADDON
 #include "cores/IPlayer.h"
 #include "cores/playercorefactory/PlayerCoreFactory.h"
 #include "PlayListPlayer.h"
+#include "settings/ISettingsHandler.h"
+#include "settings/ISubSettings.h"
 #include "storage/DetectDVDType.h"
 #include "Autorun.h"
 #include "video/Bookmark.h"
 #include "utils/Stopwatch.h"
 #include "ApplicationMessenger.h"
 
+namespace VIDEO
+{
+  class CVideoInfoScanner;
+}
+
+namespace MUSIC_INFO
+{
+  class CMusicInfoScanner;
+}
+
+#define VOLUME_MINIMUM -6000  // -60dB
+#define VOLUME_MAXIMUM 0      // 0dB
+
+struct VOICE_MASK {
+  float energy;
+  float pitch;
+  float robotic;
+  float whisper;
+};
 
 class CWebServer;
 class CXBFileZilla;
@@ -63,7 +80,8 @@ class CProfile;
 class CSplash;
 class CGUITextLayout;
 
-class CApplication : public CXBApplicationEx, public IPlayerCallback, public IMsgTargetCallback
+class CApplication : public CXBApplicationEx, public IPlayerCallback, public IMsgTargetCallback,
+                     public ISettingsHandler, public ISubSettings
 {
 public:
   CApplication(void);
@@ -139,6 +157,7 @@ public:
   bool IsPlayingVideo() const;
   bool IsPlayingFullScreenVideo() const;
   bool IsStartingPlayback() const { return m_bPlaybackStarting; }
+  bool IsFullScreen();
   bool OnKey(CKey& key);
   bool OnAction(CAction &action);
   void RenderMemoryStatus();
@@ -154,9 +173,14 @@ public:
   virtual void Process();
   void ProcessSlow();
   void ResetScreenSaver();
-  int GetVolume() const;
-  void SetVolume(int iPercent);
-  void Mute(void);
+  int GetVolume(bool percentage = true) const;
+  void SetVolume(long iValue, bool isPercentage = true);
+  int GetDynamicRangeCompressionLevel() { return m_dynamicRangeCompressionLevel; };
+  VOICE_MASK GetKaraokeVoiceMask(DWORD dwPort) { return m_karaokeVoiceMask[dwPort]; }
+  bool IsMuted() const;
+  void ToggleMute(void);
+  void SetMute(bool mute);
+  void ShowVolumeBar(const CAction *action = NULL);
   int GetPlaySpeed() const;
   int GetSubtitleDelay() const;
   int GetAudioDelay() const;
@@ -175,8 +199,16 @@ public:
   void SeekTime( double dTime = 0.0 );
   void ResetPlayTime();
 
-  void SaveMusicScanSettings();
-  void RestoreMusicScanSettings();
+  void StopVideoScan();
+  void StopMusicScan();
+  bool IsMusicScanning() const;
+  bool IsVideoScanning() const;
+
+  void StartVideoScan(const CStdString &path, bool scanAll = false);
+  void StartMusicScan(const CStdString &path);
+  void StartMusicAlbumScan(const CStdString& strDirectory);
+  void StartMusicArtistScan(const CStdString& strDirectory);
+
   void UpdateLibraries();
   void CheckMusicPlaylist();
 
@@ -185,10 +217,6 @@ public:
 
   bool ExecuteXBMCAction(std::string action);
 
-  CGUIDialogVolumeBar m_guiDialogVolumeBar;
-  CGUIDialogSeekBar m_guiDialogSeekBar;
-  CGUIDialogKaiToast m_guiDialogKaiToast;
-  CGUIDialogMuteBug m_guiDialogMuteBug;
   CGUIWindowPointer m_guiPointer;
 
   CIdleThread m_idleThread;
@@ -219,7 +247,13 @@ public:
 
   int GlobalIdleTime();
 
+  bool SetLanguage(const CStdString &strLanguage);
 protected:
+  virtual bool OnSettingsSaving() const;
+
+  virtual bool Load(const TiXmlNode *settings);
+  virtual bool Save(TiXmlNode *settings) const;
+
   void LoadSkin(const boost::shared_ptr<ADDON::CSkinInfo>& skin);
 
   friend class CApplicationMessenger;
@@ -244,9 +278,6 @@ protected:
   CSplash* m_splash;
   DWORD m_threadID;       // application thread ID.  Used in applicationMessanger to know where we are firing a thread with delay from.
   PLAYERCOREID m_eCurrentPlayer;
-  bool m_bXboxMediacenterLoaded;
-  bool m_bSettingsLoaded;
-  bool m_bAllSettingsLoaded;
   bool m_bInitializing;
 
   CBookmark m_progressTrackingVideoResumeBookmark;
@@ -260,6 +291,18 @@ protected:
   CGUITextLayout *m_debugLayout;
 
   static LONG WINAPI UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo);
+
+  VIDEO::CVideoInfoScanner *m_videoInfoScanner;
+  MUSIC_INFO::CMusicInfoScanner *m_musicInfoScanner;
+
+  bool m_muted;
+  int m_volumeLevel;                     // measured in milliBels -60dB -> 0dB range.
+  int m_dynamicRangeCompressionLevel;    // measured in milliBels  0dB -> 30dB range.
+
+  VOICE_MASK m_karaokeVoiceMask[4];
+
+  void Mute();
+  void UnMute();
 
   void SetHardwareVolume(long hardwareVolume);
   void UpdateLCD();

@@ -19,10 +19,11 @@
  */
 
 #include "librefmscrobbler.h"
-#include "Application.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "utils/URIUtils.h"
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
+#include "dialogs/GUIDialogKaiToast.h"
 
 long CLibrefmScrobbler::m_instanceLock = 0;
 CLibrefmScrobbler *CLibrefmScrobbler::m_pInstance = NULL;
@@ -66,7 +67,7 @@ void CLibrefmScrobbler::LoadCredentials()
 
 CStdString CLibrefmScrobbler::GetJournalFileName()
 {
-  CStdString strFileName = g_settings.GetProfileUserDataFolder();
+  CStdString strFileName = CProfilesManager::Get().GetProfileUserDataFolder();
   return URIUtils::AddFileToFolder(strFileName, "LibrefmScrobbler.xml");
 }
 
@@ -80,13 +81,13 @@ void CLibrefmScrobbler::NotifyUser(int error)
       strText = g_localizeStrings.Get(15206);
       m_bBadAuth = true;
       strAudioScrobbler = g_localizeStrings.Get(15220);  // Libre.fm
-      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Error, strAudioScrobbler, strText, 10000);
+      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, strAudioScrobbler, strText, 10000);
       break;
     case SCROBBLER_USER_ERROR_BANNED:
       strText = g_localizeStrings.Get(15205);
       m_bBanned = true;
       strAudioScrobbler = g_localizeStrings.Get(15220);  // Libre.fm
-      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Error, strAudioScrobbler, strText, 10000);
+      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, strAudioScrobbler, strText, 10000);
       break;
     default:
       break;

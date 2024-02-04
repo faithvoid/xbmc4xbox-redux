@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/XBMCTinyXML.h"
+
 typedef char char_t;
 typedef struct websRec *webs_t;
 
@@ -22,7 +24,7 @@ private:
 	int		Load();
 	bool	IsValidOption(char* option);
 
-	TiXmlDocument	xbmcCfg;
+	CXBMCTinyXML	xbmcCfg;
 	bool	xbmcCfgLoaded;
 };
 

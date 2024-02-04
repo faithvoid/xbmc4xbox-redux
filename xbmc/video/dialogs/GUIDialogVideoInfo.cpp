@@ -40,37 +40,23 @@
 #include "FileItem.h"
 #include "storage/MediaManager.h"
 #include "utils/AsyncFileCopy.h"
+#include "profiles/ProfilesManager.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "GUIUserMessages.h"
 #include "LocalizeStrings.h"
 #include "Application.h"
 #include "ApplicationMessenger.h"
+#include "ThumbLoader.h"
 
 using namespace std;
 using namespace XFILE;
-
-#define CONTROL_TITLE               20
-#define CONTROL_DIRECTOR            21
-#define CONTROL_CREDITS             22
-#define CONTROL_GENRE               23
-#define CONTROL_YEAR                24
-#define CONTROL_TAGLINE             25
-#define CONTROL_PLOTOUTLINE         26
-#define CONTROL_CAST                29
-#define CONTROL_RATING_AND_VOTES    30
-#define CONTROL_RUNTIME             31
-#define CONTROL_MPAARATING          32
-#define CONTROL_TITLE_AND_YEAR      33
-#define CONTROL_STUDIO              36
-#define CONTROL_TOP250              37
-#define CONTROL_TRAILER             38
-
 
 #define CONTROL_IMAGE                3
 #define CONTROL_TEXTAREA             4
 #define CONTROL_BTN_TRACKS           5
 #define CONTROL_BTN_REFRESH          6
-#define CONTROL_DISC                 7
 #define CONTROL_BTN_PLAY             8
 #define CONTROL_BTN_RESUME           9
 #define CONTROL_BTN_GET_THUMB       10
@@ -105,44 +91,6 @@ bool CGUIDialogVideoInfo::OnMessage(CGUIMessage& message)
       ClearCastList();
     }
     break;
-
-  case GUI_MSG_WINDOW_INIT:
-    {
-      m_dlgProgress = (CGUIDialogProgress*)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
-
-      m_bRefresh = false;
-      m_bRefreshAll = true;
-      m_hasUpdatedThumb = false;
-
-      CGUIDialog::OnMessage(message);
-      m_bViewReview = false;
-      CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), CONTROL_DISC);
-      OnMessage(msg);
-      for (int i = 0; i < 1000; ++i)
-      {
-        CStdString strItem;
-        strItem.Format("DVD#%03i", i);
-        CGUIMessage msg2(GUI_MSG_LABEL_ADD, GetID(), CONTROL_DISC);
-        msg2.SetLabel(strItem);
-        OnMessage(msg2);
-      }
-
-      SET_CONTROL_HIDDEN(CONTROL_DISC);
-      Refresh();
-
-      CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_REFRESH, (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Left(2).Equals("xx"));
-      CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_THUMB, (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Mid(2).Equals("plugin"));
-
-      VIDEODB_CONTENT_TYPE type = GetContentType(m_movieItem.get());
-      if (type == VIDEODB_CONTENT_TVSHOWS || type == VIDEODB_CONTENT_MOVIES)
-        CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_FANART, (g_settings.GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Mid(2).Equals("plugin"));
-      else 
-        CONTROL_DISABLE(CONTROL_BTN_GET_FANART); 
-
-      return true;
-    }
-    break;
-
 
   case GUI_MSG_CLICKED:
     {
@@ -268,6 +216,36 @@ bool CGUIDialogVideoInfo::OnMessage(CGUIMessage& message)
   return CGUIDialog::OnMessage(message);
 }
 
+void CGUIDialogVideoInfo::OnInitWindow()
+{
+  m_bRefresh = false;
+  m_bRefreshAll = true;
+  m_hasUpdatedThumb = false;
+  m_bViewReview = false;
+
+  CVideoDatabase database;
+  ADDON::ScraperPtr scraper;
+
+  if(database.Open())
+  {
+    scraper = database.GetScraperForPath(m_movieItem->GetVideoInfoTag()->GetPath());
+    database.Close();
+  }
+
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_REFRESH, (CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Left(2).Equals("xx") && scraper);
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_THUMB, (CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Mid(2).Equals("plugin"));
+
+  VIDEODB_CONTENT_TYPE type = (VIDEODB_CONTENT_TYPE)m_movieItem->GetVideoContentType();
+  if (type == VIDEODB_CONTENT_TVSHOWS || type == VIDEODB_CONTENT_MOVIES)
+    CONTROL_ENABLE_ON_CONDITION(CONTROL_BTN_GET_FANART, (CProfilesManager::Get().GetCurrentProfile().canWriteDatabases() || g_passwordManager.bMasterUser) && !m_movieItem->GetVideoInfoTag()->m_strIMDBNumber.Mid(2).Equals("plugin"));
+  else
+    CONTROL_DISABLE(CONTROL_BTN_GET_FANART);
+
+  Update();
+
+  CGUIDialog::OnInitWindow();
+}
+
 void CGUIDialogVideoInfo::SetMovie(const CFileItem *item)
 {
   *m_movieItem = *item;
@@ -276,7 +254,7 @@ void CGUIDialogVideoInfo::SetMovie(const CFileItem *item)
   // old fixed id labels that we have floating around (they may be using
   // content type to determine visibility, so we'll set the wrong label)
   ClearCastList();
-  VIDEODB_CONTENT_TYPE type = GetContentType(m_movieItem.get());
+  VIDEODB_CONTENT_TYPE type = (VIDEODB_CONTENT_TYPE)m_movieItem->GetVideoContentType();
   if (type == VIDEODB_CONTENT_MUSICVIDEOS)
   { // music video
     const std::vector<std::string> &artists = m_movieItem->GetVideoInfoTag()->m_artist;
@@ -379,61 +357,14 @@ void CGUIDialogVideoInfo::SetMovie(const CFileItem *item)
       }
     }
   }
-  m_loader.LoadItem(m_movieItem.get());
+  CVideoThumbLoader loader;
+  loader.LoadItem(m_movieItem.get());
 }
 
 void CGUIDialogVideoInfo::Update()
 {
-  CStdString strTmp;
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strTitle; strTmp.Trim();
-  SetLabel(CONTROL_TITLE, strTmp);
-
-  strTmp = StringUtils::Join(m_movieItem->GetVideoInfoTag()->m_director, g_advancedSettings.m_videoItemSeparator); strTmp.Trim();
-  SetLabel(CONTROL_DIRECTOR, strTmp);
-
-  strTmp = StringUtils::Join(m_movieItem->GetVideoInfoTag()->m_studio, g_advancedSettings.m_videoItemSeparator); strTmp.Trim();
-  SetLabel(CONTROL_STUDIO, strTmp);
-
-  strTmp = StringUtils::Join(m_movieItem->GetVideoInfoTag()->m_writingCredits, g_advancedSettings.m_videoItemSeparator); strTmp.Trim();
-  SetLabel(CONTROL_CREDITS, strTmp);
-
-  strTmp = StringUtils::Join(m_movieItem->GetVideoInfoTag()->m_genre, g_advancedSettings.m_videoItemSeparator); strTmp.Trim();
-  SetLabel(CONTROL_GENRE, strTmp);
-
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strTagLine; strTmp.Trim();
-  SetLabel(CONTROL_TAGLINE, strTmp);
-
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strPlotOutline; strTmp.Trim();
-  SetLabel(CONTROL_PLOTOUTLINE, strTmp);
-
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strTrailer; strTmp.Trim();
-  SetLabel(CONTROL_TRAILER, strTmp);
-
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strMPAARating; strTmp.Trim();
-  SetLabel(CONTROL_MPAARATING, strTmp);
-
-  CStdString strTop250;
-  if (m_movieItem->GetVideoInfoTag()->m_iTop250)
-    strTop250.Format("%i", m_movieItem->GetVideoInfoTag()->m_iTop250);
-  SetLabel(CONTROL_TOP250, strTop250);
-
-  CStdString strYear;
-  if (m_movieItem->GetVideoInfoTag()->m_iYear)
-    strYear.Format("%i", m_movieItem->GetVideoInfoTag()->m_iYear);
-  else  
-    strYear = g_infoManager.GetItemLabel(m_movieItem.get(),LISTITEM_PREMIERED);
-  SetLabel(CONTROL_YEAR, strYear);
-
-  CStdString strRating_And_Votes;
-  if (m_movieItem->GetVideoInfoTag()->m_fRating != 0.0f)  // only non-zero ratings are of interest
-    strRating_And_Votes.Format("%03.1f (%s %s)", m_movieItem->GetVideoInfoTag()->m_fRating, m_movieItem->GetVideoInfoTag()->m_strVotes, g_localizeStrings.Get(20350));
-  SetLabel(CONTROL_RATING_AND_VOTES, strRating_And_Votes);
-
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strRuntime; strTmp.Trim();
-  SetLabel(CONTROL_RUNTIME, strTmp);
-
   // setup plot text area
-  strTmp = m_movieItem->GetVideoInfoTag()->m_strPlot;
+  CStdString strTmp = m_movieItem->GetVideoInfoTag()->m_strPlot;
   if (!(!m_movieItem->GetVideoInfoTag()->m_strShowTitle.IsEmpty() && m_movieItem->GetVideoInfoTag()->m_iSeason == 0)) // dont apply to tvshows
     if (m_movieItem->GetVideoInfoTag()->m_playCount == 0 && !g_guiSettings.GetBool("videolibrary.showunwatchedplots"))
       strTmp = g_localizeStrings.Get(20370);
@@ -491,49 +422,6 @@ void CGUIDialogVideoInfo::Update()
   }
 }
 
-void CGUIDialogVideoInfo::Refresh()
-{
-  try
-  {
-    OutputDebugString("Refresh\n");
-
-    CStdString strImage = m_movieItem->GetVideoInfoTag()->m_strPictureURL.GetFirstThumb().m_url;
-
-    bool hasUpdatedThumb = false;
-    CStdString thumbImage = m_movieItem->GetThumbnailImage();
-    if (thumbImage.IsEmpty())
-      thumbImage = m_movieItem->GetCachedVideoThumb();
-
-    if (!CFile::Exists(thumbImage) || m_movieItem->GetProperty("HasAutoThumb").asString() == "1")
-    { // don't have a thumb already, try and grab one
-      m_movieItem->SetUserVideoThumb();
-      if (m_movieItem->GetThumbnailImage() != thumbImage)
-        thumbImage = m_movieItem->GetThumbnailImage();
-      if (!CFile::Exists(thumbImage) && strImage.size() > 0)
-        CScraperUrl::DownloadThumbnail(thumbImage,m_movieItem->GetVideoInfoTag()->m_strPictureURL.GetFirstThumb());
-
-      if (CFile::Exists(thumbImage))
-      {
-        if (m_movieItem->HasProperty("set_folder_thumb"))
-          VIDEO::CVideoInfoScanner::ApplyThumbToFolder(m_movieItem->GetProperty("set_folder_thumb").asString(), thumbImage);
-        hasUpdatedThumb = true;
-      }
-    }
-
-    if (hasUpdatedThumb)
-    {
-      m_movieItem->SetThumbnailImage(thumbImage);
-      CUtil::DeleteVideoDatabaseDirectoryCache();
-      m_hasUpdatedThumb = true;
-    }
-
-    Update();
-    //OutputDebugString("update\n");
-    //OutputDebugString("updated\n");
-  }
-  catch (...)
-  {}
-}
 bool CGUIDialogVideoInfo::NeedRefresh() const
 {
   return m_bRefresh;
@@ -547,20 +435,21 @@ bool CGUIDialogVideoInfo::RefreshAll() const
 /// \brief Search the current directory for a string got from the virtual keyboard
 void CGUIDialogVideoInfo::OnSearch(CStdString& strSearch)
 {
-  if (m_dlgProgress)
+  CGUIDialogProgress *progress = (CGUIDialogProgress *)g_windowManager.GetWindow(WINDOW_DIALOG_PROGRESS);
+  if (progress)
   {
-    m_dlgProgress->SetHeading(194);
-    m_dlgProgress->SetLine(0, strSearch);
-    m_dlgProgress->SetLine(1, "");
-    m_dlgProgress->SetLine(2, "");
-    m_dlgProgress->StartModal();
-    m_dlgProgress->Progress();
+    progress->SetHeading(194);
+    progress->SetLine(0, strSearch);
+    progress->SetLine(1, "");
+    progress->SetLine(2, "");
+    progress->StartModal();
+    progress->Progress();
   }
   CFileItemList items;
   DoSearch(strSearch, items);
 
-  if (m_dlgProgress)
-    m_dlgProgress->Close();
+  if (progress)
+    progress->Close();
 
   if (items.Size())
   {
@@ -642,23 +531,11 @@ void CGUIDialogVideoInfo::DoSearch(CStdString& strSearch, CFileItemList& items)
   db.Close();
 }
 
-VIDEODB_CONTENT_TYPE CGUIDialogVideoInfo::GetContentType(const CFileItem *pItem) const
-{
-  VIDEODB_CONTENT_TYPE type = VIDEODB_CONTENT_MOVIES;
-  if (pItem->HasVideoInfoTag() && !pItem->GetVideoInfoTag()->m_strShowTitle.IsEmpty()) // tvshow
-    type = VIDEODB_CONTENT_TVSHOWS;
-  if (pItem->HasVideoInfoTag() && pItem->GetVideoInfoTag()->m_iSeason > -1 && !pItem->m_bIsFolder) // episode
-    type = VIDEODB_CONTENT_EPISODES;
-  if (pItem->HasVideoInfoTag() && !pItem->GetVideoInfoTag()->m_artist.empty())
-    type = VIDEODB_CONTENT_MUSICVIDEOS;
-  return type;
-}
-
 /// \brief React on the selected search item
 /// \param pItem Search result item
 void CGUIDialogVideoInfo::OnSearchItemFound(const CFileItem* pItem)
 {
-  VIDEODB_CONTENT_TYPE type = GetContentType(pItem);
+  VIDEODB_CONTENT_TYPE type = (VIDEODB_CONTENT_TYPE)pItem->GetVideoContentType();
 
   CVideoDatabase db;
   if (!db.Open())
@@ -780,7 +657,7 @@ void CGUIDialogVideoInfo::OnGetThumb()
   }
 
   CStdString result;
-  VECSOURCES sources(g_settings.m_videoSources);
+  VECSOURCES sources(*CMediaSourceSettings::Get().GetSources("video"));
   g_mediaManager.GetLocalDrives(sources);  
   if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(20019), result))
     return;   // user cancelled
@@ -797,7 +674,6 @@ void CGUIDialogVideoInfo::OnGetThumb()
 
   if (result.Left(14) == "thumb://Remote")
   {
-    CStdString strFile;
     CFileItem chosen(result, false);
     CStdString thumb = chosen.GetCachedPictureThumb();
     if (CFile::Exists(thumb))
@@ -899,7 +775,7 @@ void CGUIDialogVideoInfo::OnGetFanart()
   }
 
   CStdString result;
-  VECSOURCES sources(g_settings.m_videoSources);
+  VECSOURCES sources(*CMediaSourceSettings::Get().GetSources("video"));
   g_mediaManager.GetLocalDrives(sources);
   bool flip=false;
   if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(20437), result, &flip, 20445) || result.Equals("fanart://Current"))
@@ -919,7 +795,7 @@ void CGUIDialogVideoInfo::OnGetFanart()
     CVideoDatabase db;
     if (db.Open())
     {
-      db.UpdateFanart(*m_movieItem, GetContentType(m_movieItem.get()));
+      db.UpdateFanart(*m_movieItem, (VIDEODB_CONTENT_TYPE)m_movieItem->GetVideoContentType());
       db.Close();
     }
 

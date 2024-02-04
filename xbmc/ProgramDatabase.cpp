@@ -23,9 +23,12 @@
 #include "xbox/xbeheader.h"
 #include "windows/GUIWindowFileManager.h"
 #include "FileItem.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "utils/Crc32.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
+#include "dbwrappers/dataset.h"
 
 using namespace XFILE;
 
@@ -525,11 +528,11 @@ bool CProgramDatabase::AddProgramInfo(CFileItem *item, unsigned int titleID)
     lastAccessed.u.LowPart = time.dwLowDateTime; 
     lastAccessed.u.HighPart = time.dwHighDateTime;
 
-    CStdString strPath, strParent;
+    CStdString strPath;
     URIUtils::GetDirectory(item->GetPath(),strPath);
     // special case - programs in root of sources
     bool bIsShare=false;
-    CUtil::GetMatchingSource(strPath,g_settings.m_programSources,bIsShare);
+    CUtil::GetMatchingSource(strPath,*CMediaSourceSettings::Get().GetSources("programs"),bIsShare);
     __int64 iSize=0;
     if (bIsShare || !item->IsDefaultXBE())
     {

@@ -38,8 +38,11 @@
 #include "filesystem/Directory.h"
 #include "filesystem/File.h"
 #include "FileItem.h"
+#include "profiles/ProfilesManager.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "LocalizeStrings.h"
+#include "view/ViewState.h"
 
 using namespace XFILE;
 
@@ -412,8 +415,8 @@ void CGUIDialogFileBrowser::Update(const CStdString &strDirectory)
   OnSort();
 
   if (m_Directory->GetPath().IsEmpty() && m_addNetworkShareEnabled &&
-     (g_settings.GetMasterProfile().getLockMode() == LOCK_MODE_EVERYONE ||
-      g_settings.IsMasterUser() || g_passwordManager.bMasterUser))
+     (CProfilesManager::Get().GetMasterProfile().getLockMode() == LOCK_MODE_EVERYONE ||
+      CProfilesManager::Get().IsMasterProfile() || g_passwordManager.bMasterUser))
   { // we are in the virtual directory - add the "Add Network Location" item
     CFileItemPtr pItem(new CFileItem(g_localizeStrings.Get(1032)));
     pItem->SetPath("net://");
@@ -873,7 +876,7 @@ void CGUIDialogFileBrowser::OnAddMediaSource()
 {
   if (CGUIDialogMediaSource::ShowAndAddMediaSource(m_addSourceType))
   {
-    SetSources(*g_settings.GetSourcesFromType(m_addSourceType));
+    SetSources(*CMediaSourceSettings::Get().GetSources(m_addSourceType));
     Update("");
   }
 }
@@ -882,7 +885,7 @@ void CGUIDialogFileBrowser::OnEditMediaSource(CFileItem* pItem)
 {
   if (CGUIDialogMediaSource::ShowAndEditMediaSource(m_addSourceType,pItem->GetLabel()))
   {
-    SetSources(*g_settings.GetSourcesFromType(m_addSourceType));
+    SetSources(*CMediaSourceSettings::Get().GetSources(m_addSourceType));
     Update("");
   }
 }
@@ -952,8 +955,8 @@ bool CGUIDialogFileBrowser::OnPopupMenu(int iItem)
     }
     else
     {
-      g_settings.DeleteSource(m_addSourceType,(*m_vecItems)[iItem]->GetLabel(),(*m_vecItems)[iItem]->GetPath());
-      SetSources(*g_settings.GetSourcesFromType(m_addSourceType));
+      CMediaSourceSettings::Get().DeleteSource(m_addSourceType,(*m_vecItems)[iItem]->GetLabel(),(*m_vecItems)[iItem]->GetPath());
+      SetSources(*CMediaSourceSettings::Get().GetSources(m_addSourceType));
       Update("");
     }
   }

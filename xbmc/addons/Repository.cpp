@@ -20,17 +20,17 @@
  */
 
 #include "Repository.h"
-#include "tinyXML/tinyxml.h"
+#include "utils/XBMCTinyXML.h"
 #include "filesystem/File.h"
 #include "AddonDatabase.h"
-#include "settings/Settings.h"
+#include "settings/GUISettings.h"
 #include "FileItem.h"
 #include "utils/JobManager.h"
 #include "addons/AddonInstaller.h"
 #include "utils/log.h"
 #include "utils/URIUtils.h"
 #include "dialogs/GUIDialogYesNo.h"
-#include "Application.h"
+#include "dialogs/GUIDialogKaiToast.h"
 #include "URL.h"
 
 using namespace XFILE;
@@ -133,7 +133,7 @@ VECADDONS CRepository::Parse()
   CSingleLock lock(m_critSection);
 
   VECADDONS result;
-  TiXmlDocument doc;
+  CXBMCTinyXML doc;
 
   CStdString file = m_info;
   if (m_compressed)
@@ -209,7 +209,7 @@ bool CRepositoryUpdateJob::DoWork()
     if (addon && addons[i]->Version() > addon->Version() &&
         !database.IsAddonBlacklisted(addons[i]->ID(),addons[i]->Version().c_str()))
     {
-      if (g_settings.m_bAddonAutoUpdate || addon->Type() >= ADDON_VIZ_LIBRARY)
+      if (g_guiSettings.GetBool("general.addonautoupdate") || addon->Type() >= ADDON_VIZ_LIBRARY)
       {
         CStdString referer;
         if (URIUtils::IsInternetStream(addons[i]->Path()))
@@ -217,11 +217,11 @@ bool CRepositoryUpdateJob::DoWork()
 
         CAddonInstaller::Get().Install(addon->ID(), true, referer);
       }
-      else if (g_settings.m_bAddonNotifications)
+      else if (g_guiSettings.GetBool("general.addonnotifications"))
       {
-        g_application.m_guiDialogKaiToast.QueueNotification(addon->Icon(),
-                                                            g_localizeStrings.Get(24061),
-                                                            addon->Name(),TOAST_DISPLAY_TIME,false);
+        CGUIDialogKaiToast::QueueNotification(addon->Icon(),
+                                              g_localizeStrings.Get(24061),
+                                              addon->Name(),TOAST_DISPLAY_TIME,false,TOAST_DISPLAY_TIME);
       }
     }
     if (!addons[i]->Props().broken.IsEmpty())

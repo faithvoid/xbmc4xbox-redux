@@ -18,7 +18,6 @@
  *
  */
 
-#include "utils/log.h"
 #include "GUIWindowGameSaves.h"
 #include "Util.h"
 #include "filesystem/ZipManager.h"
@@ -36,10 +35,12 @@
 #include "filesystem/Directory.h"
 #include "FileItem.h"
 #include "FileOperationJob.h"
-#include "utils/URIUtils.h"
-#include "LocalizeStrings.h"
+#include "settings/GUISettings.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/CharsetConverter.h"
 #include "utils/FileUtils.h"
+#include "utils/log.h"
+#include "utils/URIUtils.h"
 
 using namespace XFILE;
 
@@ -316,7 +317,7 @@ bool CGUIWindowGameSaves::DownloadSaves(CFileItem item)
   strURL.Format("http://www.xboxmediacenter.com/xbmc.php?gameid=%s",item.m_musicInfoTag.GetTitle()); // donnos little fix the unleashx.php is broken (content lenght is greater then lenght sent)
   if (http.Get(strURL, theHtml))
   {
-    TiXmlDocument gsXml;
+    CXBMCTinyXML gsXml;
     gsXml.Parse(theHtml.c_str(), 0);
     TiXmlElement *pRootElement = gsXml.RootElement();
     if (pRootElement)

@@ -210,7 +210,7 @@ namespace VIDEO
     if (CUtil::ExcludeFileOrFolder(strDirectory, regexps))
       return true;
 
-    bool ignoreFolder = !m_scanAll && settings.noupdate;
+    bool ignoreFolder = m_scanAll && settings.noupdate;
     if (content == CONTENT_NONE || ignoreFolder)
       return true;
 
@@ -229,7 +229,7 @@ namespace VIDEO
       }
       if (!bSkip)
       { // need to fetch the folder
-        CDirectory::GetDirectory(strDirectory, items, g_settings.m_videoExtensions);
+        CDirectory::GetDirectory(strDirectory, items, g_advancedSettings.m_videoExtensions);
         if (content == CONTENT_MOVIES)
           items.Stack();
         // compute hash
@@ -266,7 +266,7 @@ namespace VIDEO
 
       if (foundDirectly && !settings.parent_name_root)
       {
-        CDirectory::GetDirectory(strDirectory, items, g_settings.m_videoExtensions);
+        CDirectory::GetDirectory(strDirectory, items, g_advancedSettings.m_videoExtensions);
         items.SetPath(strDirectory);
         GetPathHash(items, hash);
         bSkip = true;
@@ -669,7 +669,7 @@ namespace VIDEO
 
     if (item->m_bIsFolder)
     {
-      CUtil::GetRecursiveListing(item->GetPath(), items, g_settings.m_videoExtensions, true);
+      CUtil::GetRecursiveListing(item->GetPath(), items, g_advancedSettings.m_videoExtensions, true);
       CStdString hash, dbHash;
       int numFilesInFolder = GetPathHash(items, hash);
 

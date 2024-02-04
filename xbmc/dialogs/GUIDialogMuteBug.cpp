@@ -18,14 +18,11 @@
  *
  */
 
-#include "dialogs/GUIDialogMuteBug.h"
-#include "GUIWindowManager.h"
+#include "GUIDialogMuteBug.h"
 #include "GUIUserMessages.h"
-#include "LocalizeStrings.h"
+#include "Application.h"
 
 // the MuteBug is a true modeless dialog
-
-#define MUTEBUG_IMAGE     901
 
 CGUIDialogMuteBug::CGUIDialogMuteBug(void)
     : CGUIDialog(WINDOW_DIALOG_MUTE_BUG, "DialogMuteBug.xml")
@@ -36,25 +33,10 @@ CGUIDialogMuteBug::CGUIDialogMuteBug(void)
 CGUIDialogMuteBug::~CGUIDialogMuteBug(void)
 {}
 
-bool CGUIDialogMuteBug::OnMessage(CGUIMessage& message)
+void CGUIDialogMuteBug::UpdateVisibility()
 {
-  switch ( message.GetMessage() )
-  {
-  case GUI_MSG_MUTE_OFF:
-    {
-      Close();
-      return true;
-    }
-    break;
-
-  case GUI_MSG_MUTE_ON:
-    {
-      // this is handled in g_application
-      // non-active modeless window can not get messages
-      //Show();
-      return true;
-    }
-    break;
-  }
-  return CGUIDialog::OnMessage(message);
+  if (g_application.IsMuted() || g_application.GetVolume(false) == VOLUME_MINIMUM)
+    Show();
+  else
+    Close();
 }

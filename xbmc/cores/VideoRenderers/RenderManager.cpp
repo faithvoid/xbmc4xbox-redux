@@ -29,7 +29,8 @@
 #include "RGBRendererV2.h"
 #include "Application.h"
 #include "ApplicationMessenger.h"
-#include "settings/Settings.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSettings.h"
 
 CXBoxRenderManager g_renderManager;
 
@@ -260,9 +261,9 @@ float CXBoxRenderManager::GetMaximumFPS()
 {
   float fps;
   int res = g_graphicsContext.GetVideoResolution();
-  EINTERLACEMETHOD method = g_settings.m_currentVideoSettings.m_InterlaceMethod;
+  EINTERLACEMETHOD method = CMediaSettings::Get().GetCurrentVideoSettings().m_InterlaceMethod;
 
-  if( res == PAL_4x3 || res == PAL_16x9 )
+  if( res == RES_PAL_4x3 || res == RES_PAL_16x9 )
     fps = 50.0f;
   else
     fps = 60000.0f/1001.0f;
@@ -286,7 +287,7 @@ void CXBoxRenderManager::Present()
     return;
   }
 
-  EINTERLACEMETHOD mInt = g_settings.m_currentVideoSettings.m_InterlaceMethod;
+  EINTERLACEMETHOD mInt = CMediaSettings::Get().GetCurrentVideoSettings().m_InterlaceMethod;
 
   /* check for forced fields */
   if( mInt == VS_INTERLACEMETHOD_AUTO && m_presentfield != FS_NONE )
@@ -296,10 +297,10 @@ void CXBoxRenderManager::Present()
     if( m_rendermethod == RENDER_HQ_RGB_SHADER 
      || m_rendermethod == RENDER_HQ_RGB_SHADERV2 )
       mInt = VS_INTERLACEMETHOD_RENDER_BOB;
-    else if( mResolution == HDTV_480p_16x9 
-          || mResolution == HDTV_480p_4x3 
-          || mResolution == HDTV_720p 
-          || mResolution == HDTV_1080i )
+    else if( mResolution == RES_HDTV_480p_16x9 
+          || mResolution == RES_HDTV_480p_4x3 
+          || mResolution == RES_HDTV_720p 
+          || mResolution == RES_HDTV_1080i )
       mInt = VS_INTERLACEMETHOD_RENDER_BLEND;
     else
       mInt = VS_INTERLACEMETHOD_RENDER_BOB;

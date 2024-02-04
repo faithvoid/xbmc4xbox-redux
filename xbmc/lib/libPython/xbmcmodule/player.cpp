@@ -31,7 +31,7 @@
 #include "listitem.h"
 #include "FileItem.h"
 #include "LangCodeExpander.h"
-#include "settings/Settings.h"
+#include "settings/MediaSettings.h"
 #include "utils/log.h"
 #include "pythreadstate.h"
 
@@ -39,12 +39,6 @@ using namespace MUSIC_INFO;
 
 // player callback class
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,7 +127,7 @@ namespace PYXBMC
     }
 
     // set fullscreen or windowed
-    g_settings.m_bStartVideoWindowed = (0 != bWindowed);
+    CMediaSettings::Get().SetVideoStartWindowed(0 != bWindowed);
 
     // force a playercore before playing
     g_application.m_eForcedNextPlayer = self->playerCore;
@@ -496,8 +490,8 @@ namespace PYXBMC
       {
         g_application.m_pPlayer->SetSubtitle(nStream);
         g_application.m_pPlayer->SetSubtitleVisible(true);
-        g_settings.m_currentVideoSettings.m_SubtitleDelay = 0.0f;
-        g_application.m_pPlayer->SetSubTitleDelay(g_settings.m_currentVideoSettings.m_SubtitleDelay);
+        CMediaSettings::Get().GetCurrentVideoSettings().m_SubtitleDelay = 0.0f;
+        g_application.m_pPlayer->SetSubTitleDelay(CMediaSettings::Get().GetCurrentVideoSettings().m_SubtitleDelay);
       }
     }
     
@@ -541,7 +535,7 @@ namespace PYXBMC
     if (!PyArg_ParseTuple(args, (char*)"b", &bVisible)) return NULL;
     if (g_application.m_pPlayer)
     {
-      g_settings.m_currentVideoSettings.m_SubtitleOn = (bVisible != 0);
+      CMediaSettings::Get().GetCurrentVideoSettings().m_SubtitleOn = (bVisible != 0);
       g_application.m_pPlayer->SetSubtitleVisible(bVisible != 0);
 
       Py_INCREF(Py_None);
@@ -559,7 +553,7 @@ namespace PYXBMC
     CLog::Log(LOGWARNING,"'xbmc.Player().disableSubtitles()' is deprecated and will be removed in future releases, please use 'xbmc.Player().showSubtitles(false)' instead");
     if (g_application.m_pPlayer)
     {
-      g_settings.m_currentVideoSettings.m_SubtitleOn = false;
+      CMediaSettings::Get().GetCurrentVideoSettings().m_SubtitleOn = false;
       g_application.m_pPlayer->SetSubtitleVisible(false);
     
       Py_INCREF(Py_None);
@@ -717,12 +711,6 @@ namespace PYXBMC
     "         : - xbmc.PLAYER_CORE_MODPLAYER\n");
 
 // Restore code and data sections to normal.
-#ifndef __GNUC__
-#pragma code_seg()
-#pragma data_seg()
-#pragma bss_seg()
-#pragma const_seg()
-#endif
 
   PyTypeObject Player_Type;
 

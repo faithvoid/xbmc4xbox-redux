@@ -21,9 +21,11 @@
 
 #include <vector>
 
-#include "tinyXML/tinyxml.h"
+#include "settings/ISettingsHandler.h"
 #include "utils/StdString.h"
-#include "utils/StringUtils.h"
+#include "utils/GlobalsHandling.h"
+
+class TiXmlElement;
 
 class DatabaseSettings
 {
@@ -49,11 +51,16 @@ struct TVShowRegexp
 
 typedef std::vector<TVShowRegexp> SETTINGS_TVSHOWLIST;
 
-class CAdvancedSettings
+class CAdvancedSettings : public ISettingsHandler
 {
   public:
     CAdvancedSettings();
 
+    static CAdvancedSettings* getInstance();
+
+    virtual void OnSettingsLoaded();
+
+    void AddSettingsFile(const CStdString &filename);
     bool Load();
     void Clear();
 
@@ -236,7 +243,18 @@ class CAdvancedSettings
 
     DatabaseSettings m_databaseMusic; // advanced music database setup
     DatabaseSettings m_databaseVideo; // advanced video database setup
+
+    std::vector<CStdString> m_settingsFiles;
+    void ParseSettingsFile(const CStdString &file);
+
+    // runtime settings which cannot be set from advancedsettings.xml
+    CStdString m_pictureExtensions;
+    CStdString m_musicExtensions;
+    CStdString m_videoExtensions;
+
+    CStdString m_logFolder;
+
+    CStdString m_userAgent;
 };
 
-extern CAdvancedSettings g_advancedSettings;
-
+XBMC_GLOBAL(CAdvancedSettings,g_advancedSettings);

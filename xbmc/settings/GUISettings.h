@@ -20,11 +20,13 @@
  *
  */
 
-#include "tinyXML/tinyxml.h"
 #include <vector>
 #include <map>
 #include "GraphicContext.h"
 #include "addons/IAddon.h"
+
+class TiXmlNode;
+class TiXmlElement;
 
 // Render Methods
 #define RENDER_LQ_RGB_SHADER   0
@@ -135,16 +137,6 @@
 #define PLAYER_DVDPLAYER  1
 #define PLAYER_PAPLAYER   2
 
-// replay gain settings struct for quick access by the player multiple
-// times per second (saves doing settings lookup)
-struct ReplayGainSettings
-{
-  int iPreAmp;
-  int iNoGainPreAmp;
-  int iType;
-  bool bAvoidClipping;
-};
-
 // base class for all settings types
 class CSetting
 {
@@ -223,14 +215,23 @@ class CSettingInt : public CSetting
 public:
   CSettingInt(int iOrder, const char *strSetting, int iLabel, int iData, int iMin, int iStep, int iMax, int iControlType, const char *strFormat);
   CSettingInt(int iOrder, const char *strSetting, int iLabel, int iData, int iMin, int iStep, int iMax, int iControlType, int iFormat, int iLabelMin);
+  CSettingInt(int iOrder, const char *strSetting, int iLabel, int iData, const std::map<int,int>& entries, int iControlType);
   virtual ~CSettingInt() {};
 
   virtual int GetType() { return SETTINGS_TYPE_INT; };
   virtual void FromString(const CStdString &strValue);
   virtual CStdString ToString();
 
-  void SetData(int iData) { m_iData = iData; if (m_iData < m_iMin) m_iData = m_iMin; if (m_iData > m_iMax) m_iData = m_iMax;};
-int GetData() const { return m_iData; };
+  void SetData(int iData)
+  { 
+    m_iData = iData;
+    if (m_entries.empty())
+    {
+      if (m_iData < m_iMin) m_iData = m_iMin; 
+      if (m_iData > m_iMax) m_iData = m_iMax;
+    }
+  }
+  int GetData() const { return m_iData; };
 
   int m_iMin;
   int m_iStep;
@@ -238,6 +239,7 @@ int GetData() const { return m_iData; };
   int m_iFormat;
   int m_iLabelMin;
   CStdString m_strFormat;
+  std::map<int,int> m_entries;
 
 protected:
   int m_iData;
@@ -375,6 +377,7 @@ public:
 
   void AddInt(CSettingsCategory* cat, const char *strSetting, int iLabel, int fSetting, int iMin, int iStep, int iMax, int iControlType, const char *strFormat = NULL);
   void AddInt(CSettingsCategory* cat, const char *strSetting, int iLabel, int iData, int iMin, int iStep, int iMax, int iControlType, int iFormat, int iLabelMin=-1);
+  void AddInt(CSettingsCategory* cat, const char *strSetting, int iLabel, int iData, const std::map<int,int>& entries, int iControlType);
   int GetInt(const char *strSetting) const;
   void SetInt(const char *strSetting, int fSetting);
 
@@ -396,12 +399,6 @@ public:
   void LoadXML(TiXmlElement *pRootElement, bool hideSettings = false);
   void SaveXML(TiXmlNode *pRootNode);
   void LoadMasterLock(TiXmlElement *pRootElement);
-  bool SetLanguage(const CStdString &strLanguage);
-
-  //m_LookAndFeelResolution holds the real gui resolution,
-  //also when g_guiSettings.GetInt("videoscreen.resolution") is set to AUTORES
-  RESOLUTION m_LookAndFeelResolution;
-  ReplayGainSettings m_replayGain;
 
   void Clear();
 

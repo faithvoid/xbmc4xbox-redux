@@ -18,15 +18,16 @@
  *
  */
 
-#include "programs/GUIViewStatePrograms.h"
-#include "GUIBaseContainer.h"
+#include "GUIViewStatePrograms.h"
 #include "FileItem.h"
-#include "ViewState.h"
-#include "settings/Settings.h"
+#include "view/ViewState.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "filesystem/Directory.h"
 #include "filesystem/PluginDirectory.h"
-#include "Util.h"
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
+#include "guilib/Key.h"
+#include "view/ViewStateSettings.h"
 
 using namespace XFILE;
 
@@ -39,16 +40,17 @@ CGUIViewStateWindowPrograms::CGUIViewStateWindowPrograms(const CFileItemList& it
   AddSortMethod(SortBySize, 553, LABEL_MASKS("%K", "%I", "%K", "%I"));  // Filename, Size | Foldername, Size
   AddSortMethod(SortByFile, 561, LABEL_MASKS("%L", "%I", "%L", ""));  // Filename, Size | FolderName, empty
 
-  SetSortMethod(g_settings.m_viewStatePrograms.m_sortDescription);
-  SetViewAsControl(g_settings.m_viewStatePrograms.m_viewMode);
-  SetSortOrder(g_settings.m_viewStatePrograms.m_sortDescription.sortOrder);
+  const CViewState *viewState = CViewStateSettings::Get().Get("programs");
+  SetSortMethod(viewState->m_sortDescription);
+  SetViewAsControl(viewState->m_viewMode);
+  SetSortOrder(viewState->m_sortDescription.sortOrder);
 
   LoadViewState(items.GetPath(), WINDOW_PROGRAMS);
 }
 
 void CGUIViewStateWindowPrograms::SaveViewState()
 {
-    SaveViewToDb(m_items.GetPath(), WINDOW_PROGRAMS, &g_settings.m_viewStatePrograms);  
+  SaveViewToDb(m_items.GetPath(), WINDOW_PROGRAMS, CViewStateSettings::Get().Get("programs")); 
 }
 
 CStdString CGUIViewStateWindowPrograms::GetLockType()
@@ -64,7 +66,9 @@ CStdString CGUIViewStateWindowPrograms::GetExtensions()
 VECSOURCES& CGUIViewStateWindowPrograms::GetSources()
 {
   AddAddonsSource("executable", g_localizeStrings.Get(1043), "DefaultAddonProgram.png");
-  AddOrReplace(g_settings.m_programSources,CGUIViewState::GetSources());
-  return g_settings.m_programSources; 
+
+  VECSOURCES *programSources = CMediaSourceSettings::Get().GetSources("programs");
+  AddOrReplace(*programSources, CGUIViewState::GetSources());
+  return *programSources;
 }
 

@@ -21,13 +21,15 @@
 #include "pictures/GUIViewStatePictures.h"
 #include "GUIBaseContainer.h"
 #include "FileItem.h"
-#include "ViewState.h"
-#include "settings/Settings.h"
+#include "view/ViewState.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "filesystem/Directory.h"
 #include "filesystem/PluginDirectory.h"
 #include "Util.h"
 #include "LocalizeStrings.h"
+#include "view/ViewStateSettings.h"
 
 using namespace XFILE;
 
@@ -50,16 +52,17 @@ CGUIViewStateWindowPictures::CGUIViewStateWindowPictures(const CFileItemList& it
     AddSortMethod(SortByDate, 552, LABEL_MASKS("%L", "%J", "%L", "%J"));  // Filename, Date | Foldername, Date
     AddSortMethod(SortByFile, 561, LABEL_MASKS("%L", "%I", "%L", ""));  // Filename, Size | FolderName, empty
 
-    SetSortMethod(g_settings.m_viewStatePictures.m_sortDescription);
-    SetViewAsControl(g_settings.m_viewStatePictures.m_viewMode);
-    SetSortOrder(g_settings.m_viewStatePictures.m_sortDescription.sortOrder);
+    const CViewState *viewState = CViewStateSettings::Get().Get("pictures");
+    SetSortMethod(viewState->m_sortDescription);
+    SetViewAsControl(viewState->m_viewMode);
+    SetSortOrder(viewState->m_sortDescription.sortOrder);
   }
   LoadViewState(items.GetPath(), WINDOW_PICTURES);
 }
 
 void CGUIViewStateWindowPictures::SaveViewState()
 {
-    SaveViewToDb(m_items.GetPath(), WINDOW_PICTURES, &g_settings.m_viewStatePictures);
+  SaveViewToDb(m_items.GetPath(), WINDOW_PICTURES, CViewStateSettings::Get().Get("pictures"));
 }
 
 CStdString CGUIViewStateWindowPictures::GetLockType()
@@ -75,15 +78,16 @@ bool CGUIViewStateWindowPictures::UnrollArchives()
 CStdString CGUIViewStateWindowPictures::GetExtensions()
 {
   if (g_guiSettings.GetBool("pictures.showvideos"))
-    return g_settings.m_pictureExtensions+"|"+g_settings.m_videoExtensions;
+    return g_advancedSettings.m_pictureExtensions+"|"+g_advancedSettings.m_videoExtensions;
 
-  return g_settings.m_pictureExtensions;
+  return g_advancedSettings.m_pictureExtensions;
 }
 
 VECSOURCES& CGUIViewStateWindowPictures::GetSources()
 {
+  VECSOURCES *pictureSources = CMediaSourceSettings::Get().GetSources("pictures");
   AddAddonsSource("image", g_localizeStrings.Get(1039), "DefaultAddonPicture.png");
-  AddOrReplace(g_settings.m_pictureSources, CGUIViewState::GetSources());
-  return g_settings.m_pictureSources; 
+  AddOrReplace(*pictureSources, CGUIViewState::GetSources());
+  return *pictureSources;
 }
 

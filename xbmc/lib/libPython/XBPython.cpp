@@ -32,10 +32,10 @@
 
 #include "XBPython.h"
 #include "XBPythonDll.h"
-#include "settings/Settings.h"
-#include "settings/Profile.h"
 #include "filesystem/File.h"
 #include "filesystem/SpecialProtocol.h"
+#include "guilib/GraphicContext.h"
+#include "profiles/ProfilesManager.h"
 #include "utils/log.h"
 #include "utils/SingleLock.h"
 #include "utils/TimeUtils.h"
@@ -629,7 +629,7 @@ int XBPython::evalFile(const CStdString &src, const std::vector<CStdString> &arg
   }
 
   // check if locked
-  if (g_settings.GetCurrentProfile().programsLocked() && !g_passwordManager.IsMasterLockUnlocked(true))
+  if (CProfilesManager::Get().GetCurrentProfile().programsLocked() && !g_passwordManager.IsMasterLockUnlocked(true))
     return -1;
 
   Initialize();

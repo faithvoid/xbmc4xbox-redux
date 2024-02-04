@@ -31,9 +31,11 @@
 #include "addons/GUIDialogAddonSettings.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #include "dialogs/GUIDialogKeyboard.h"
+#include "dialogs/GUIDialogKaiToast.h"
 #include "music/dialogs/GUIDialogMusicScan.h"
 #include "dialogs/GUIDialogNumeric.h"
 #include "dialogs/GUIDialogYesNo.h"
+#include "dialogs/GUIDialogProgress.h"
 #include "video/dialogs/GUIDialogVideoScan.h"
 #include "GUIUserMessages.h"
 #include "windows/GUIWindowLoginScreen.h"
@@ -46,9 +48,14 @@
 #include "LCD.h"
 #include "log.h"
 #include "storage/MediaManager.h"
-#include "RssReader.h"
+#include "utils/RssManager.h"
 #include "PartyModeManager.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
+#include "settings/MediaSettings.h"
+#include "settings/MediaSourceSettings.h"
+#include "settings/SkinSettings.h"
 #include "utils/StringUtils.h"
 #include "Util.h"
 #include "video/VideoDatabase.h"
@@ -152,7 +159,7 @@ const BUILT_IN commands[] = {
   { "SetFocus",                   true,   "Change current focus to a different control id" }, 
   { "BackupSystemInfo",           false,  "Backup System Informations to local hdd" },
   { "UpdateLibrary",              true,   "Update the selected library (music or video)" },
-  { "CleanLibrary",               true,   "Clean the video library" },
+  { "CleanLibrary",               true,   "Clean the video/music library" },
   { "ExportLibrary",              true,   "Export the video/music library" },
   { "PageDown",                   true,   "Send a page down event to the pagecontrol with given id" },
   { "PageUp",                     true,   "Send a page up event to the pagecontrol with given id" },
@@ -181,6 +188,10 @@ const BUILT_IN commands[] = {
   { "UpdateAddonRepos",           false,  "Check add-on repositories for updates" },
   { "InstallFromZip",             false,  "Open the install from zip dialog" },
   { "toggledebug",                false,  "Enables/disables debug mode" },
+  { "Weather.Refresh",            false,  "Force weather data refresh"},
+  { "Weather.LocationNext",       false,  "Switch to next weather location"},
+  { "Weather.LocationPrevious",   false,  "Switch to previous weather location"},
+  { "Weather.LocationSet",        true,   "Switch to given weather location (parameter can be 1-3)"},
 };
 
 bool CBuiltins::HasCommand(const CStdString& execString)
@@ -253,9 +264,9 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     g_application.getApplicationMessenger().Quit();
   }
-  else if (execute.Equals("loadprofile") && g_settings.GetMasterProfile().getLockMode() == LOCK_MODE_EVERYONE)
+  else if (execute.Equals("loadprofile") && CProfilesManager::Get().GetMasterProfile().getLockMode() == LOCK_MODE_EVERYONE)
   {
-    int index = g_settings.GetProfileIndex(parameter);
+    int index = CProfilesManager::Get().GetProfileIndex(parameter);
     if (index >= 0)
       CGUIWindowLoginScreen::LoadProfile(index);
   }
@@ -265,13 +276,13 @@ int CBuiltins::Execute(const CStdString& execString)
     {
       g_passwordManager.bMasterUser = false;
       g_passwordManager.LockSources(true);
-      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(20052),g_localizeStrings.Get(20053));
+      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(20052),g_localizeStrings.Get(20053));
     }
     else if (g_passwordManager.IsMasterLockUnlocked(true))
     {
       g_passwordManager.LockSources(false);
       g_passwordManager.bMasterUser = true;
-      g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(20052),g_localizeStrings.Get(20054));
+      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(20052),g_localizeStrings.Get(20054));
     }
 
     CUtil::DeleteVideoDatabaseDirectoryCache();
@@ -357,20 +368,17 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("resolution"))
   {
-    RESOLUTION res = PAL_4x3;
-    if (parameter.Equals("pal")) res = PAL_4x3;
-    else if (parameter.Equals("pal16x9")) res = PAL_16x9;
-    else if (parameter.Equals("ntsc")) res = NTSC_4x3;
-    else if (parameter.Equals("ntsc16x9")) res = NTSC_16x9;
-    else if (parameter.Equals("720p")) res = HDTV_720p;
-    else if (parameter.Equals("1080i")) res = HDTV_1080i;
+    RESOLUTION res = RES_PAL_4x3;
+    if (parameter.Equals("pal")) res = RES_PAL_4x3;
+    else if (parameter.Equals("pal16x9")) res = RES_PAL_16x9;
+    else if (parameter.Equals("ntsc")) res = RES_NTSC_4x3;
+    else if (parameter.Equals("ntsc16x9")) res = RES_NTSC_16x9;
+    else if (parameter.Equals("720p")) res = RES_HDTV_720p;
+    else if (parameter.Equals("1080i")) res = RES_HDTV_1080i;
     if (g_videoConfig.IsValidResolution(res))
     {
-      g_guiSettings.SetInt("videoscreen.resolution", res);
-      //set the gui resolution, if newRes is AUTORES newRes will be set to the highest available resolution
+      CDisplaySettings::Get().SetCurrentResolution(res, true);
       g_graphicsContext.SetVideoResolution(res, TRUE);
-      //set our lookandfeelres to the resolution set in graphiccontext
-      g_guiSettings.m_LookAndFeelResolution = res;
       g_application.ReloadSkin();
     }
   }
@@ -468,7 +476,7 @@ int CBuiltins::Execute(const CStdString& execString)
       if (params[i].Equals("isdir"))
         item.m_bIsFolder = true;
       else if (params[i].Equals("1")) // set fullscreen or windowed
-        g_settings.m_bStartVideoWindowed = true;
+        CMediaSettings::Get().SetVideoStartWindowed(true);
       else if (params[i].Equals("resume"))
       {
         // force the item to resume (if applicable) (see CApplication::PlayMedia)
@@ -495,7 +503,7 @@ int CBuiltins::Execute(const CStdString& execString)
     if (item.m_bIsFolder)
     {
       CFileItemList items;
-      CDirectory::GetDirectory(item.GetPath(),items,g_settings.m_videoExtensions);
+      CDirectory::GetDirectory(item.GetPath(),items,g_advancedSettings.m_videoExtensions);
       g_playlistPlayer.Add(PLAYLIST_VIDEO,items);
       g_playlistPlayer.SetCurrentPlaylist(PLAYLIST_VIDEO);
       g_playlistPlayer.Play();
@@ -574,9 +582,7 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("refreshrss"))
   {
-    g_rssManager.Stop();
-    g_settings.LoadRSSFeeds();
-    g_rssManager.Start();
+    CRssManager::Get().Reload();
   }
   else if (execute.Equals("playercontrol"))
   {
@@ -681,7 +687,7 @@ int CBuiltins::Execute(const CStdString& execString)
     {
       if( g_application.IsPlaying() && g_application.m_pPlayer && g_application.m_pPlayer->CanRecord())
       {
-        if (m_pXbmcHttp && g_settings.m_HttpApiBroadcastLevel>=1)
+        if (m_pXbmcHttp && g_guiSettings.GetInt("services.httpapibroadcastlevel")>=1)
           g_application.getApplicationMessenger().HttpApi(g_application.m_pPlayer->IsRecording()?"broadcastlevel; RecordStopping;1":"broadcastlevel; RecordStarting;1");
         g_application.m_pPlayer->Record(!g_application.m_pPlayer->IsRecording());
       }
@@ -717,17 +723,20 @@ int CBuiltins::Execute(const CStdString& execString)
       bool shuffled = g_playlistPlayer.IsShuffled(iPlaylist);
       if ((shuffled && parameter.Equals("randomon")) || (!shuffled && parameter.Equals("randomoff")))
         return 0;
-      g_playlistPlayer.SetShuffle(iPlaylist, !shuffled);
+
+      // check to see if we should notify the user
+      bool notify = (params.size() == 2 && params[1].Equals("notify"));
+      g_playlistPlayer.SetShuffle(iPlaylist, !shuffled, notify);
 
       // save settings for now playing windows
       switch (iPlaylist)
       {
       case PLAYLIST_MUSIC:
-        g_settings.m_bMyMusicPlaylistShuffle = g_playlistPlayer.IsShuffled(iPlaylist);
+        CMediaSettings::Get().SetMusicPlaylistShuffled(g_playlistPlayer.IsShuffled(iPlaylist));
         g_settings.Save();
         break;
       case PLAYLIST_VIDEO:
-        g_settings.m_bMyVideoPlaylistShuffle = g_playlistPlayer.IsShuffled(iPlaylist);
+        CMediaSettings::Get().SetVideoPlaylistShuffled(g_playlistPlayer.IsShuffled(iPlaylist));
         g_settings.Save();
       }
 
@@ -740,32 +749,38 @@ int CBuiltins::Execute(const CStdString& execString)
     {
       // get current playlist
       int iPlaylist = g_playlistPlayer.GetCurrentPlaylist();
-      PLAYLIST::REPEAT_STATE state = g_playlistPlayer.GetRepeat(iPlaylist);
+      PLAYLIST::REPEAT_STATE previous_state = g_playlistPlayer.GetRepeat(iPlaylist);
 
+      PLAYLIST::REPEAT_STATE state;
       if (parameter.Equals("repeatall"))
         state = PLAYLIST::REPEAT_ALL;
       else if (parameter.Equals("repeatone"))
         state = PLAYLIST::REPEAT_ONE;
       else if (parameter.Equals("repeatoff"))
         state = PLAYLIST::REPEAT_NONE;
-      else if (state == PLAYLIST::REPEAT_NONE)
+      else if (previous_state == PLAYLIST::REPEAT_NONE)
         state = PLAYLIST::REPEAT_ALL;
-      else if (state == PLAYLIST::REPEAT_ALL)
+      else if (previous_state == PLAYLIST::REPEAT_ALL)
         state = PLAYLIST::REPEAT_ONE;
       else
         state = PLAYLIST::REPEAT_NONE;
 
-      g_playlistPlayer.SetRepeat(iPlaylist, state);
+      if (state == previous_state)
+        return 0;
+
+      // check to see if we should notify the user
+      bool notify = (params.size() == 2 && params[1].Equals("notify"));
+      g_playlistPlayer.SetRepeat(iPlaylist, state, notify);
 
       // save settings for now playing windows
       switch (iPlaylist)
       {
       case PLAYLIST_MUSIC:
-        g_settings.m_bMyMusicPlaylistRepeat = (state == PLAYLIST::REPEAT_ALL);
+        CMediaSettings::Get().SetMusicPlaylistRepeat(state == PLAYLIST::REPEAT_ALL);
         g_settings.Save();
         break;
       case PLAYLIST_VIDEO:
-        g_settings.m_bMyVideoPlaylistRepeat = (state == PLAYLIST::REPEAT_ALL);
+        CMediaSettings::Get().SetVideoPlaylistRepeat(state == PLAYLIST::REPEAT_ALL);
         g_settings.Save();
       }
 
@@ -776,16 +791,26 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("playwith"))
   {
-    g_application.m_eForcedNextPlayer = CPlayerCoreFactory::GetPlayerCore(parameter);
+    g_application.m_eForcedNextPlayer = CPlayerCoreFactory::Get().GetPlayerCore(parameter);
     g_application.OnAction(CAction(ACTION_PLAYER_PLAY));
   }
   else if (execute.Equals("mute"))
   {
-    g_application.Mute();
+    g_application.ToggleMute();
   }
   else if (execute.Equals("setvolume"))
   {
-    g_application.SetVolume(atoi(parameter.c_str()));
+    int oldVolume = g_application.GetVolume();
+    int volume = atoi(parameter.c_str());
+
+    g_application.SetVolume(volume);   
+    if(oldVolume != volume)
+    {
+      if(params.size() > 1 && params[1].Equals("showVolumeBar"))    
+      {
+        g_application.getApplicationMessenger().ShowVolumeBar(oldVolume < volume);
+      }
+    }
   }
   else if (execute.Equals("playlist.playoffset"))
   {
@@ -885,11 +910,11 @@ int CBuiltins::Execute(const CStdString& execString)
     if (params.size() < 2)
       return -1;
     if (params.size() == 4)
-      g_application.m_guiDialogKaiToast.QueueNotification(params[3],params[0],params[1],atoi(params[2].c_str()));
+      CGUIDialogKaiToast::QueueNotification(params[3],params[0],params[1],atoi(params[2].c_str()));
     else if (params.size() == 3)
-      g_application.m_guiDialogKaiToast.QueueNotification("",params[0],params[1],atoi(params[2].c_str()));
+      CGUIDialogKaiToast::QueueNotification("",params[0],params[1],atoi(params[2].c_str()));
     else
-      g_application.m_guiDialogKaiToast.QueueNotification(params[0],params[1]);
+      CGUIDialogKaiToast::QueueNotification(params[0],params[1]);
   }
   else if (execute.Equals("cancelalarm"))
   {
@@ -901,32 +926,32 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("skin.togglesetting"))
   {
-    int setting = g_settings.TranslateSkinBool(parameter);
-    g_settings.SetSkinBool(setting, !g_settings.GetSkinBool(setting));
+    int setting = CSkinSettings::Get().TranslateBool(parameter);
+    CSkinSettings::Get().SetBool(setting, !CSkinSettings::Get().GetBool(setting));
     g_settings.Save();
   }
   else if (execute.Equals("skin.setbool") && params.size())
   {
     if (params.size() > 1)
     {
-      int string = g_settings.TranslateSkinBool(params[0]);
-      g_settings.SetSkinBool(string, params[1].CompareNoCase("true") == 0);
+      int string = CSkinSettings::Get().TranslateBool(params[0]);
+      CSkinSettings::Get().SetBool(string, params[1].CompareNoCase("true") == 0);
       g_settings.Save();
       return 0;
     }
     // default is to set it to true
-    int setting = g_settings.TranslateSkinBool(params[0]);
-    g_settings.SetSkinBool(setting, true);
+    int setting = CSkinSettings::Get().TranslateBool(params[0]);
+    CSkinSettings::Get().SetBool(setting, true);
     g_settings.Save();
   }
   else if (execute.Equals("skin.reset"))
   {
-    g_settings.ResetSkinSetting(parameter);
+    CSkinSettings::Get().Reset(parameter);
     g_settings.Save();
   }
   else if (execute.Equals("skin.resetsettings"))
   {
-    g_settings.ResetSkinSettings();
+    CSkinSettings::Get().Reset();
     g_settings.Save();
   }
   else if (execute.Equals("skin.theme"))
@@ -983,40 +1008,40 @@ int CBuiltins::Execute(const CStdString& execString)
     int string = 0;
     if (params.size() > 1)
     {
-      string = g_settings.TranslateSkinString(params[0]);
+      string = CSkinSettings::Get().TranslateString(params[0]);
       if (execute.Equals("skin.setstring"))
       {
-        g_settings.SetSkinString(string, params[1]);
+        CSkinSettings::Get().SetString(string, params[1]);
         g_settings.Save();
         return 0;
       }
     }
     else
-      string = g_settings.TranslateSkinString(params[0]);
-    CStdString value = g_settings.GetSkinString(string);
+      string = CSkinSettings::Get().TranslateString(params[0]);
+    CStdString value = CSkinSettings::Get().GetString(string);
     VECSOURCES localShares;
     g_mediaManager.GetLocalDrives(localShares);
     if (execute.Equals("skin.setstring"))
     {
       if (CGUIDialogKeyboard::ShowAndGetInput(value, g_localizeStrings.Get(1029), true))
-        g_settings.SetSkinString(string, value);
+        CSkinSettings::Get().SetString(string, value);
     }
     else if (execute.Equals("skin.setnumeric"))
     {
       if (CGUIDialogNumeric::ShowAndGetNumber(value, g_localizeStrings.Get(611)))
-        g_settings.SetSkinString(string, value);
+        CSkinSettings::Get().SetString(string, value);
     }
     else if (execute.Equals("skin.setimage"))
     {
       if (CGUIDialogFileBrowser::ShowAndGetImage(localShares, g_localizeStrings.Get(1030), value))
-        g_settings.SetSkinString(string, value);
+        CSkinSettings::Get().SetString(string, value);
     }
     else if (execute.Equals("skin.setlargeimage"))
     {
-      VECSOURCES *shares = g_settings.GetSourcesFromType("pictures");
+      VECSOURCES *shares = CMediaSourceSettings::Get().GetSources("pictures");
       if (!shares) shares = &localShares;
       if (CGUIDialogFileBrowser::ShowAndGetImage(*shares, g_localizeStrings.Get(1030), value))
-        g_settings.SetSkinString(string, value);
+        CSkinSettings::Get().SetString(string, value);
     }
     else if (execute.Equals("skin.setfile"))
     {
@@ -1037,7 +1062,7 @@ int CBuiltins::Execute(const CStdString& execString)
         url.SetPassword(content);
         CStdString replace;
         if (CGUIDialogFileBrowser::ShowAndGetFile(url.Get(), "", TranslateType(type, true), replace, true, true))
-          g_settings.SetSkinString(string, replace);
+          CSkinSettings::Get().SetString(string, replace);
       }
       else 
       {
@@ -1055,19 +1080,19 @@ int CBuiltins::Execute(const CStdString& execString)
           }
         }
         if (CGUIDialogFileBrowser::ShowAndGetFile(localShares, strMask, g_localizeStrings.Get(1033), value))
-          g_settings.SetSkinString(string, value);
+          CSkinSettings::Get().SetString(string, value);
       }
     }
     else // execute.Equals("skin.setpath"))
     {
       if (CGUIDialogFileBrowser::ShowAndGetDirectory(localShares, g_localizeStrings.Get(1031), value))
-        g_settings.SetSkinString(string, value);
+        CSkinSettings::Get().SetString(string, value);
     }
     g_settings.Save();
   }
   else if (execute.Equals("skin.setaddon") && params.size() > 1)
   {
-    int string = g_settings.TranslateSkinString(params[0]);
+    int string = CSkinSettings::Get().TranslateString(params[0]);
     vector<ADDON::TYPE> types;
     for (unsigned int i = 1 ; i < params.size() ; i++)
     {
@@ -1078,7 +1103,7 @@ int CBuiltins::Execute(const CStdString& execString)
     CStdString result;
     if (types.size() > 0 && CGUIWindowAddonBrowser::SelectAddonID(types, result, true) == 1)
     {
-      g_settings.SetSkinString(string, result);
+      CSkinSettings::Get().SetString(string, result);
       g_settings.Save();
     }
   }
@@ -1101,13 +1126,27 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("system.logoff"))
   {
-    if (g_windowManager.GetActiveWindow() == WINDOW_LOGIN_SCREEN || !g_settings.UsingLoginScreen())
+    if (g_windowManager.GetActiveWindow() == WINDOW_LOGIN_SCREEN || !CProfilesManager::Get().UsingLoginScreen())
       return -1;
 
     g_application.StopPlaying();
-    CGUIDialogMusicScan *musicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-    if (musicScan && musicScan->IsScanning())
-      musicScan->StopScanning();
+    if (g_application.IsMusicScanning())
+    {
+      g_application.StopMusicScan();
+      CGUIDialogMusicScan *musicScan = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
+      if (musicScan)
+        musicScan->Close(true);
+    }
+
+    if (g_application.IsVideoScanning())
+    {
+      g_application.StopVideoScan();
+      CGUIDialogVideoScan *videoScan = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
+      if (videoScan)
+      {
+        videoScan->Close(true);
+      }
+    }
 
     ADDON::CAddonMgr::Get().StopServices(true);
 
@@ -1117,7 +1156,7 @@ int CBuiltins::Execute(const CStdString& execString)
     CLog::Log(LOGNOTICE, "stop fancontroller");
     CFanController::Instance()->Stop();
 #endif
-    g_settings.LoadMasterForLogin();
+    CProfilesManager::Get().LoadMasterProfileForLogin();
     g_passwordManager.bMasterUser = false;
     g_windowManager.ActivateWindow(WINDOW_LOGIN_SCREEN);
     g_application.getNetwork().SetupNetwork();
@@ -1170,38 +1209,42 @@ int CBuiltins::Execute(const CStdString& execString)
   {
     if (params[0].Equals("music"))
     {
-      CGUIDialogMusicScan *scanner = (CGUIDialogMusicScan *)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-      if (scanner)
-      {
-        if (scanner->IsScanning())
-          scanner->StopScanning();
-        else
-          scanner->StartScanning("");
-      }
+      if (g_application.IsMusicScanning())
+        g_application.StopMusicScan();
+      else
+        g_application.StartMusicScan(params.size() > 1 ? params[1] : "");
     }
     if (params[0].Equals("video"))
     {
-      CGUIDialogVideoScan *scanner = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
-      if (scanner)
-      {
-        if (scanner->IsScanning())
-          scanner->StopScanning();
-        else
-          CGUIWindowVideoBase::OnScan(params.size() > 1 ? params[1] : "");
-      }
+      if (g_application.IsVideoScanning())
+        g_application.StopVideoScan();
+      else
+        g_application.StartVideoScan(params.size() > 1 ? params[1] : "");
     }
   }
   else if (execute.Equals("cleanlibrary"))
   {
-    CGUIDialogVideoScan *scanner = (CGUIDialogVideoScan *)g_windowManager.GetWindow(WINDOW_DIALOG_VIDEO_SCAN);
-    if (scanner)
+    if (!params.size() || params[0].Equals("video"))
     {
-      if (!scanner->IsScanning())
+      if (!g_application.IsVideoScanning())
       {
          CVideoDatabase videodatabase;
          videodatabase.Open();
          videodatabase.CleanDatabase();
          videodatabase.Close();
+      }
+      else
+        CLog::Log(LOGERROR, "XBMC.CleanLibrary is not possible while scanning for media info");
+    }
+    else if (params[0].Equals("music"))
+    {
+      if (!g_application.IsMusicScanning())
+      {
+        CMusicDatabase musicdatabase;
+
+        musicdatabase.Open();
+        musicdatabase.Cleanup();
+        musicdatabase.Close();
       }
       else
         CLog::Log(LOGERROR, "XBMC.CleanLibrary is not possible while scanning for media info");
@@ -1442,6 +1485,27 @@ int CBuiltins::Execute(const CStdString& execString)
     bool debug = g_guiSettings.GetBool("debug.showloginfo");
     g_guiSettings.SetBool("debug.showloginfo", !debug);
     g_advancedSettings.SetDebugMode(!debug);
+  }
+  else if (execute.Equals("weather.locationset"))
+  {
+    int loc = atoi(params[0]);
+    CGUIMessage msg(GUI_MSG_ITEM_SELECT, 0, 0, loc);
+    g_windowManager.SendMessage(msg, WINDOW_WEATHER);
+  }
+  else if (execute.Equals("weather.locationnext"))
+  {
+    CGUIMessage msg(GUI_MSG_MOVE_OFFSET, 0, 0, 1);
+    g_windowManager.SendMessage(msg, WINDOW_WEATHER);
+  }
+  else if (execute.Equals("weather.locationprevious"))
+  {
+    CGUIMessage msg(GUI_MSG_MOVE_OFFSET, 0, 0, -1);
+    g_windowManager.SendMessage(msg, WINDOW_WEATHER);
+  }
+  else if (execute.Equals("weather.refresh"))
+  {
+    CGUIMessage msg(GUI_MSG_MOVE_OFFSET, 0, 0, 0);
+    g_windowManager.SendMessage(msg, WINDOW_WEATHER);
   }
   else
     return -1;

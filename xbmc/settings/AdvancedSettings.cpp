@@ -20,19 +20,45 @@
 
 #include <limits.h>
 
-#include "utils/log.h"
-#include "settings/AdvancedSettings.h"
+#include "AdvancedSettings.h"
 #include "Application.h"
 #include "network/DNSNameCache.h"
 #include "filesystem/File.h"
 #include "utils/LangCodeExpander.h"
 #include "LangInfo.h"
-#include "utils/URIUtils.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "settings/Settings.h"
+#include "utils/StringUtils.h"
+#include "utils/SystemInfo.h"
+#include "utils/URIUtils.h"
+#include "utils/XMLUtils.h"
+#include "utils/log.h"
 
 using namespace XFILE;
 
-CAdvancedSettings g_advancedSettings;
+void CAdvancedSettings::OnSettingsLoaded()
+{
+  // load advanced settings
+  Load();
+
+  // default players?
+  CLog::Log(LOGNOTICE, "Default Video Player: %s", g_settings.GetDefaultVideoPlayerName().c_str());
+  CLog::Log(LOGNOTICE, "Default Audio Player: %s", g_settings.GetDefaultAudioPlayerName().c_str());
+
+  // setup any logging...
+  if (g_guiSettings.GetBool("debug.showloginfo"))
+  {
+    m_logLevel = std::max(m_logLevelHint, LOG_LEVEL_DEBUG_FREEMEM);
+    CLog::Log(LOGNOTICE, "Enabled debug logging due to GUI setting (%d)", m_logLevel);
+  }
+  else
+  {
+    m_logLevel = std::min(m_logLevelHint, LOG_LEVEL_DEBUG/*LOG_LEVEL_NORMAL*/);
+    CLog::Log(LOGNOTICE, "Disabled debug logging due to GUI setting. Level %d.", m_logLevel);
+  }
+  CLog::SetLogLevel(m_logLevel);
+}
 
 CAdvancedSettings::CAdvancedSettings()
 {
@@ -219,6 +245,16 @@ CAdvancedSettings::CAdvancedSettings()
   m_bgInfoLoaderMaxThreads = 1;
 
   m_guiKeepInMemory = false;
+
+  m_pictureExtensions = ".png|.jpg|.jpeg|.bmp|.gif|.ico|.tif|.tiff|.tga|.pcx|.cbz|.zip|.cbr|.rar|.m3u|.dng|.nef|.cr2|.crw|.orf|.arw|.erf|.3fr|.dcr|.x3f|.mef|.raf|.mrw|.pef|.sr2";
+  m_musicExtensions = ".nsv|.m4a|.flac|.aac|.strm|.pls|.rm|.rma|.mpa|.wav|.wma|.ogg|.mp3|.mp2|.m3u|.mod|.amf|.669|.dmf|.dsm|.far|.gdm|.imf|.it|.m15|.med|.okt|.s3m|.stm|.sfx|.ult|.uni|.xm|.sid|.ac3|.dts|.cue|.aif|.aiff|.wpl|.ape|.mac|.mpc|.mp+|.mpp|.shn|.zip|.rar|.wv|.nsf|.spc|.gym|.adplug|.adx|.dsp|.adp|.ymf|.ast|.afc|.hps|.xsp|.xwav|.waa|.wvs|.wam|.gcm|.idsp|.mpdsp|.mss|.spt|.rsd|.mid|.kar|.sap|.cmc|.cmr|.dmc|.mpt|.mpd|.rmt|.tmc|.tm8|.tm2|.oga|.url|.pxml";
+  m_videoExtensions = ".m4v|.3g2|.3gp|.nsv|.tp|.ts|.ty|.strm|.pls|.rm|.rmvb|.m3u|.m3u8|.ifo|.mov|.qt|.divx|.xvid|.bivx|.vob|.nrg|.img|.iso|.pva|.wmv|.asf|.asx|.ogm|.m2v|.avi|.bin|.dat|.mpg|.mpeg|.mp4|.mkv|.avc|.vp3|.svq3|.nuv|.viv|.dv|.fli|.flv|.rar|.001|.wpl|.zip|.vdr|.dvr-ms|.xsp|.mts|.m2t|.m2ts|.evo|.ogv|.sdp|.avs|.rec|.url|.pxml|.vc1|.h264|.rcv|.rss|.mpls|.webm|.xmv|.bik|.sfd";
+  // internal music extensions
+  m_musicExtensions += "|.sidstream|.oggstream|.nsfstream|.asapstream|.cdda";
+
+  m_logFolder = "special://home/";              // log file location
+
+  m_userAgent = g_sysinfo.GetUserAgent();
 }
 
 bool CAdvancedSettings::Load()
@@ -226,37 +262,44 @@ bool CAdvancedSettings::Load()
   // NOTE: This routine should NOT set the default of any of these parameters
   //       it should instead use the versions of GetString/Integer/Float that
   //       don't take defaults in.  Defaults are set in the constructor above
-  CStdString advancedSettingsXML;
-  advancedSettingsXML  = g_settings.GetUserDataItem("advancedsettings.xml");
-  TiXmlDocument advancedXML;
-  if (!CFile::Exists(advancedSettingsXML))
-  { // tell the user it doesn't exist
-    CLog::Log(LOGNOTICE, "No advancedsettings.xml to load (%s)", advancedSettingsXML.c_str());
-    return false;
+  ParseSettingsFile("special://xbmc/system/advancedsettings.xml");
+  for (unsigned int i = 0; i < m_settingsFiles.size(); i++)
+    ParseSettingsFile(m_settingsFiles[i]);
+  ParseSettingsFile(CProfilesManager::Get().GetUserDataItem("advancedsettings.xml"));
+  return true;
+}
+
+void CAdvancedSettings::ParseSettingsFile(const CStdString &file)
+{
+  CXBMCTinyXML advancedXML;
+  if (!CFile::Exists(file))
+  {
+    CLog::Log(LOGNOTICE, "No settings file to load to load (%s)", file.c_str());
+    return;
   }
 
-  if (!advancedXML.LoadFile(advancedSettingsXML))
+  if (!advancedXML.LoadFile(file))
   {
-    CLog::Log(LOGERROR, "Error loading %s, Line %d\n%s", advancedSettingsXML.c_str(), advancedXML.ErrorRow(), advancedXML.ErrorDesc());
-    return false;
+    CLog::Log(LOGERROR, "Error loading %s, Line %d\n%s", file.c_str(), advancedXML.ErrorRow(), advancedXML.ErrorDesc());
+    return;
   }
 
   TiXmlElement *pRootElement = advancedXML.RootElement();
   if (!pRootElement || strcmpi(pRootElement->Value(),"advancedsettings") != 0)
   {
-    CLog::Log(LOGERROR, "Error loading %s, no <advancedsettings> node", advancedSettingsXML.c_str());
-    return false;
+    CLog::Log(LOGERROR, "Error loading %s, no <advancedsettings> node", file.c_str());
+    return;
   }
 
   // succeeded - tell the user it worked
-  CLog::Log(LOGNOTICE, "Loaded advancedsettings.xml from %s", advancedSettingsXML.c_str());
+  CLog::Log(LOGNOTICE, "Loaded settings file from %s", file.c_str());
 
   // Dump contents of AS.xml to debug log
   TiXmlPrinter printer;
   printer.SetLineBreak("\n");
   printer.SetIndent("  ");
   advancedXML.Accept(&printer);
-  CLog::Log(LOGNOTICE, "Contents of %s are...\n%s", advancedSettingsXML.c_str(), printer.CStr());
+  CLog::Log(LOGNOTICE, "Contents of %s are...\n%s", file.c_str(), printer.CStr());
 
   TiXmlElement *pElement = pRootElement->FirstChildElement("audio");
   if (pElement)
@@ -501,20 +544,19 @@ bool CAdvancedSettings::Load()
     GetCustomRegexps(pPictureExcludes, m_pictureExcludeFromListingRegExps);
 
   // picture extensions
-  CStdString extraExtensions;
   TiXmlElement* pExts = pRootElement->FirstChildElement("pictureextensions");
   if (pExts)
-    GetCustomExtensions(pExts,g_settings.m_pictureExtensions);
+    GetCustomExtensions(pExts, m_pictureExtensions);
 
   // music extensions
   pExts = pRootElement->FirstChildElement("musicextensions");
   if (pExts)
-    GetCustomExtensions(pExts,g_settings.m_musicExtensions);
+    GetCustomExtensions(pExts, m_musicExtensions);
 
   // video extensions
   pExts = pRootElement->FirstChildElement("videoextensions");
   if (pExts)
-    GetCustomExtensions(pExts,g_settings.m_videoExtensions);
+    GetCustomExtensions(pExts, m_videoExtensions);
 
   m_vecTokens.clear();
   CLangInfo::LoadTokens(pRootElement->FirstChild("sorttokens"),m_vecTokens);
@@ -523,7 +565,9 @@ bool CAdvancedSettings::Load()
 
   // TODO: Should cache path be given in terms of our predefined paths??
   //       Are we even going to have predefined paths??
-  CSettings::GetPath(pRootElement, "cachepath", m_cachePath);
+  CStdString tmp;
+  if (XMLUtils::GetPath(pRootElement, "cachepath", tmp))
+    m_cachePath = tmp;
   URIUtils::AddSlashAtEnd(m_cachePath);
 
   XMLUtils::GetBoolean(pRootElement, "ftpshowcache", m_FTPShowCache);
@@ -605,61 +649,14 @@ bool CAdvancedSettings::Load()
   XMLUtils::GetBoolean(pRootElement, "detectasudf", m_detectAsUdf);
 
   // music thumbs
-  CStdString extraThumbs;
   TiXmlElement* pThumbs = pRootElement->FirstChildElement("musicthumbs");
   if (pThumbs)
-  {
-    // remove before add so that the defaults can be restored after user defined ones
-    // (ie, the list can be:cover.jpg|cover.png|folder.jpg)
-    CSettings::GetString(pThumbs, "remove", extraThumbs, "");
-    if (extraThumbs != "")
-    {
-      CStdStringArray thumbs;
-      StringUtils::SplitString(extraThumbs, "|", thumbs);
-      for (unsigned int i = 0; i < thumbs.size(); ++i)
-      {
-        int iPos = m_musicThumbs.Find(thumbs[i]);
-        if (iPos == -1)
-          continue;
-        m_musicThumbs.erase(iPos, thumbs[i].size() + 1);
-      }
-    }
-    CSettings::GetString(pThumbs, "add", extraThumbs,"");
-    if (extraThumbs != "")
-    {
-      if (!m_musicThumbs.IsEmpty())
-        m_musicThumbs += "|";
-      m_musicThumbs += extraThumbs;
-    }
-  }
+    GetCustomExtensions(pThumbs,m_musicThumbs);
 
   // dvd thumbs
   pThumbs = pRootElement->FirstChildElement("dvdthumbs");
   if (pThumbs)
-  {
-    // remove before add so that the defaults can be restored after user defined ones
-    // (ie, the list can be:cover.jpg|cover.png|folder.jpg)
-    CSettings::GetString(pThumbs, "remove", extraThumbs, "");
-    if (extraThumbs != "")
-    {
-      CStdStringArray thumbs;
-      StringUtils::SplitString(extraThumbs, "|", thumbs);
-      for (unsigned int i = 0; i < thumbs.size(); ++i)
-      {
-        int iPos = m_dvdThumbs.Find(thumbs[i]);
-        if (iPos == -1)
-          continue;
-        m_dvdThumbs.erase(iPos, thumbs[i].size() + 1);
-      }
-    }
-    CSettings::GetString(pThumbs, "add", extraThumbs,"");
-    if (extraThumbs != "")
-    {
-      if (!m_dvdThumbs.IsEmpty())
-        m_dvdThumbs += "|";
-      m_dvdThumbs += extraThumbs;
-    }
-  }
+    GetCustomExtensions(pThumbs,m_dvdThumbs);
 
   // movie fanarts
   TiXmlElement* pFanart = pRootElement->FirstChildElement("fanart");
@@ -728,8 +725,6 @@ bool CAdvancedSettings::Load()
     XMLUtils::GetString(pDatabase, "pass", m_databaseMusic.pass);
     XMLUtils::GetString(pDatabase, "name", m_databaseMusic.name);
   }
-
-  return true;
 }
 
 void CAdvancedSettings::Clear()
@@ -743,6 +738,13 @@ void CAdvancedSettings::Clear()
   m_audioExcludeFromScanRegExps.clear();
   m_audioExcludeFromListingRegExps.clear();
   m_pictureExcludeFromListingRegExps.clear();
+
+  m_pictureExtensions.clear();
+  m_musicExtensions.clear();
+  m_videoExtensions.clear();
+
+  m_logFolder.clear();
+  m_userAgent.clear();
 }
 
 void CAdvancedSettings::GetCustomTVRegexps(TiXmlElement *pRootElement, SETTINGS_TVSHOWLIST& settings)
@@ -835,11 +837,9 @@ void CAdvancedSettings::GetCustomRegexps(TiXmlElement *pRootElement, CStdStringA
 void CAdvancedSettings::GetCustomExtensions(TiXmlElement *pRootElement, CStdString& extensions)
 {
   CStdString extraExtensions;
-  CSettings::GetString(pRootElement,"add",extraExtensions,"");
-  if (extraExtensions != "")
+  if (XMLUtils::GetString(pRootElement, "add", extraExtensions) && !extraExtensions.empty())
     extensions += "|" + extraExtensions;
-  CSettings::GetString(pRootElement,"remove",extraExtensions,"");
-  if (extraExtensions != "")
+  if (XMLUtils::GetString(pRootElement, "remove", extraExtensions) && !extraExtensions.empty())
   {
     CStdStringArray exts;
     StringUtils::SplitString(extraExtensions,"|",exts);
@@ -866,7 +866,12 @@ void CAdvancedSettings::SetDebugMode(bool debug)
   {
     int level = std::min(m_logLevelHint, LOG_LEVEL_DEBUG/*LOG_LEVEL_NORMAL*/);
     CLog::Log(LOGNOTICE, "Disabled debug logging due to GUI setting. Level %d.", level);
-    m_logLevel = level;
     CLog::SetLogLevel(level);
+    m_logLevel = level;
   }
+}
+
+void CAdvancedSettings::AddSettingsFile(const CStdString &filename)
+{
+  m_settingsFiles.push_back(filename);
 }

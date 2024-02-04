@@ -54,6 +54,7 @@
 #include "cores/VideoRenderers/RenderManager.h"
 #endif
 #include "lib/libPython/XBPython.h"
+#include "profiles/ProfilesManager.h"
 #include "utils/RegExp.h"
 #include "utils/AlarmClock.h"
 #include "utils/RssFeed.h"
@@ -96,11 +97,14 @@
 #include "dialogs/GUIDialogOK.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "dialogs/GUIDialogKeyboard.h"
+#include "dialogs/GUIDialogKaiToast.h"
 #include "filesystem/File.h"
 #include "playlists/PlayList.h"
 #include "utils/Crc32.h"
 #include "utils/RssReader.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/DisplaySettings.h"
+#include "settings/MediaSettings.h"
 #include "utils/TimeUtils.h"
 #include "utils/URIUtils.h"
 #include "cores/dvdplayer/DVDSubtitles/DVDSubtitleTagSami.h"
@@ -431,8 +435,6 @@ bool CUtil::GetVolumeFromFileName(const CStdString& strFileName, CStdString& str
   CStdString strFileNameLower = strFileName;
   strFileNameLower.MakeLower();
 
-  CStdString strVolume;
-  CStdString strTestString;
   CRegExp reg;
 
 //  CLog::Log(LOGDEBUG, "GetVolumeFromFileName:[%s]", strFileNameLower.c_str());
@@ -1145,7 +1147,7 @@ bool CUtil::IsPicture(const CStdString& strFile)
     return false;
 
   extension.ToLower();
-  if (g_settings.m_pictureExtensions.Find(extension) != -1)
+  if (g_advancedSettings.m_pictureExtensions.Find(extension) != -1)
     return true;
 
   if (extension == ".tbn" || extension == ".dds")
@@ -1580,7 +1582,7 @@ void CUtil::GetDVDDriveIcon( const CStdString& strPath, CStdString& strIcon )
 
 void CUtil::RemoveTempFiles()
 {
-  CStdString searchPath = g_settings.GetDatabaseFolder();
+  CStdString searchPath = CProfilesManager::Get().GetDatabaseFolder();
   CFileItemList items;
   if (!XFILE::CDirectory::GetDirectory(searchPath, items, ".tmp", DIR_FLAG_NO_FILE_DIRS))
     return;
@@ -1595,14 +1597,14 @@ void CUtil::RemoveTempFiles()
 void CUtil::DeleteGUISettings()
 {
   // Load in master code first to ensure it's setting isn't reset
-  TiXmlDocument doc;
-  if (doc.LoadFile(g_settings.GetSettingsFile()))
+  CXBMCTinyXML doc;
+  if (doc.LoadFile(CProfilesManager::Get().GetSettingsFile()))
   {
     g_guiSettings.LoadMasterLock(doc.RootElement());
   }
   // delete the settings file only
-  CLog::Log(LOGINFO, "  DeleteFile(%s)", g_settings.GetSettingsFile().c_str());
-  CFile::Delete(g_settings.GetSettingsFile());
+  CLog::Log(LOGINFO, "  DeleteFile(%s)", CProfilesManager::Get().GetSettingsFile().c_str());
+  CFile::Delete(CProfilesManager::Get().GetSettingsFile());
 }
 
 void CUtil::RemoveIllegalChars( CStdString& strText)
@@ -1718,20 +1720,20 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
   CStdString strFileNameNoExt(URIUtils::ReplaceExtension(strFileName, ""));
   strLookInPaths.push_back(strPath);
 
-  if (!g_settings.iAdditionalSubtitleDirectoryChecked && !g_guiSettings.GetString("subtitles.custompath").IsEmpty()) // to avoid checking non-existent directories (network) every time..
+  if (!CMediaSettings::Get().GetAdditionalSubtitleDirectoryChecked() && !g_guiSettings.GetString("subtitles.custompath").IsEmpty()) // to avoid checking non-existent directories (network) every time..
   {
     if (!g_application.getNetwork().IsAvailable() && !URIUtils::IsHD(g_guiSettings.GetString("subtitles.custompath")))
     {
       CLog::Log(LOGINFO,"CUtil::CacheSubtitles: disabling alternate subtitle directory for this session, it's nonaccessible");
-      g_settings.iAdditionalSubtitleDirectoryChecked = -1; // disabled
+      CMediaSettings::Get().SetAdditionalSubtitleDirectoryChecked(-1); // disabled
     }
     else if (!CDirectory::Exists(g_guiSettings.GetString("subtitles.custompath")))
     {
       CLog::Log(LOGINFO,"CUtil::CacheSubtitles: disabling alternate subtitle directory for this session, it's nonexistant");
-      g_settings.iAdditionalSubtitleDirectoryChecked = -1; // disabled
+      CMediaSettings::Get().SetAdditionalSubtitleDirectoryChecked(-1); // disabled
     }
 
-    g_settings.iAdditionalSubtitleDirectoryChecked = 1;
+    CMediaSettings::Get().SetAdditionalSubtitleDirectoryChecked(1);
   }
 
   if (strMovie.substr(0,6) == "rar://") // <--- if this is found in main path then ignore it!
@@ -1783,7 +1785,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
   // .. done checking for cd-dirs
 
   // this is last because we dont want to check any common subdirs or cd-dirs in the alternate <subtitles> dir.
-  if (g_settings.iAdditionalSubtitleDirectoryChecked == 1)
+  if (CMediaSettings::Get().GetAdditionalSubtitleDirectoryChecked() == 1)
   {
     strPath = g_guiSettings.GetString("subtitles.custompath");
     if (!URIUtils::HasSlashAtEnd(strPath))
@@ -2196,10 +2198,10 @@ void CUtil::TakeScreenshot(const CStdString& strFileName, bool flashScreen)
     if (0)
     { // reset calibration to defaults
       OVERSCAN oscan;
-      memcpy(&oscan, &g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, sizeof(OVERSCAN));
-      g_graphicsContext.ResetOverscan(g_graphicsContext.GetVideoResolution(), g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan);
+      memcpy(&oscan, &CDisplaySettings::Get().GetResolutionInfo(g_graphicsContext.GetVideoResolution()).Overscan, sizeof(OVERSCAN));
+      g_graphicsContext.ResetOverscan(g_graphicsContext.GetVideoResolution(), CDisplaySettings::Get().GetResolutionInfo(g_graphicsContext.GetVideoResolution()).Overscan);
       g_application.Render();
-      memcpy(&g_settings.m_ResInfo[g_graphicsContext.GetVideoResolution()].Overscan, &oscan, sizeof(OVERSCAN));
+      memcpy(&CDisplaySettings::Get().GetResolutionInfo(g_graphicsContext.GetVideoResolution()).Overscan, &oscan, sizeof(OVERSCAN));
     }
     // now take screenshot
 #ifdef HAS_XBOX_D3D
@@ -3040,7 +3042,7 @@ bool CUtil::AutoDetection()
         //Do Notification for this Client
         CStdString strtemplbl;
         strtemplbl.Format("%s %s",strNickName, v_xboxclients.client_ip[i]);
-        g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(1251), strtemplbl);
+        CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(1251), strtemplbl);
 
         //Debug Log
         CLog::Log(LOGDEBUG,"%s: %s FTP-Link: %s", g_localizeStrings.Get(1251).c_str(), strNickName.c_str(), strFTPPath.c_str());
@@ -3664,7 +3666,7 @@ CStdString CUtil::GetCachedMusicThumb(const CStdString& path)
   hex.Format("%08x", (unsigned __int32) crc);
   CStdString thumb;
   thumb.Format("%c/%s.tbn", hex[0], hex.c_str());
-  return URIUtils::AddFileToFolder(g_settings.GetMusicThumbFolder(), thumb);
+  return URIUtils::AddFileToFolder(CProfilesManager::Get().GetMusicThumbFolder(), thumb);
 }
 
 CStdString CUtil::GetDefaultFolderThumb(const CStdString &folderThumb)
@@ -3911,7 +3913,7 @@ bool CUtil::RunFFPatchedXBE(CStdString szPath1, CStdString& szNewPath)
     CLog::Log(LOGDEBUG, "%s - Auto Filter Flicker is off. Skipping Filter Flicker Patching.", __FUNCTION__);
     return false;
   }
-  CStdString strIsPMode = g_settings.m_ResInfo[g_guiSettings.m_LookAndFeelResolution].strMode;
+  CStdString strIsPMode = CDisplaySettings::Get().GetCurrentResolutionInfo().strMode;
   if ( strIsPMode.Equals("480p 16:9") || strIsPMode.Equals("480p 4:3") || strIsPMode.Equals("720p 16:9"))
   {
     CLog::Log(LOGDEBUG, "%s - Progressive Mode detected: Skipping Auto Filter Flicker Patching!", __FUNCTION__);
@@ -3968,8 +3970,8 @@ bool CUtil::RunFFPatchedXBE(CStdString szPath1, CStdString& szNewPath)
 void CUtil::RunXBE(const char* szPath1, char* szParameters, F_VIDEO ForceVideo, F_COUNTRY ForceCountry, CUSTOM_LAUNCH_DATA* pData)
 {
   // check if locked
-  if (g_settings.GetCurrentProfile().programsLocked() && 
-      g_settings.GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE)
+  if (CProfilesManager::Get().GetCurrentProfile().programsLocked() && 
+      CProfilesManager::Get().GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE)
     if (!g_passwordManager.IsMasterLockUnlocked(true))
       return;
 
@@ -4200,4 +4202,13 @@ int CUtil::TranslateRomanNumeral(const char* roman_numeral)
       decimal += 2 * last - temp_sum;
   }
   return decimal;
+}
+
+bool CUtil::ValidatePort(int port)
+{
+  // check that it's a valid port
+  if (port <= 0 || port > 65535)
+    return false;
+
+  return true;
 }

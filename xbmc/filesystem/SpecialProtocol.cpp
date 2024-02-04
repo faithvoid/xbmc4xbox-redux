@@ -23,6 +23,7 @@
 #include "SpecialProtocol.h"
 #include "URL.h"
 #include "Util.h"
+#include "profiles/ProfilesManager.h"
 #include "settings/GUISettings.h"
 #include "settings/Settings.h"
 #include "utils/URIUtils.h"
@@ -111,11 +112,11 @@ CStdString CSpecialProtocol::TranslatePath(const CURL &url)
   if (RootDir.Equals("subtitles"))
     URIUtils::AddFileToFolder(g_guiSettings.GetString("subtitles.custompath"), FileName, translatedPath);
   else if (RootDir.Equals("userdata"))
-    URIUtils::AddFileToFolder(g_settings.GetUserDataFolder(), FileName, translatedPath);
+    URIUtils::AddFileToFolder(CProfilesManager::Get().GetUserDataFolder(), FileName, translatedPath);
   else if (RootDir.Equals("database"))
-    URIUtils::AddFileToFolder(g_settings.GetDatabaseFolder(), FileName, translatedPath);
+    URIUtils::AddFileToFolder(CProfilesManager::Get().GetDatabaseFolder(), FileName, translatedPath);
   else if (RootDir.Equals("thumbnails"))
-    URIUtils::AddFileToFolder(g_settings.GetThumbnailsFolder(), FileName, translatedPath);
+    URIUtils::AddFileToFolder(CProfilesManager::Get().GetThumbnailsFolder(), FileName, translatedPath);
   else if (RootDir.Equals("recordings") || RootDir.Equals("cdrips"))
     URIUtils::AddFileToFolder(g_guiSettings.GetString("audiocds.recordingpath", false), FileName, translatedPath);
   else if (RootDir.Equals("screenshots"))
@@ -212,24 +213,6 @@ CStdString CSpecialProtocol::TranslatePathConvertCase(const CStdString& path)
 #else
   return translatedPath;
 #endif
-}
-
-CStdString CSpecialProtocol::ReplaceOldPath(const CStdString &oldPath, int pathVersion)
-{
-  if (pathVersion < 1)
-  {
-    if (oldPath.Left(2).CompareNoCase("P:") == 0)
-      return URIUtils::AddFileToFolder("special://profile/", oldPath.Mid(2));
-    else if (oldPath.Left(2).CompareNoCase("Q:") == 0)
-      return URIUtils::AddFileToFolder("special://xbmc/", oldPath.Mid(2));
-    else if (oldPath.Left(2).CompareNoCase("T:") == 0)
-      return URIUtils::AddFileToFolder("special://masterprofile/", oldPath.Mid(2));
-    else if (oldPath.Left(2).CompareNoCase("U:") == 0)
-      return URIUtils::AddFileToFolder("special://home/", oldPath.Mid(2));
-    else if (oldPath.Left(2).CompareNoCase("Z:") == 0)
-      return URIUtils::AddFileToFolder("special://temp/", oldPath.Mid(2));
-  }
-  return oldPath;
 }
 
 void CSpecialProtocol::LogPaths()

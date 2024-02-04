@@ -20,13 +20,12 @@
 
 #include "system.h"
 #include "music/MusicDatabase.h"
-#include "filesystem/cddb.h"
+#include "network/cddb.h"
 #include "filesystem/DirectoryCache.h"
 #include "filesystem/MusicDatabaseDirectory/DirectoryNode.h"
 #include "filesystem/MusicDatabaseDirectory/QueryParams.h"
 #include "filesystem/MusicDatabaseDirectory.h"
 #include "filesystem/SpecialProtocol.h"
-#include "music/dialogs/GUIDialogMusicScan.h"
 #include "storage/DetectDVDType.h"
 #include "GUIInfoManager.h"
 #include "music/tags/MusicInfoTag.h"
@@ -44,7 +43,8 @@
 #include "dialogs/GUIDialogYesNo.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "filesystem/File.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
 #include "FileItem.h"
 #include "LocalizeStrings.h"
@@ -53,6 +53,7 @@
 #include "interfaces/AnnouncementManager.h"
 #include "utils/log.h"
 #include "SmartPlayList.h"
+#include "dbwrappers/dataset.h"
 
 using namespace std;
 using namespace AUTOPTR;
@@ -1227,6 +1228,9 @@ bool CMusicDatabase::GetAlbumInfo(int idAlbum, CAlbum &info, VECSONGS* songs)
 {
   try
   {
+    if (NULL == m_pDB.get()) return false;
+    if (NULL == m_pDS2.get()) return false;
+  
     if (idAlbum == -1)
       return false; // not in the database
 
@@ -1280,30 +1284,18 @@ bool CMusicDatabase::HasAlbumInfo(int idAlbum)
 
 bool CMusicDatabase::DeleteAlbumInfo(int idAlbum)
 {
-  try
-  {
-    if (idAlbum == -1)
-      return false; // not in the database
-
-    CStdString strSQL = PrepareSQL("delete from albuminfo where idAlbum=%i",idAlbum);
-
-    if (!m_pDS2->exec(strSQL.c_str()))
-      return false;
-
-    return true;
-  }
-  catch (...)
-  {
-    CLog::Log(LOGERROR, "%s - (%i) failed", __FUNCTION__, idAlbum);
-  }
-
-  return false;
+  if (idAlbum == -1)
+    return false; // not in the database
+  return ExecuteQuery(PrepareSQL("delete from albuminfo where idAlbum=%i",idAlbum));
 }
 
 bool CMusicDatabase::GetArtistInfo(int idArtist, CArtist &info, bool needAll)
 {
   try
   {
+    if (NULL == m_pDB.get()) return false;
+    if (NULL == m_pDS2.get()) return false;
+
     if (idArtist == -1)
       return false; // not in the database
 
@@ -1349,24 +1341,10 @@ bool CMusicDatabase::GetArtistInfo(int idArtist, CArtist &info, bool needAll)
 
 bool CMusicDatabase::DeleteArtistInfo(int idArtist)
 {
-  try
-  {
-    if (idArtist == -1)
-      return false; // not in the database
+  if (idArtist == -1)
+    return false; // not in the database
 
-    CStdString strSQL = PrepareSQL("delete from artistinfo where idArtist=%i",idArtist);
-
-    if (!m_pDS2->exec(strSQL.c_str()))
-      return false;
-
-    return true;
-  }
-  catch (...)
-  {
-    CLog::Log(LOGERROR, "%s - (%i) failed", __FUNCTION__, idArtist);
-  }
-
-  return false;
+  return ExecuteQuery(PrepareSQL("delete from artistinfo where idArtist=%i",idArtist));
 }
 
 bool CMusicDatabase::GetAlbumInfoSongs(int idAlbumInfo, VECSONGS& songs)
@@ -2185,7 +2163,7 @@ bool CMusicDatabase::CleanupThumbs()
       return true;
     }
     // get albums dir
-    CStdString strThumbsDir = g_settings.GetMusicThumbFolder();
+    CStdString strThumbsDir = CProfilesManager::Get().GetMusicThumbFolder();
     while (!m_pDS->eof())
     {
       CStdString strThumb = m_pDS->fv("strThumb").get_asString();
@@ -2275,67 +2253,87 @@ int CMusicDatabase::Cleanup(CGUIDialogProgress *pDlgProgress)
   if (NULL == m_pDB.get()) return ERROR_DATABASE;
   if (NULL == m_pDS.get()) return ERROR_DATABASE;
   // first cleanup any songs with invalid paths
-  pDlgProgress->SetHeading(700);
-  pDlgProgress->SetLine(0, "");
-  pDlgProgress->SetLine(1, 318);
-  pDlgProgress->SetLine(2, 330);
-  pDlgProgress->SetPercentage(0);
-  pDlgProgress->StartModal();
-  pDlgProgress->ShowProgressBar(true);
-
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetHeading(700);
+    pDlgProgress->SetLine(0, "");
+    pDlgProgress->SetLine(1, 318);
+    pDlgProgress->SetLine(2, 330);
+    pDlgProgress->SetPercentage(0);
+    pDlgProgress->StartModal();
+    pDlgProgress->ShowProgressBar(true);
+  }
   if (!CleanupSongs())
   {
     RollbackTransaction();
     return ERROR_REORG_SONGS;
   }
   // then the albums that are not linked to a song or to albuminfo, or whose path is removed
-  pDlgProgress->SetLine(1, 326);
-  pDlgProgress->SetPercentage(20);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 326);
+    pDlgProgress->SetPercentage(20);
+    pDlgProgress->Progress();
+  }
   if (!CleanupAlbums())
   {
     RollbackTransaction();
     return ERROR_REORG_ALBUM;
   }
   // now the paths
-  pDlgProgress->SetLine(1, 324);
-  pDlgProgress->SetPercentage(40);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 324);
+    pDlgProgress->SetPercentage(40);
+    pDlgProgress->Progress();
+  }
   if (!CleanupPaths() || !CleanupThumbs())
   {
     RollbackTransaction();
     return ERROR_REORG_PATH;
   }
   // and finally artists + genres
-  pDlgProgress->SetLine(1, 320);
-  pDlgProgress->SetPercentage(60);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 320);
+    pDlgProgress->SetPercentage(60);
+    pDlgProgress->Progress();
+  }
   if (!CleanupArtists())
   {
     RollbackTransaction();
     return ERROR_REORG_ARTIST;
   }
-  pDlgProgress->SetLine(1, 322);
-  pDlgProgress->SetPercentage(80);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 322);
+    pDlgProgress->SetPercentage(80);
+    pDlgProgress->Progress();
+  }
   if (!CleanupGenres())
   {
     RollbackTransaction();
     return ERROR_REORG_GENRE;
   }
   // commit transaction
-  pDlgProgress->SetLine(1, 328);
-  pDlgProgress->SetPercentage(90);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 328);
+    pDlgProgress->SetPercentage(90);
+    pDlgProgress->Progress();
+  }
   if (!CommitTransaction())
   {
     RollbackTransaction();
     return ERROR_WRITING_CHANGES;
   }
   // and compress the database
-  pDlgProgress->SetLine(1, 331);
-  pDlgProgress->SetPercentage(100);
-  pDlgProgress->Progress();
+  if (pDlgProgress)
+  {
+    pDlgProgress->SetLine(1, 331);
+    pDlgProgress->SetPercentage(100);
+    pDlgProgress->Progress();
+  }
   if (!Compress(false))
   {
     return ERROR_COMPRESSING;
@@ -2352,8 +2350,7 @@ void CMusicDatabase::DeleteAlbumInfo()
 
   // If we are scanning for music info in the background,
   // other writing access to the database is prohibited.
-  CGUIDialogMusicScan* dlgMusicScan = (CGUIDialogMusicScan*)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-  if (dlgMusicScan->IsDialogRunning())
+  if (g_application.IsMusicScanning())
   {
     CGUIDialogOK::ShowAndGetInput(189, 14057, 0, 0);
     return;
@@ -2432,12 +2429,12 @@ bool CMusicDatabase::LookupCDDBInfo(bool bRequery/*=false*/)
   {
     CStdString strFile;
     strFile.Format("%x.cddb", pCdInfo->GetCddbDiscId());
-    CFile::Delete(URIUtils::AddFileToFolder(g_settings.GetCDDBFolder(), strFile));
+    CFile::Delete(URIUtils::AddFileToFolder(CProfilesManager::Get().GetCDDBFolder(), strFile));
   }
 
   // Prepare cddb
   Xcddb cddb;
-  cddb.setCacheDir(g_settings.GetCDDBFolder());
+  cddb.setCacheDir(CProfilesManager::Get().GetCDDBFolder());
 
   // Do we have to look for cddb information
   if (pCdInfo->HasCDDBInfo() && !cddb.isCDCached(pCdInfo))
@@ -2520,7 +2517,7 @@ bool CMusicDatabase::LookupCDDBInfo(bool bRequery/*=false*/)
 void CMusicDatabase::DeleteCDDBInfo()
 {
   CFileItemList items;
-  if (!CDirectory::GetDirectory(g_settings.GetCDDBFolder(), items, ".cddb", DIR_FLAG_NO_FILE_DIRS))
+  if (!CDirectory::GetDirectory(CProfilesManager::Get().GetCDDBFolder(), items, ".cddb", DIR_FLAG_NO_FILE_DIRS))
   {
     CGUIDialogOK::ShowAndGetInput(313, 426, 0, 0);
     return ;
@@ -2542,7 +2539,7 @@ void CMusicDatabase::DeleteCDDBInfo()
       strFile.Delete(strFile.size() - 5, 5);
       ULONG lDiscId = strtoul(strFile.c_str(), NULL, 16);
       Xcddb cddb;
-      cddb.setCacheDir(g_settings.GetCDDBFolder());
+      cddb.setCacheDir(CProfilesManager::Get().GetCDDBFolder());
 
       if (!cddb.queryCache(lDiscId))
         continue;
@@ -2580,7 +2577,7 @@ void CMusicDatabase::DeleteCDDBInfo()
       {
         CStdString strFile;
         strFile.Format("%x.cddb", it->first);
-        CFile::Delete(URIUtils::AddFileToFolder(g_settings.GetCDDBFolder(), strFile));
+        CFile::Delete(URIUtils::AddFileToFolder(CProfilesManager::Get().GetCDDBFolder(), strFile));
         break;
       }
     }
@@ -2592,8 +2589,7 @@ void CMusicDatabase::Clean()
 {
   // If we are scanning for music info in the background,
   // other writing access to the database is prohibited.
-  CGUIDialogMusicScan* dlgMusicScan = (CGUIDialogMusicScan*)g_windowManager.GetWindow(WINDOW_DIALOG_MUSIC_SCAN);
-  if (dlgMusicScan->IsDialogRunning())
+  if (g_application.IsMusicScanning())
   {
     CGUIDialogOK::ShowAndGetInput(189, 14057, 0, 0);
     return;
@@ -3131,7 +3127,7 @@ bool CMusicDatabase::GetAlbumsNav(const CStdString& strBaseDir, CFileItemList& i
   if (bResult && idArtist != -1)
   {
     CStdString strArtist = GetArtistById(idArtist);
-    CStdString strFanart = items.GetCachedThumb(strArtist,g_settings.GetMusicFanartFolder());
+    CStdString strFanart = items.GetCachedThumb(strArtist,CProfilesManager::Get().GetMusicFanartFolder());
     if (CFile::Exists(strFanart))
       items.SetProperty("fanart_image",strFanart);
   }
@@ -3402,7 +3398,7 @@ bool CMusicDatabase::GetSongsNav(const CStdString& strBaseDir, CFileItemList& it
   if (bResult && idArtist != -1)
   {
     CStdString strArtist = GetArtistById(idArtist);
-    CStdString strFanart = items.GetCachedThumb(strArtist,g_settings.GetMusicFanartFolder());
+    CStdString strFanart = items.GetCachedThumb(strArtist,CProfilesManager::Get().GetMusicFanartFolder());
     if (CFile::Exists(strFanart))
       items.SetProperty("fanart_image",strFanart);
   }
@@ -3485,7 +3481,7 @@ bool CMusicDatabase::UpdateOldVersion(int version)
     if (version < 12)
     {
       // update our thumb table as we've changed from storing absolute to relative paths
-      CStdString newPath = g_settings.GetMusicThumbFolder();
+      CStdString newPath = CProfilesManager::Get().GetMusicThumbFolder();
       CStdString oldPath = CSpecialProtocol::TranslatePath(newPath);
       if (m_pDS->query("select * from thumb where strThumb != 'NONE'") && m_pDS->num_rows())
       {
@@ -3520,7 +3516,7 @@ bool CMusicDatabase::UpdateOldVersion(int version)
         m_pDS->query(strSQL.c_str());
         while (!m_pDS->eof())
         {
-          TiXmlDocument doc;
+          CXBMCTinyXML doc;
           doc.Parse(m_pDS->fv(1).get_asString().c_str());
           if (!doc.RootElement() || strcmp(doc.RootElement()->Value(),"thumb") == 0)
           {
@@ -3531,7 +3527,7 @@ bool CMusicDatabase::UpdateOldVersion(int version)
           while (strstr(doc.RootElement()->FirstChild()->Value(),"<"))
           {
             CStdString strThumbs = doc.RootElement()->FirstChild()->Value();
-            TiXmlDocument doc2;
+            CXBMCTinyXML doc2;
             doc2.Parse(strThumbs);
             doc = doc2;
             thumb = doc.FirstChildElement("thumb");
@@ -4049,7 +4045,6 @@ bool CMusicDatabase::SetPathHash(const CStdString &path, const CStdString &hash)
 
 bool CMusicDatabase::GetPathHash(const CStdString &path, CStdString &hash)
 {
-  CStdString strSQL;
   try
   {
     if (NULL == m_pDB.get()) return false;
@@ -4464,7 +4459,7 @@ void CMusicDatabase::ExportToXML(const CStdString &xmlFile, bool singleFiles, bo
     int current = 0;
 
     // create our xml document
-    TiXmlDocument xmlDoc;
+    CXBMCTinyXML xmlDoc;
     TiXmlDeclaration decl("1.0", "UTF-8", "yes");
     xmlDoc.InsertEndChild(decl);
     TiXmlNode *pMain = NULL;
@@ -4624,7 +4619,7 @@ void CMusicDatabase::ImportFromXML(const CStdString &xmlFile)
     if (NULL == m_pDB.get()) return;
     if (NULL == m_pDS.get()) return;
 
-    TiXmlDocument xmlDoc;
+    CXBMCTinyXML xmlDoc;
     if (!xmlDoc.LoadFile(xmlFile))
       return;
 
@@ -4658,11 +4653,10 @@ void CMusicDatabase::ImportFromXML(const CStdString &xmlFile)
     entry = root->FirstChildElement();
     while (entry)
     {
-      CArtist artist;
-      CAlbum album;
       CStdString strTitle;
       if (strnicmp(entry->Value(), "artist", 6) == 0)
       {
+        CArtist artist;
         artist.Load(entry);
         strTitle = artist.strArtist;
         int idArtist = GetArtistByName(artist.strArtist);
@@ -4673,6 +4667,7 @@ void CMusicDatabase::ImportFromXML(const CStdString &xmlFile)
       }
       else if (strnicmp(entry->Value(), "album", 5) == 0)
       {
+        CAlbum album;
         album.Load(entry);
         strTitle = album.strAlbum;
         int idAlbum = GetAlbumByName(album.strAlbum,album.artist);

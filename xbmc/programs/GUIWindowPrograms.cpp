@@ -29,7 +29,6 @@
 #include "utils/Trainer.h"
 #include "utils/LabelFormatter.h"
 #include "Autorun.h"
-#include "settings/Profile.h"
 #include "GUIWindowManager.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "dialogs/GUIDialogKeyboard.h"
@@ -37,6 +36,9 @@
 #include "filesystem/File.h"
 #include "filesystem/RarManager.h"
 #include "FileItem.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "utils/URIUtils.h"
 #include "LocalizeStrings.h"
 #include "utils/log.h"
@@ -82,7 +84,7 @@ bool CGUIWindowPrograms::OnMessage(CGUIMessage& message)
 
       // is this the first time accessing this window?
       if (m_vecItems->GetPath() == "?" && message.GetStringParam().IsEmpty())
-        message.SetStringParam(g_settings.m_defaultProgramSource);
+        message.SetStringParam(CMediaSourceSettings::Get().GetDefaultSource("programs"));
 
       m_database.Open();
 
@@ -168,7 +170,7 @@ void CGUIWindowPrograms::GetContextButtons(int itemNumber, CContextButtons &butt
         if (g_guiSettings.GetBool("myprograms.gameautoregion"))
           buttons.Add(CONTEXT_BUTTON_LAUNCH_IN, 519); // launch in video mode
   
-        if (g_passwordManager.IsMasterLockUnlocked(false) || g_settings.GetCurrentProfile().canWriteDatabases())
+        if (g_passwordManager.IsMasterLockUnlocked(false) || CProfilesManager::Get().GetCurrentProfile().canWriteDatabases())
         {
           if (item->IsShortCut())
             buttons.Add(CONTEXT_BUTTON_RENAME, 16105); // rename

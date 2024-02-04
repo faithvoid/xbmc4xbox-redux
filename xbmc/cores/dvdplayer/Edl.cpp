@@ -20,11 +20,13 @@
 
 #include "Edl.h"
 #include "include.h"
-#include "utils/log.h"
+#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "filesystem/File.h"
 #include "filesystem/MythFile.h"
 #include "settings/AdvancedSettings.h"
+#include "utils/log.h"
+#include "utils/XBMCTinyXML.h"
 
 extern "C"
 {
@@ -501,7 +503,7 @@ bool CEdl::ReadBeyondTV(const CStdString& strMovie)
   if (!CFile::Exists(beyondTVFilename))
     return false;
 
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
   if (!xmlDoc.LoadFile(beyondTVFilename))
   {
     CLog::Log(LOGERROR, "%s - Could not load Beyond TV file: %s. %s", __FUNCTION__, beyondTVFilename.c_str(),

@@ -19,10 +19,10 @@
  */
 
 #include "PasswordManager.h"
-#include "settings/GUIDialogLockSettings.h"
+#include "profiles/ProfilesManager.h"
+#include "profiles/dialogs/GUIDialogLockSettings.h"
 #include "URL.h"
-#include "settings/Settings.h"
-#include "XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "utils/SingleLock.h"
 #include "utils/log.h"
 #include "filesystem/File.h"
@@ -117,10 +117,10 @@ void CPasswordManager::Clear()
 void CPasswordManager::Load()
 {
   Clear();
-  CStdString passwordsFile = g_settings.GetUserDataItem("passwords.xml");
+  CStdString passwordsFile = CProfilesManager::Get().GetUserDataItem("passwords.xml");
   if (XFILE::CFile::Exists(passwordsFile))
   {
-    TiXmlDocument doc;
+    CXBMCTinyXML doc;
     if (!doc.LoadFile(passwordsFile))
     {
       CLog::Log(LOGERROR, "%s - Unable to load: %s, Line %d\n%s", 
@@ -152,7 +152,7 @@ void CPasswordManager::Save() const
   if (!m_permanentCache.size())
     return;
 
-  TiXmlDocument doc;
+  CXBMCTinyXML doc;
   TiXmlElement rootElement("passwords");
   TiXmlNode *root = doc.InsertEndChild(rootElement);
   if (!root)
@@ -166,7 +166,7 @@ void CPasswordManager::Save() const
     XMLUtils::SetPath(path, "to", i->second);
   }
 
-  doc.SaveFile(g_settings.GetUserDataItem("passwords.xml"));
+  doc.SaveFile(CProfilesManager::Get().GetUserDataItem("passwords.xml"));
 }
 
 CStdString CPasswordManager::GetLookupPath(const CURL &url) const

@@ -22,7 +22,7 @@
 #include "LocalizeStrings.h"
 #include "utils/CharsetConverter.h"
 #include "filesystem/SpecialProtocol.h"
-#include "XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "utils/URIUtils.h"
 #include "utils/POUtils.h"
 #include "filesystem/Directory.h"
@@ -153,7 +153,7 @@ bool CLocalizeStrings::LoadPO(const CStdString &filename, CStdString &encoding,
 
 bool CLocalizeStrings::LoadXML(const CStdString &filename, CStdString &encoding, CStdString &error, uint32_t offset /* = 0 */)
 {
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
   if (!xmlDoc.LoadFile(filename))
   {
     CLog::Log(LOGDEBUG, "unable to load %s: %s at line %d", filename.c_str(), xmlDoc.ErrorDesc(), xmlDoc.ErrorRow());

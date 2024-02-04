@@ -30,6 +30,7 @@
 #include "GUICheckMarkControl.h"
 #include "GUIRadioButtonControl.h"
 #include "GUIWindowManager.h"
+#include "settings/DisplaySettings.h"
 #include "Application.h"
 #include "utils/Variant.h"
 
@@ -37,12 +38,6 @@ using namespace std;
 
 #define ACTIVE_WINDOW g_windowManager.GetActiveWindow()
 
-#ifndef __GNUC__
-#pragma code_seg("PY_TEXT")
-#pragma data_seg("PY_DATA")
-#pragma bss_seg("PY_BSS")
-#pragma const_seg("PY_RDATA")
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -892,7 +887,7 @@ namespace PYXBMC
     long res;
     if (!PyArg_ParseTuple(args, (char*)"l", &res)) return NULL;
 
-    if (res < HDTV_1080i || res > AUTORES)
+    if (res < RES_HDTV_1080i || res > RES_AUTORES)
     {
       PyErr_SetString(PyExc_RuntimeError, "Invalid resolution.");
       return NULL;
@@ -901,7 +896,7 @@ namespace PYXBMC
     CGUIWindow* pWindow = (CGUIWindow*)g_windowManager.GetWindow(self->iWindowId);
     if (PyXBMCWindowIsNull(pWindow)) return NULL;
 
-    pWindow->SetCoordsRes((RESOLUTION)res);
+    pWindow->SetCoordsRes(CDisplaySettings::Get().GetResolutionInfo(res));
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -1095,12 +1090,6 @@ namespace PYXBMC
     "and resets (not delete) all controls that are associated with this window.");
 
 // Restore code and data sections to normal.
-#ifndef __GNUC__
-#pragma code_seg()
-#pragma data_seg()
-#pragma bss_seg()
-#pragma const_seg()
-#endif
 
   PyTypeObject Window_Type;
 

@@ -19,13 +19,14 @@
  */
 
 #include "video/VideoInfoTag.h"
-#include "XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "LocalizeStrings.h"
 #include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/log.h"
 #include "utils/StringUtils.h"
 #include "utils/Variant.h"
+#include "utils/Archive.h"
 #include "utils/CharsetConverter.h"
 #include "pictures/Picture.h"
 
@@ -130,7 +131,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const CStdString &tag, bool savePathIn
   XMLUtils::SetString(movie, "runtime", m_strRuntime);
   if (!m_strPictureURL.m_xml.empty())
   {
-    TiXmlDocument doc;
+    CXBMCTinyXML doc;
     doc.Parse(m_strPictureURL.m_xml); 
     const TiXmlNode* thumb = doc.FirstChild("thumb");
     while (thumb)
@@ -141,7 +142,7 @@ bool CVideoInfoTag::Save(TiXmlNode *node, const CStdString &tag, bool savePathIn
   }
   if (m_fanart.m_xml.size())
   {
-    TiXmlDocument doc;
+    CXBMCTinyXML doc;
     doc.Parse(m_fanart.m_xml);
     movie->InsertEndChild(*doc.RootElement());
   }

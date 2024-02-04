@@ -56,10 +56,11 @@
 #include "GUIInfoManager.h"
 #include "utils/CharsetConverter.h"
 #include "input/ButtonTranslator.h"
-#include "XMLUtils.h"
+#include "utils/XMLUtils.h"
 #include "GUIFontManager.h"
 #include "GUIColorManager.h"
 #include "settings/Settings.h"
+#include "utils/RssManager.h"
 
 using namespace std;
 
@@ -1180,8 +1181,8 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const FRECT &rect, TiXmlEl
       parentID, id, posX, posY, width, height,
       labelInfo, textColor3, headlineColor, strRSSTags);
 
-    std::map<int,CSettings::RssSet>::iterator iter=g_settings.m_mapRssUrls.find(iUrlSet);
-    if (iter != g_settings.m_mapRssUrls.end())
+    RssUrls::const_iterator iter = CRssManager::Get().GetUrls().find(iUrlSet);
+    if (iter != CRssManager::Get().GetUrls().end())
     {
       ((CGUIRSSControl *)control)->SetUrls(iter->second.url,iter->second.rtl);
       ((CGUIRSSControl *)control)->SetIntervals(iter->second.interval);
@@ -1453,51 +1454,4 @@ CGUIControl* CGUIControlFactory::Create(int parentID, const FRECT &rect, TiXmlEl
       control->SetCamera(camera);
   }
   return control;
-}
-
-void CGUIControlFactory::ScaleElement(TiXmlElement *element, RESOLUTION fileRes, RESOLUTION destRes)
-{
-  if (element->FirstChild())
-  {
-    const char *value = element->FirstChild()->Value();
-    if (value)
-    {
-      float v = (float)atof(value);
-      CStdString name = element->Value();
-      if (name == "posx" ||
-          name == "width" ||
-          name == "textoffsetx" ||
-          name == "textwidth" ||
-          name == "spinwidth" ||
-          name == "spinposx" ||
-          name == "markwidth" ||
-          name == "sliderwidth" ||
-          name == "radiowidth" ||
-          name == "radioposx")
-      {
-        // scale
-        v *= (float)g_settings.m_ResInfo[destRes].iWidth / g_settings.m_ResInfo[fileRes].iWidth;
-        CStdString floatValue;
-        floatValue.Format("%f", v);
-        element->FirstChild()->SetValue(floatValue);
-      }
-      else if (name == "posy" ||
-          name == "height" ||
-          name == "textoffsety" ||
-          name == "spinheight" ||
-          name == "spinposy" ||
-          name == "markheight" ||
-          name == "sliderheight" ||
-          name == "buttongap" ||  // should really depend on orientation
-          name == "radioheight" ||
-          name == "radioposy")
-      {
-        // scale
-        v *= (float)g_settings.m_ResInfo[destRes].iHeight / g_settings.m_ResInfo[fileRes].iHeight;
-        CStdString floatValue;
-        floatValue.Format("%f", v);
-        element->FirstChild()->SetValue(floatValue);
-      }
-    }
-  }
 }

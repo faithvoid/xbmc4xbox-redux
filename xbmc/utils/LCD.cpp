@@ -19,10 +19,12 @@
  */
 
 #include "LCD.h"
-#include "settings/Settings.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
-#include "CharsetConverter.h"
+#include "utils/CharsetConverter.h"
 #include "utils/log.h"
+#include "utils/XBMCTinyXML.h"
 
 using namespace std;
 
@@ -389,7 +391,7 @@ CStdString ILCD::GetBigDigit( UINT _nCharset, int _nDigit, UINT _nLine, UINT _nM
 void ILCD::Initialize()
 {
   CStdString lcdPath;
-  lcdPath = g_settings.GetUserDataItem("LCD.xml");
+  lcdPath = CProfilesManager::Get().GetUserDataItem("LCD.xml");
   LoadSkin(lcdPath);
   m_eCurrentCharset = CUSTOM_CHARSET_DEFAULT;
 
@@ -403,7 +405,7 @@ void ILCD::LoadSkin(const CStdString &xmlFile)
 
   bool condensed = TiXmlBase::IsWhiteSpaceCondensed();
   TiXmlBase::SetCondenseWhiteSpace(false);
-  TiXmlDocument doc;
+  CXBMCTinyXML doc;
   if (!doc.LoadFile(xmlFile.c_str()))
   {
     CLog::Log(LOGERROR, "Unable to load LCD skin file %s", xmlFile.c_str());

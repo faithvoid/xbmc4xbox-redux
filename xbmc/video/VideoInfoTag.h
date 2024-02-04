@@ -19,16 +19,19 @@
  *
  */
 
-#include "utils/Archive.h"
 #include "DateTime.h"
 #include "utils/ScraperUrl.h"
 #include "utils/Fanart.h"
 #include "utils/ISortable.h"
 #include "utils/StreamDetails.h"
 #include "video/Bookmark.h"
-#include "DateTime.h"
 
 #include <vector>
+
+class CArchive;
+class TiXmlNode;
+class TiXmlElement;
+class CVariant;
 
 struct SActorInfo
 {
@@ -50,6 +53,13 @@ public:
   const CStdString GetCast(bool bIncludeRole = false) const;
   bool HasStreamDetails() const;
   bool IsEmpty() const;
+
+  const CStdString& GetPath() const
+  {
+    if (m_strFileNameAndPath.IsEmpty())
+      return m_strPath;
+    return m_strFileNameAndPath;
+  };
 
   CStdString m_basePath; // the base path of the video, for folder-based lookups
   int m_parentPathID;      // the parent path id where the base path of the video lies

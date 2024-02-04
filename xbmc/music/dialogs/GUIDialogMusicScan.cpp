@@ -26,7 +26,7 @@
 #include "URL.h"
 #include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
-#include "settings/Settings.h"
+#include "settings/GUISettings.h"
 #include "utils/SingleLock.h"
 
 using namespace MUSIC_INFO;
@@ -38,7 +38,6 @@ using namespace MUSIC_INFO;
 CGUIDialogMusicScan::CGUIDialogMusicScan(void)
 : CGUIDialog(WINDOW_DIALOG_MUSIC_SCAN, "DialogMusicScan.xml")
 {
-  m_musicInfoScanner.SetObserver(this);
   m_loadType = KEEP_IN_MEMORY;
 }
 
@@ -97,60 +96,10 @@ void CGUIDialogMusicScan::OnSetProgress(int currentItem, int itemCount)
   if (m_fPercentDone>100.0F) m_fPercentDone=100.0F;
 }
 
-void CGUIDialogMusicScan::StartScanning(const CStdString& strDirectory)
+void CGUIDialogMusicScan::ShowScan()
 {
   m_ScanState = PREPARING;
-
-  if (!g_guiSettings.GetBool("musiclibrary.backgroundupdate"))
-  {
-    Show();
-  }
-
-  // save settings
-  g_application.SaveMusicScanSettings();
-
-  m_musicInfoScanner.Start(strDirectory);
-}
-
-void CGUIDialogMusicScan::StartAlbumScan(const CStdString& strDirectory)
-{
-  m_ScanState = PREPARING;
-
-  if (!g_guiSettings.GetBool("musiclibrary.backgroundupdate"))
-  {
-    Show();
-  }
-
-  // save settings
-  g_application.SaveMusicScanSettings();
-
-  m_musicInfoScanner.FetchAlbumInfo(strDirectory);
-}
-
-void CGUIDialogMusicScan::StartArtistScan(const CStdString& strDirectory)
-{
-  m_ScanState = PREPARING;
-
-  if (!g_guiSettings.GetBool("musiclibrary.backgroundupdate"))
-  {
-    Show();
-  }
-
-  // save settings
-  g_application.SaveMusicScanSettings();
-
-  m_musicInfoScanner.FetchArtistInfo(strDirectory);
-}
-
-void CGUIDialogMusicScan::StopScanning()
-{
-  if (m_musicInfoScanner.IsScanning())
-    m_musicInfoScanner.Stop();
-}
-
-bool CGUIDialogMusicScan::IsScanning()
-{
-  return m_musicInfoScanner.IsScanning();
+  Show();
 }
 
 void CGUIDialogMusicScan::OnDirectoryScanned(const CStdString& strDirectory)
@@ -168,10 +117,6 @@ void CGUIDialogMusicScan::OnFinished()
   // send message
   CGUIMessage msg(GUI_MSG_SCAN_FINISHED, 0, 0, 0);
   g_windowManager.SendThreadMessage(msg);
-
-  // be sure to restore the settings
-  CLog::Log(LOGINFO,"Music scan was stopped or finished ... restoring FindRemoteThumbs");
-  g_application.RestoreMusicScanSettings();
 
   if (!g_guiSettings.GetBool("musiclibrary.backgroundupdate"))
   {

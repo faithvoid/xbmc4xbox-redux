@@ -34,6 +34,8 @@
 #include "filesystem/CurlFile.h"
 #include "FileItem.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/GUISettings.h"
+#include "settings/MediaSourceSettings.h"
 #include "LocalizeStrings.h"
 #include "music/Album.h"
 
@@ -102,7 +104,7 @@ bool CGUIDialogSongInfo::OnMessage(CGUIMessage& message)
       }
       else if (iControl == CONTROL_ALBUMINFO)
       {
-        CGUIWindowMusicBase *window = (CGUIWindowMusicBase *)g_windowManager.GetWindow(g_windowManager.GetActiveWindow());
+        CGUIWindowMusicBase *window = (CGUIWindowMusicBase *)g_windowManager.GetWindow(WINDOW_MUSIC_NAV);
         if (window)
         {
           CFileItem item(*m_song);
@@ -280,7 +282,8 @@ void CGUIDialogSongInfo::OnGetThumb()
   }
 
   CStdString result;
-  if (!CGUIDialogFileBrowser::ShowAndGetImage(items, g_settings.m_musicSources, g_localizeStrings.Get(1030), result))
+  VECSOURCES sources(*CMediaSourceSettings::Get().GetSources("music"));
+  if (!CGUIDialogFileBrowser::ShowAndGetImage(items, sources, g_localizeStrings.Get(1030), result))
     return;   // user cancelled
 
   if (result == "thumb://Current")

@@ -19,8 +19,8 @@
  */
 
 #include "system.h"
-#include "utils/log.h"
-#include "settings/GUISettings.h"
+#include "GUISettings.h"
+#include "Settings.h"
 #include "dialogs/GUIDialogFileBrowser.h"
 #ifdef HAS_XBOX_HARDWARE
 #include "utils/FanController.h"
@@ -32,10 +32,15 @@
 #include <xfont.h>
 #endif
 #include "storage/MediaManager.h"
-#include "filesystem/SpecialProtocol.h"
 #include "settings/AdvancedSettings.h"
+#include "settings/VideoSettings.h"
+#include "cores/paplayer/AudioDecoder.h"
 #include "LocalizeStrings.h"
-#include "GUIFont.h" // for FONT_STYLE_* definitions
+#include "filesystem/CurlFile.h"
+#include "guilib/GUIFont.h" // for FONT_STYLE_* definitions
+#include "utils/StringUtils.h"
+#include "utils/log.h"
+#include "utils/XMLUtils.h"
 
 using namespace std;
 using namespace ADDON;
@@ -127,9 +132,22 @@ CSettingInt::CSettingInt(int iOrder, const char *strSetting, int iLabel, int iDa
     m_strFormat = "%i";
 }
 
+CSettingInt::CSettingInt(int iOrder, const char *strSetting, int iLabel,
+                         int iData, const map<int,int>& entries, int iControlType)
+  : CSetting(iOrder, strSetting, iLabel, iControlType),
+    m_entries(entries)
+{
+  m_iData = iData;
+  m_iMin = -1;
+  m_iMax = -1;
+  m_iStep = 1;
+  m_iLabelMin = -1;
+}
+
 void CSettingInt::FromString(const CStdString &strValue)
 {
-  SetData(atoi(strValue.c_str()));
+  int id = atoi(strValue.c_str());
+  SetData(id);
 }
 
 CStdString CSettingInt::ToString()
@@ -202,8 +220,6 @@ CGUISettings::CGUISettings(void)
 
 void CGUISettings::Initialize()
 {
-  ZeroMemory(&m_replayGain, sizeof(ReplayGainSettings));
-
   // Pictures settings
   AddGroup(0, 1);
   CSettingsCategory* pic = AddCategory(0, "pictures", 14081);
@@ -211,7 +227,7 @@ void CGUISettings::Initialize()
   AddBool(pic,"pictures.generatethumbs",13360,true);
   AddBool(pic, "pictures.useexifrotation", 20184, true);
   AddBool(pic, "pictures.showvideos", 22022, false);
-  AddInt(pic, "pictures.displayresolution", 169, (int)AUTORES, (int)HDTV_1080i, 1, (int)AUTORES, SPIN_CONTROL_TEXT);
+  AddInt(pic, "pictures.displayresolution", 169, (int)RES_AUTORES, (int)RES_HDTV_1080i, 1, (int)RES_AUTORES, SPIN_CONTROL_TEXT);
 
   CSettingsCategory* cat = AddCategory(0, "slideshow", 108);
   AddInt(cat, "slideshow.staytime", 12378, 5, 1, 1, 100, SPIN_CONTROL_INT_PLUS, MASK_SECS);
@@ -234,6 +250,7 @@ void CGUISettings::Initialize()
   // My Weather settings
   AddGroup(2, 8);
   CSettingsCategory* wea = AddCategory(2, "weather", 16000);
+  AddInt(NULL, "weather.currentlocation", 0, 1, 1, 1, 3, SPIN_CONTROL_INT_PLUS, NULL, -1);
   AddString(wea, "weather.areacode1", 14019, "USNY0996 - New York, NY", BUTTON_CONTROL_STANDARD);
   AddString(wea, "weather.areacode2", 14020, "UKXX0085 - London, United Kingdom", BUTTON_CONTROL_STANDARD);
   AddString(wea, "weather.areacode3", 14021, "JAXX0085 - Tokyo, Japan", BUTTON_CONTROL_STANDARD);
@@ -261,7 +278,12 @@ void CGUISettings::Initialize()
   AddBool(mp, "musicplayer.autoplaynextitem", 489, true);
   AddBool(mp, "musicplayer.queuebydefault", 14084, false);
   AddSeparator(mp, "musicplayer.sep1");
-  AddInt(mp, "musicplayer.replaygaintype", 638, REPLAY_GAIN_ALBUM, REPLAY_GAIN_NONE, 1, REPLAY_GAIN_TRACK, SPIN_CONTROL_TEXT);
+  map<int,int> gain;
+  gain.insert(make_pair(351,REPLAY_GAIN_NONE));
+  gain.insert(make_pair(639,REPLAY_GAIN_TRACK));
+  gain.insert(make_pair(640,REPLAY_GAIN_ALBUM));
+
+  AddInt(mp, "musicplayer.replaygaintype", 638, REPLAY_GAIN_ALBUM, gain, SPIN_CONTROL_TEXT);
   AddInt(NULL, "musicplayer.replaygainpreamp", 641, 89, 77, 1, 101, SPIN_CONTROL_INT_PLUS, MASK_DB);
   AddInt(NULL, "musicplayer.replaygainnogainpreamp", 642, 89, 77, 1, 101, SPIN_CONTROL_INT_PLUS, MASK_DB);
   AddBool(NULL, "musicplayer.replaygainavoidclipping", 643, false);
@@ -270,7 +292,12 @@ void CGUISettings::Initialize()
   AddSeparator(mp, "musicplayer.sep2");
   AddDefaultAddon(mp, "musicplayer.visualisation", 250, DEFAULT_VISUALISATION, ADDON_VIZ);
   AddSeparator(mp, "musicplayer.sep3");
-  AddInt(mp, "musicplayer.defaultplayer", 22003, PLAYER_PAPLAYER, PLAYER_MPLAYER, 1, PLAYER_PAPLAYER, SPIN_CONTROL_TEXT);
+
+  map<int,int> defaultMusicPlayers;
+  defaultMusicPlayers.insert(make_pair(22027, PLAYER_PAPLAYER));
+  defaultMusicPlayers.insert(make_pair(22029, PLAYER_MPLAYER));
+  defaultMusicPlayers.insert(make_pair(22028, PLAYER_DVDPLAYER));
+  AddInt(mp, "musicplayer.defaultplayer", 22003, PLAYER_PAPLAYER, defaultMusicPlayers, SPIN_CONTROL_TEXT);
 #ifdef _XBOX
   AddBool(mp, "musicplayer.outputtoallspeakers", 252, false);
 #endif
@@ -301,8 +328,19 @@ void CGUISettings::Initialize()
   AddSeparator(acd, "audiocds.sep1");
   AddPath(acd,"audiocds.recordingpath",20000,"select writable folder",BUTTON_CONTROL_PATH_INPUT,false,657);
   AddString(acd, "audiocds.trackpathformat", 13307, "%A - %B/[%N. ][%A - ]%T", EDIT_CONTROL_INPUT, false, 16016);
-  AddInt(acd, "audiocds.encoder", 621, CDDARIP_ENCODER_LAME, CDDARIP_ENCODER_LAME, 1, CDDARIP_ENCODER_FLAC, SPIN_CONTROL_TEXT);
-  AddInt(acd, "audiocds.quality", 622, CDDARIP_QUALITY_CBR, CDDARIP_QUALITY_CBR, 1, CDDARIP_QUALITY_EXTREME, SPIN_CONTROL_TEXT);
+  map<int,int> encoders;
+  encoders.insert(make_pair(34005, CDDARIP_ENCODER_FLAC));
+  encoders.insert(make_pair(34000,CDDARIP_ENCODER_LAME));
+  encoders.insert(make_pair(34001,CDDARIP_ENCODER_VORBIS));
+  encoders.insert(make_pair(34002,CDDARIP_ENCODER_WAV));
+  AddInt(acd, "audiocds.encoder", 621, CDDARIP_ENCODER_LAME, encoders, SPIN_CONTROL_TEXT);
+
+  map<int,int> qualities;
+  qualities.insert(make_pair(604,CDDARIP_QUALITY_CBR));
+  qualities.insert(make_pair(601,CDDARIP_QUALITY_MEDIUM));
+  qualities.insert(make_pair(602,CDDARIP_QUALITY_STANDARD));
+  qualities.insert(make_pair(603,CDDARIP_QUALITY_EXTREME));
+  AddInt(acd, "audiocds.quality", 622, CDDARIP_QUALITY_CBR, qualities, SPIN_CONTROL_TEXT);
   AddInt(acd, "audiocds.bitrate", 623, 192, 128, 32, 320, SPIN_CONTROL_INT_PLUS, MASK_KBPS);
   AddInt(acd, "audiocds.compressionlevel", 665, 5, 0, 1, 8, SPIN_CONTROL_INT_PLUS);
 
@@ -317,12 +355,27 @@ void CGUISettings::Initialize()
 
   // System settings
   AddGroup(4, 13000);
+
+  map<int,int> ledPlaybacks;
+  ledPlaybacks.insert(make_pair(106, LED_PLAYBACK_OFF));
+  ledPlaybacks.insert(make_pair(13002, LED_PLAYBACK_VIDEO));
+  ledPlaybacks.insert(make_pair(475, LED_PLAYBACK_MUSIC));
+  ledPlaybacks.insert(make_pair(476, LED_PLAYBACK_VIDEO_MUSIC));
+
+  map<int,int> ledColours;
+  ledColours.insert(make_pair(13340, LED_COLOUR_NO_CHANGE));
+  ledColours.insert(make_pair(13341, LED_COLOUR_GREEN));
+  ledColours.insert(make_pair(13342, LED_COLOUR_ORANGE));
+  ledColours.insert(make_pair(13343, LED_COLOUR_RED));
+  ledColours.insert(make_pair(13344, LED_COLOUR_CYCLE));
+  ledColours.insert(make_pair(351, LED_COLOUR_OFF));
+
 #ifdef HAS_XBOX_HARDWARE
   CSettingsCategory* sys = AddCategory(4, "system", 128);
   AddBool(sys, "system.mceremote", 13601, false);
   AddInt(sys, "system.shutdowntime", 357, 0, 0, 5, 120, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF);
-  AddInt(sys, "system.ledcolour", 13339, LED_COLOUR_NO_CHANGE, LED_COLOUR_NO_CHANGE, 1, LED_COLOUR_OFF, SPIN_CONTROL_TEXT);
-  AddInt(sys, "system.leddisableonplayback", 13345, LED_PLAYBACK_OFF, LED_PLAYBACK_OFF, 1, LED_PLAYBACK_VIDEO_MUSIC, SPIN_CONTROL_TEXT);
+  AddInt(sys, "system.ledcolour", 13339, LED_COLOUR_NO_CHANGE, ledColours, SPIN_CONTROL_TEXT);
+  AddInt(sys, "system.leddisableonplayback", 13345, LED_PLAYBACK_OFF, ledPlaybacks, SPIN_CONTROL_TEXT);
   AddBool(sys, "system.ledenableonpaused", 20313, true);
   AddSeparator(sys, "system.sep1");
   AddBool(sys, "system.fanspeedcontrol", 13302, false);
@@ -334,13 +387,22 @@ void CGUISettings::Initialize()
 #endif
   
   CSettingsCategory* vo = AddCategory(4, "videooutput", 21373);
-  AddInt(vo, "videooutput.aspect", 21374, VIDEO_NORMAL, VIDEO_NORMAL, 1, VIDEO_WIDESCREEN, SPIN_CONTROL_TEXT);
+  map<int,int> videoAspects;
+  videoAspects.insert(make_pair(21375, VIDEO_NORMAL));
+  videoAspects.insert(make_pair(21376, VIDEO_LETTERBOX));
+  videoAspects.insert(make_pair(21377, VIDEO_WIDESCREEN));
+
+  AddInt(vo, "videooutput.aspect", 21374, VIDEO_NORMAL, videoAspects, SPIN_CONTROL_TEXT);
   AddBool(vo,  "videooutput.hd480p", 21378, true);
   AddBool(vo,  "videooutput.hd720p", 21379, true);
   AddBool(vo,  "videooutput.hd1080i", 21380, false);
 
   CSettingsCategory* ao = AddCategory(4, "audiooutput", 772);
-  AddInt(ao, "audiooutput.mode", 337, AUDIO_ANALOG, AUDIO_ANALOG, 1, AUDIO_DIGITAL, SPIN_CONTROL_TEXT);
+
+  map<int,int> audiomode;
+  audiomode.insert(make_pair(338, AUDIO_ANALOG));
+  audiomode.insert(make_pair(339, AUDIO_DIGITAL));
+  AddInt(ao, "audiooutput.mode", 337, AUDIO_ANALOG, audiomode, SPIN_CONTROL_TEXT);
   AddBool(ao, "audiooutput.ac3passthrough", 364, true);
   AddBool(ao, "audiooutput.dtspassthrough", 254, true);
   AddBool(ao, "audiooutput.aacpassthrough", 299, false);
@@ -349,12 +411,24 @@ void CGUISettings::Initialize()
 #endif
 
   CSettingsCategory* lcd = AddCategory(4, "lcd", 448);
-  AddInt(lcd, "lcd.type", 4501, LCD_TYPE_NONE, LCD_TYPE_NONE, 1, LCD_TYPE_VFD, SPIN_CONTROL_TEXT);
-  AddInt(lcd, "lcd.modchip", 471, MODCHIP_SMARTXX, MODCHIP_SMARTXX, 1, MODCHIP_XECUTER3, SPIN_CONTROL_TEXT);
+
+  map<int,int> lcdTypes;
+  lcdTypes.insert(make_pair(351, LCD_TYPE_NONE));
+  lcdTypes.insert(make_pair(34006, LCD_TYPE_LCD_HD44780));
+  lcdTypes.insert(make_pair(34007, LCD_TYPE_LCD_KS0073));
+  lcdTypes.insert(make_pair(34008, LCD_TYPE_VFD));
+  AddInt(lcd, "lcd.type", 4501, LCD_TYPE_NONE, lcdTypes, SPIN_CONTROL_TEXT);
+
+  map<int,int> lcdModcips;
+  lcdModcips.insert(make_pair(34009, MODCHIP_SMARTXX));
+  lcdModcips.insert(make_pair(34010, MODCHIP_XENIUM));
+  lcdModcips.insert(make_pair(34011, MODCHIP_XECUTER3));
+
+  AddInt(lcd, "lcd.modchip", 471, MODCHIP_SMARTXX, lcdModcips, SPIN_CONTROL_TEXT);
   AddInt(lcd, "lcd.backlight", 463, 80, 0, 5, 100, SPIN_CONTROL_INT_PLUS, MASK_PERCENT);
   AddInt(lcd, "lcd.contrast", 465, 100, 0, 5, 100, SPIN_CONTROL_INT_PLUS, MASK_PERCENT);
   AddSeparator(lcd, "lcd.sep1");
-  AddInt(lcd, "lcd.disableonplayback", 20310, LED_PLAYBACK_OFF, LED_PLAYBACK_OFF, 1, LED_PLAYBACK_VIDEO_MUSIC, SPIN_CONTROL_TEXT);
+  AddInt(lcd, "lcd.disableonplayback", 20310, LED_PLAYBACK_OFF, ledPlaybacks, SPIN_CONTROL_TEXT);
   AddBool(lcd, "lcd.enableonpaused", 20312, true);
 
   CSettingsCategory* dbg = AddCategory(4, "debug", 14092);
@@ -372,11 +446,27 @@ void CGUISettings::Initialize()
 
   CSettingsCategory* hdd = AddCategory(4, "harddisk", 440);
   AddInt(hdd, "harddisk.spindowntime", 229, 0, 0, 1, 60, SPIN_CONTROL_INT_PLUS, MASK_MINS, TEXT_OFF); // Minutes
-  AddInt(hdd, "harddisk.remoteplayspindown", 13001, 0, 0, 1, 3, SPIN_CONTROL_TEXT); // off, music, video, both
+  map<int,int> remotePlaySpinDowns;
+  remotePlaySpinDowns.insert(make_pair(474, SPIN_DOWN_NONE));
+  remotePlaySpinDowns.insert(make_pair(475, SPIN_DOWN_MUSIC));
+  remotePlaySpinDowns.insert(make_pair(13002, SPIN_DOWN_VIDEO));
+  remotePlaySpinDowns.insert(make_pair(476, SPIN_DOWN_BOTH));
+
+  AddInt(hdd, "harddisk.remoteplayspindown", 13001, 0, remotePlaySpinDowns, SPIN_CONTROL_TEXT); // off, music, video, both
   AddInt(NULL, "harddisk.remoteplayspindownminduration", 13004, 20, 0, 1, 20, SPIN_CONTROL_INT_PLUS, MASK_MINS); // Minutes
   AddInt(NULL, "harddisk.remoteplayspindowndelay", 13003, 20, 5, 5, 300, SPIN_CONTROL_INT_PLUS, MASK_SECS); // seconds
-  AddInt(hdd, "harddisk.aamlevel", 21386, AAM_FAST, AAM_FAST, 1, AAM_QUIET, SPIN_CONTROL_TEXT);
-  AddInt(hdd, "harddisk.apmlevel", 21390, APM_HIPOWER, APM_HIPOWER, 1, APM_LOPOWER_STANDBY, SPIN_CONTROL_TEXT);
+
+  map<int,int> aamLevels;
+  aamLevels.insert(make_pair(21388, AAM_QUIET));
+  aamLevels.insert(make_pair(21387, AAM_FAST));
+  AddInt(hdd, "harddisk.aamlevel", 21386, AAM_FAST, aamLevels, SPIN_CONTROL_TEXT);
+
+  map<int,int> apmLevels;
+  apmLevels.insert(make_pair(21391, APM_HIPOWER));
+  apmLevels.insert(make_pair(21392, APM_LOPOWER));
+  apmLevels.insert(make_pair(21393, APM_HIPOWER_STANDBY));
+  apmLevels.insert(make_pair(21394, APM_LOPOWER_STANDBY));
+  AddInt(hdd, "harddisk.apmlevel", 21390, APM_HIPOWER, apmLevels, SPIN_CONTROL_TEXT);
 
   CSettingsCategory* dpc = AddCategory(4, "dvdplayercache", 483);
   AddInt(dpc, "dvdplayercache.video", 14096, 1024, 0, 256, 16384, SPIN_CONTROL_INT_PLUS, MASK_KB, TEXT_OFF);
@@ -416,7 +506,13 @@ void CGUISettings::Initialize()
   AddBool(vdl, "videolibrary.showunwatchedplots", 20369, true);
   AddBool(vdl, "videolibrary.seasonthumbs", 20382, true);
   AddBool(vdl, "videolibrary.actorthumbs", 20402, false);
-  AddInt(NULL, "videolibrary.flattentvshows", 20412, 1, 0, 1, 2, SPIN_CONTROL_TEXT);
+
+  map<int,int> flattenTVShowOptions;
+  flattenTVShowOptions.insert(make_pair(20420, 0));
+  flattenTVShowOptions.insert(make_pair(20421, 1));
+  flattenTVShowOptions.insert(make_pair(20422, 2));
+  AddInt(vdl, "videolibrary.flattentvshows", 20412, 1, flattenTVShowOptions, SPIN_CONTROL_TEXT);
+
   AddBool(vdl, "videolibrary.groupmoviesets", 20458, false);
   AddBool(vdl, "videolibrary.updateonstartup", 22000, false);
   AddBool(NULL, "videolibrary.backgroundupdate", 22001, false);
@@ -426,20 +522,51 @@ void CGUISettings::Initialize()
   AddString(vdl, "videolibrary.import", 648, "", BUTTON_CONTROL_STANDARD);
 
   CSettingsCategory* vp = AddCategory(5, "videoplayer", 14086);
-  AddInt(vp, "videoplayer.resumeautomatically", 12017, RESUME_ASK, RESUME_NO, 1, RESUME_ASK, SPIN_CONTROL_TEXT);
+
+  map<int,int> resume;
+  resume.insert(make_pair(106,RESUME_NO));
+  resume.insert(make_pair(107,RESUME_YES));
+  resume.insert(make_pair(12020,RESUME_ASK));
+  AddInt(vp, "videoplayer.resumeautomatically", 12017, RESUME_ASK, resume, SPIN_CONTROL_TEXT);
   AddString(vp, "videoplayer.calibrate", 214, "", BUTTON_CONTROL_STANDARD);
   AddSeparator(vp, "videoplayer.sep1");
-  AddInt(vp, "videoplayer.rendermethod", 13354, RENDER_HQ_RGB_SHADER, RENDER_LQ_RGB_SHADER, 1, RENDER_HQ_RGB_SHADERV2, SPIN_CONTROL_TEXT);
-  AddInt(vp, "videoplayer.displayresolution", 169, (int)AUTORES, (int)HDTV_1080i, 1, (int)AUTORES, SPIN_CONTROL_TEXT);
-  AddInt(vp, "videoplayer.framerateconversions", 336, FRAME_RATE_LEAVE_AS_IS, FRAME_RATE_LEAVE_AS_IS, 1, FRAME_RATE_USE_PAL60, SPIN_CONTROL_TEXT);
+
+  map<int,int> renderMethods;
+  renderMethods.insert(make_pair(13355, RENDER_LQ_RGB_SHADER));
+  renderMethods.insert(make_pair(13356, RENDER_OVERLAYS));
+  renderMethods.insert(make_pair(13357, RENDER_HQ_RGB_SHADER));
+  renderMethods.insert(make_pair(21397, RENDER_HQ_RGB_SHADERV2));
+
+  AddInt(vp, "videoplayer.rendermethod", 13354, RENDER_HQ_RGB_SHADER, renderMethods, SPIN_CONTROL_TEXT);
+  AddInt(vp, "videoplayer.displayresolution", 169, (int)RES_AUTORES, (int)RES_HDTV_1080i, 1, (int)RES_AUTORES, SPIN_CONTROL_TEXT);
+
+  map<int,int> framerateConversions;
+  framerateConversions.insert(make_pair(231, FRAME_RATE_LEAVE_AS_IS));
+  framerateConversions.insert(make_pair(g_videoConfig.HasPAL() ? 12380 : 12381, FRAME_RATE_CONVERT));
+  if (g_videoConfig.HasPAL() && g_videoConfig.HasPAL60())
+    framerateConversions.insert(make_pair(12382, FRAME_RATE_USE_PAL60));
+
+  AddInt(vp, "videoplayer.framerateconversions", 336, FRAME_RATE_LEAVE_AS_IS, framerateConversions, SPIN_CONTROL_TEXT);
   AddInt(vp, "videoplayer.flicker", 13100, 1, 0, 1, 5, SPIN_CONTROL_INT_PLUS, -1, TEXT_OFF);
   AddBool(vp, "videoplayer.soften", 215, false);
   AddFloat(vp, "videoplayer.errorinaspect", 22021, 3.0f, 0.0f, 1.0f, 20.0f);
   AddSeparator(vp, "videoplayer.sep2");
-  AddInt(vp, "videoplayer.defaultplayer", 22003, PLAYER_DVDPLAYER, PLAYER_MPLAYER, 1, PLAYER_DVDPLAYER, SPIN_CONTROL_TEXT);
+
+  map<int,int> defaultVideoPlayers;
+  defaultVideoPlayers.insert(make_pair(22028, PLAYER_DVDPLAYER));
+  defaultVideoPlayers.insert(make_pair(22029, PLAYER_MPLAYER));
+
+  AddInt(vp, "videoplayer.defaultplayer", 22003, PLAYER_DVDPLAYER, defaultVideoPlayers, SPIN_CONTROL_TEXT);
   AddBool(vp, "videoplayer.allcodecs", 22025, false);
   AddBool(vp, "videoplayer.fast", 22026, false);
-  AddInt(vp, "videoplayer.skiploopfilter", 14100, VS_SKIPLOOP_NONREF, VS_SKIPLOOP_DEFAULT, 1, VS_SKIPLOOP_ALL, SPIN_CONTROL_TEXT);
+
+  map<int,int> skipLoopFilters;
+  skipLoopFilters.insert(make_pair(14101, VS_SKIPLOOP_DEFAULT));
+  skipLoopFilters.insert(make_pair(14102, VS_SKIPLOOP_NONREF));
+  skipLoopFilters.insert(make_pair(14103, VS_SKIPLOOP_BIDIR));
+  skipLoopFilters.insert(make_pair(14104, VS_SKIPLOOP_NONKEY));
+  skipLoopFilters.insert(make_pair(14105, VS_SKIPLOOP_ALL));
+  AddInt(vp, "videoplayer.skiploopfilter", 14100, VS_SKIPLOOP_NONREF, skipLoopFilters, SPIN_CONTROL_TEXT);
 
   CSettingsCategory* vid = AddCategory(5, "myvideos", 14081);
   AddBool(NULL, "myvideos.treatstackasfile", 20051, true);
@@ -447,10 +574,22 @@ void CGUISettings::Initialize()
   AddBool(vid, "myvideos.cleanstrings", 20419, false);
   AddBool(NULL, "myvideos.extractthumb",20433, false);
 
+  AddSeparator(NULL, "myvideos.sep1");
+  AddInt(NULL, "myvideos.startwindow", 0, WINDOW_VIDEO_FILES, WINDOW_VIDEO_FILES, 1, WINDOW_VIDEO_NAV, SPIN_CONTROL_INT);
+  AddBool(NULL, "myvideos.stackvideos", 0, false);
+  AddBool(NULL, "myvideos.flatten", 0, false);
+
   CSettingsCategory* sub = AddCategory(5, "subtitles", 287);
   AddString(sub, "subtitles.font", 288, "Arial.ttf", SPIN_CONTROL_TEXT);
   AddInt(sub, "subtitles.height", 289, 28, 16, 2, 74, SPIN_CONTROL_TEXT); // use text as there is a disk based lookup needed
-  AddInt(sub, "subtitles.style", 736, FONT_STYLE_BOLD, FONT_STYLE_NORMAL, 1, FONT_STYLE_BOLD | FONT_STYLE_ITALICS, SPIN_CONTROL_TEXT);
+
+  map<int,int> fontStyles;
+  fontStyles.insert(make_pair(738, FONT_STYLE_NORMAL));
+  fontStyles.insert(make_pair(739, FONT_STYLE_BOLD));
+  fontStyles.insert(make_pair(740, FONT_STYLE_ITALICS));
+  fontStyles.insert(make_pair(741, FONT_STYLE_BOLD_ITALICS));
+
+  AddInt(sub, "subtitles.style", 736, FONT_STYLE_BOLD, fontStyles, SPIN_CONTROL_TEXT);
   AddInt(sub, "subtitles.color", 737, SUBTITLE_COLOR_START + 1, SUBTITLE_COLOR_START, 1, SUBTITLE_COLOR_END, SPIN_CONTROL_TEXT);
   AddString(sub, "subtitles.charset", 735, "DEFAULT", SPIN_CONTROL_TEXT);
   AddSeparator(sub, "subtitles.sep1");
@@ -495,6 +634,8 @@ void CGUISettings::Initialize()
   AddString(srv,"services.webserverusername",1048, "xbmc", EDIT_CONTROL_INPUT);
   AddString(srv,"services.webserverpassword",733, "", EDIT_CONTROL_HIDDEN_INPUT, true, 733);
   AddDefaultAddon(srv, "services.webskin",199, DEFAULT_WEB_INTERFACE, ADDON_WEB_INTERFACE);
+  AddInt(NULL, "services.httpapibroadcastlevel", 0, 0, 0, 1, 5, SPIN_CONTROL_INT);
+  AddInt(NULL, "services.httpapibroadcastport", 0, 8278, 1, 1, 65535, SPIN_CONTROL_INT);
 #ifdef HAS_EVENT_SERVER
   AddSeparator(srv,"services.sep1");
   AddBool(srv,  "services.esenabled",         794, true);
@@ -523,7 +664,13 @@ void CGUISettings::Initialize()
   AddString(smb, "smb.workgroup",   1202,   "WORKGROUP", EDIT_CONTROL_INPUT, false, 1202);
 
   CSettingsCategory* net = AddCategory(6, "network", 705);
-  AddInt(net, "network.assignment", 715, NETWORK_DHCP, NETWORK_DASH, 1, NETWORK_STATIC, SPIN_CONTROL_TEXT);
+
+  map<int,int> networkAssignments;
+  networkAssignments.insert(make_pair(716, NETWORK_DHCP));
+  networkAssignments.insert(make_pair(717, NETWORK_STATIC));
+  networkAssignments.insert(make_pair(718, NETWORK_DASH));
+
+  AddInt(net, "network.assignment", 715, NETWORK_DHCP, networkAssignments, SPIN_CONTROL_TEXT);
   AddString(net, "network.ipaddress", 719, "0.0.0.0", EDIT_CONTROL_IP_INPUT);
   AddString(net, "network.subnet", 720, "255.255.255.0", EDIT_CONTROL_IP_INPUT);
   AddString(net, "network.gateway", 721, "0.0.0.0", EDIT_CONTROL_IP_INPUT);
@@ -534,6 +681,13 @@ void CGUISettings::Initialize()
 
   AddSeparator(net, "network.sep1");
   AddBool(net, "network.usehttpproxy", 708, false);
+  map<int,int> proxyTypes;
+  proxyTypes.insert(make_pair(1181, XFILE::CCurlFile::PROXY_HTTP));
+  proxyTypes.insert(make_pair(1182, XFILE::CCurlFile::PROXY_SOCKS4));
+  proxyTypes.insert(make_pair(1183, XFILE::CCurlFile::PROXY_SOCKS4A));
+  proxyTypes.insert(make_pair(1184, XFILE::CCurlFile::PROXY_SOCKS5));
+  proxyTypes.insert(make_pair(1185, XFILE::CCurlFile::PROXY_SOCKS5_REMOTE));
+  AddInt(net, "network.httpproxytype", 1180, XFILE::CCurlFile::PROXY_HTTP, proxyTypes, SPIN_CONTROL_TEXT);
   AddString(net, "network.httpproxyserver", 706, "", EDIT_CONTROL_INPUT);
   AddString(net, "network.httpproxyport", 730, "8080", EDIT_CONTROL_NUMBER_INPUT, false, 707);
   AddString(net, "network.httpproxyusername", 1048, "", EDIT_CONTROL_INPUT);
@@ -569,7 +723,7 @@ void CGUISettings::Initialize()
   AddString(loc, "locale.timeserveraddress", 731, "pool.ntp.org", EDIT_CONTROL_INPUT);
 
   CSettingsCategory* vs = AddCategory(7, "videoscreen", 131);
-  AddInt(vs, "videoscreen.resolution",169,(int)AUTORES, (int)HDTV_1080i, 1, (int)AUTORES, SPIN_CONTROL_TEXT);
+  AddInt(vs, "videoscreen.resolution",169,(int)RES_AUTORES, (int)RES_HDTV_1080i, 1, (int)RES_AUTORES, SPIN_CONTROL_TEXT);
   AddString(vs, "videoscreen.guicalibration",214,"", BUTTON_CONTROL_STANDARD);
   AddInt(vs, "videoscreen.flickerfilter", 13100, 5, 0, 1, 5, SPIN_CONTROL_INT_PLUS, -1, TEXT_OFF);
   AddBool(vs, "videoscreen.soften", 215, false);
@@ -594,6 +748,14 @@ void CGUISettings::Initialize()
   AddBool(ss, "screensaver.usedimonpause", 22014, true);
 
   AddPath(NULL,"system.playlistspath",20006,"set default",BUTTON_CONTROL_PATH_INPUT,false);
+
+  AddInt(NULL, "mymusic.startwindow", 0, WINDOW_MUSIC_FILES, WINDOW_MUSIC_FILES, 1, WINDOW_MUSIC_NAV, SPIN_CONTROL_INT);
+  AddBool(NULL, "mymusic.songthumbinvis", 0, false);
+  AddString(NULL, "mymusic.defaultlibview", 0, "", BUTTON_CONTROL_STANDARD);
+
+  AddBool(NULL, "general.addonautoupdate", 0, true);
+  AddBool(NULL, "general.addonnotifications", 0, true);
+  AddBool(NULL, "general.addonforeignfilter", 0, false);
 }
 
 CGUISettings::~CGUISettings(void)
@@ -759,6 +921,16 @@ void CGUISettings::AddInt(CSettingsCategory* cat, const char *strSetting, int iL
   settingsMap.insert(pair<CStdString, CSetting*>(CStdString(strSetting).ToLower(), pSetting));
 }
 
+void CGUISettings::AddInt(CSettingsCategory* cat, const char *strSetting,
+                          int iLabel, int iData, const map<int,int>& entries,
+                          int iControlType)
+{
+  int iOrder = cat?++cat->m_entries:0;
+  CSettingInt* pSetting = new CSettingInt(iOrder, CStdString(strSetting).ToLower(), iLabel, iData, entries, iControlType);
+  if (!pSetting) return ;
+  settingsMap.insert(pair<CStdString, CSetting*>(CStdString(strSetting).ToLower(), pSetting));
+}
+
 void CGUISettings::AddHex(CSettingsCategory* cat, const char *strSetting, int iLabel, int iData, int iMin, int iStep, int iMax, int iControlType, const char *strFormat)
 {
   int iOrder = cat?++cat->m_entries:0;
@@ -788,8 +960,6 @@ void CGUISettings::SetInt(const char *strSetting, int iSetting)
   if (it != settingsMap.end())
   {
     ((CSettingInt *)(*it).second)->SetData(iSetting);
-    if (stricmp(strSetting, "videoscreen.resolution") == 0)
-      g_guiSettings.m_LookAndFeelResolution = (RESOLUTION)iSetting;
     return ;
   }
   // Assert here and write debug output
@@ -939,37 +1109,12 @@ void CGUISettings::LoadXML(TiXmlElement *pRootElement, bool hideSettings /* = fa
   SetInt("locale.timezone", g_timezone.GetTimeZoneIndex());
   SetBool("locale.usedst", g_timezone.GetDST());
 
-  g_guiSettings.m_LookAndFeelResolution = (RESOLUTION)GetInt("videoscreen.resolution");
-  CLog::Log(LOGNOTICE, "Checking resolution %i", g_guiSettings.m_LookAndFeelResolution);
-  g_videoConfig.PrintInfo();
-  if (
-    (g_guiSettings.m_LookAndFeelResolution == AUTORES) ||
-    (!g_graphicsContext.IsValidResolution(g_guiSettings.m_LookAndFeelResolution))
-  )
-  {
-#ifdef _XBOX
-    RESOLUTION newRes = g_videoConfig.GetBestMode();
-#else
-    RESOLUTION newRes = g_videoConfig.GetSafeMode();
-#endif
-    if (g_guiSettings.m_LookAndFeelResolution == AUTORES)
-    {
-      //"videoscreen.resolution" will stay at AUTORES, m_LookAndFeelResolution will be the real mode
-      CLog::Log(LOGNOTICE, "Setting autoresolution mode %i", newRes);
-      g_guiSettings.m_LookAndFeelResolution = newRes;
-    }
-    else
-    {
-      CLog::Log(LOGNOTICE, "Setting safe mode %i", newRes);
-      SetInt("videoscreen.resolution", newRes);
-    }
-  }
-
   // Move replaygain settings into our struct
-  m_replayGain.iPreAmp = GetInt("musicplayer.replaygainpreamp");
-  m_replayGain.iNoGainPreAmp = GetInt("musicplayer.replaygainnogainpreamp");
-  m_replayGain.iType = GetInt("musicplayer.replaygaintype");
-  m_replayGain.bAvoidClipping = GetBool("musicplayer.replaygainavoidclipping");
+  ReplayGainSettings &replayGainSettings = CAudioDecoder::GetReplayGainSettings();
+  replayGainSettings.iPreAmp = GetInt("musicplayer.replaygainpreamp");
+  replayGainSettings.iNoGainPreAmp = GetInt("musicplayer.replaygainnogainpreamp");
+  replayGainSettings.iType = GetInt("musicplayer.replaygaintype");
+  replayGainSettings.bAvoidClipping = GetBool("musicplayer.replaygainavoidclipping");
 }
 
 void CGUISettings::LoadFromXML(TiXmlElement *pRootElement, mapIter &it, bool advanced /* = false */)
@@ -987,12 +1132,6 @@ void CGUISettings::LoadFromXML(TiXmlElement *pRootElement, mapIter &it, bool adv
         CStdString strValue = pGrandChild->FirstChild() ? pGrandChild->FirstChild()->Value() : "";
         if (strValue != "-")
         { // update our item
-          if ((*it).second->GetType() == SETTINGS_TYPE_PATH)
-          { // check our path
-            int pathVersion = 0;
-            pGrandChild->Attribute("pathversion", &pathVersion);
-            strValue = CSpecialProtocol::ReplaceOldPath(strValue, pathVersion);
-          }
           (*it).second->FromString(strValue);
           if (advanced)
             (*it).second->SetAdvanced();
@@ -1026,7 +1165,7 @@ void CGUISettings::SaveXML(TiXmlNode *pRootNode)
       { // successfully added (or found) our group
         TiXmlElement newElement(strSplit[1]);
         if ((*it).second->GetType() == SETTINGS_TYPE_PATH)
-          newElement.SetAttribute("pathversion", CSpecialProtocol::path_version);
+          newElement.SetAttribute("pathversion", XMLUtils::path_version);
         TiXmlNode *pNewNode = pChild->InsertEndChild(newElement);
         if (pNewNode)
         {

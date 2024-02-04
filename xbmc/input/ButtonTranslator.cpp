@@ -19,15 +19,17 @@
  */
 
 #include "system.h"
-#include "utils/log.h"
 #include "interfaces/Builtins.h"
-#include "input/ButtonTranslator.h"
-#include "Util.h"
-#include "settings/Settings.h"
-#include "Key.h"
+#include "ButtonTranslator.h"
+#include "profiles/ProfilesManager.h"
+#include "guilib/Key.h"
 #include "filesystem/File.h"
 #include "filesystem/Directory.h"
 #include "FileItem.h"
+#include "utils/StringUtils.h"
+#include "utils/log.h"
+#include "utils/XBMCTinyXML.h"
+#include "XBIRRemote.h"
 
 using namespace std;
 using namespace XFILE;
@@ -306,7 +308,7 @@ bool CButtonTranslator::Load()
       success |= LoadKeymap(files[i]->GetPath());
   }
   //load from user's keymaps/ directory
-  const CStdString userKeymapDirPath = g_settings.GetUserDataItem("keymaps/");
+  const CStdString userKeymapDirPath = CProfilesManager::Get().GetUserDataItem("keymaps/");
   if( XFILE::CDirectory::Exists(userKeymapDirPath) )
   {
     CFileItemList files;
@@ -318,7 +320,7 @@ bool CButtonTranslator::Load()
   }
 
   //try to load userdata/Keymap.xml for backward compatibility
-  const CStdString oldKeymapPath = g_settings.GetUserDataItem("Keymap.xml");
+  const CStdString oldKeymapPath = CProfilesManager::Get().GetUserDataItem("Keymap.xml");
   if( CFile::Exists(oldKeymapPath) )
   {
     CLog::Log(LOGINFO, "CButtonTranslator::Load - old Keymap.xml in userdata found (%s). Please consider moving it to the \"keymaps/\" folder", oldKeymapPath.c_str());
@@ -337,7 +339,7 @@ bool CButtonTranslator::Load()
 
 bool CButtonTranslator::LoadKeymap(const CStdString &keymapPath)
 {
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
 
   CLog::Log(LOGINFO, "Loading %s", keymapPath.c_str());
   if (!xmlDoc.LoadFile(keymapPath))
@@ -356,7 +358,7 @@ bool CButtonTranslator::LoadKeymap(const CStdString &keymapPath)
   TiXmlNode* pWindow = pRoot->FirstChild();
   while (pWindow)
   {
-    if (pWindow->Type() == TiXmlNode::ELEMENT)
+    if (pWindow->Type() == TiXmlNode::TINYXML_ELEMENT)
     {
       int windowID = WINDOW_INVALID;
       const char *szWindow = pWindow->Value();

@@ -37,13 +37,15 @@
 #include "URL.h"
 #include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
+#include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogYesNo.h"
-#include "settings/Settings.h"
 #include "playlists/PlayList.h"
-#include "utils/Crc32.h"
+#include "profiles/ProfilesManager.h"
+#include "settings/GUISettings.h"
 #include "settings/AdvancedSettings.h"
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
+#include "utils/Crc32.h"
 #include "utils/log.h"
 
 #include <sstream>
@@ -279,7 +281,7 @@ bool CLastFmManager::RequestRadioTracks()
   //CLog::DebugLog("RequestRadioTracks: %s", html.c_str());
 
   //parse playlist
-  TiXmlDocument xmlDoc;
+  CXBMCTinyXML xmlDoc;
 
   xmlDoc.Parse(html);
   if (xmlDoc.Error())
@@ -431,7 +433,7 @@ void CLastFmManager::CacheTrackThumb(const int nrInitialTracksToAdd)
         crc.ComputeFromLowerCase(coverUrl);
         crcFile.Format("%08x.tbn", (__int32)crc);
         URIUtils::AddFileToFolder(g_advancedSettings.m_cachePath, crcFile, cachedFile);
-        URIUtils::AddFileToFolder(g_settings.GetLastFMThumbFolder(), crcFile, thumbFile);
+        URIUtils::AddFileToFolder(CProfilesManager::Get().GetLastFMThumbFolder(), crcFile, thumbFile);
         item->SetThumbnailImage("");
         try
         {
@@ -707,7 +709,7 @@ bool CLastFmManager::CallXmlRpc(const CStdString& action, const CStdString& arti
   CreateMD5Hash(strAuth, strAuth);
 
   //create request xml
-	TiXmlDocument doc;
+	CXBMCTinyXML doc;
 	TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
 	doc.LinkEndChild( decl );
 	
@@ -806,13 +808,13 @@ bool CLastFmManager::Love(bool askConfirmation)
         if (Love(*infoTag))
         {
           strMessage.Format(g_localizeStrings.Get(15289), strTitle);
-          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(15200), strMessage, 7000, false);
+          CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(15200), strMessage, 7000, false);
           return true;
         }
         else 
         {
           strMessage.Format(g_localizeStrings.Get(15290), strTitle);
-          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Error, g_localizeStrings.Get(15200), strMessage, 7000, false);
+          CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, g_localizeStrings.Get(15200), strMessage, 7000, false);
           return false;
         }
       }
@@ -839,13 +841,13 @@ bool CLastFmManager::Ban(bool askConfirmation)
         if (Ban(*infoTag))
         {
           strMessage.Format(g_localizeStrings.Get(15291), strTitle);
-          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(15200), strMessage, 7000, false);
+          CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Info, g_localizeStrings.Get(15200), strMessage, 7000, false);
           return true;
         }
         else 
         {
           strMessage.Format(g_localizeStrings.Get(15292), strTitle);
-          g_application.m_guiDialogKaiToast.QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(15200), strMessage, 7000, false);
+          CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Warning, g_localizeStrings.Get(15200), strMessage, 7000, false);
           return false;
         }
       }
