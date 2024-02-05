@@ -23,7 +23,6 @@
 #include "CodecFactory.h"
 #include "GUIInfoManager.h"
 #include "AudioContext.h"
-#include "filesystem/ShoutcastFile.h"
 #include "CdgParser.h"
 #include "music/tags/MusicInfoTag.h"
 #include "settings/AdvancedSettings.h"
@@ -39,8 +38,6 @@
 #define TIME_TO_CROSS_FADE      10000L        // 10 seconds
 
 using namespace XFILE;
-
-extern CShoutcastFile* m_pShoutCastRipper;
 
 // PAP: Psycho-acoustic Audio Player
 // Supporting all open  audio codec standards.
@@ -1126,30 +1123,6 @@ bool PAPlayer::SkipNext()
     return true;
   }
   return false;
-}
-
-bool PAPlayer::CanRecord()
-{
-  if (!m_pShoutCastRipper) return false;
-  return m_pShoutCastRipper->CanRecord();
-}
-
-bool PAPlayer::IsRecording()
-{
-  if (!m_pShoutCastRipper) return false;
-  return m_pShoutCastRipper->IsRecording();
-}
-
-bool PAPlayer::Record(bool bOnOff)
-{
-  if (!m_pShoutCastRipper) return false;
-  if (bOnOff && IsRecording()) return true;
-  if (bOnOff == false && IsRecording() == false) return true;
-  if (bOnOff)
-    return m_pShoutCastRipper->Record();
-
-  m_pShoutCastRipper->StopRecording();
-  return true;
 }
 
 void PAPlayer::WaitForStream()

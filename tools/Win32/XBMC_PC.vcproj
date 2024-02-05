@@ -2538,12 +2538,6 @@
 					RelativePath="..\..\xbmc\FileSystem\ShoutcastFile.h">
 				</File>
 				<File
-					RelativePath="..\..\xbmc\FileSystem\ShoutcastRipFile.cpp">
-				</File>
-				<File
-					RelativePath="..\..\xbmc\FileSystem\ShoutcastRipFile.h">
-				</File>
-				<File
 					RelativePath="..\..\xbmc\FileSystem\SlingboxDirectory.cpp">
 				</File>
 				<File

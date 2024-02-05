@@ -5,7 +5,6 @@
 #include "DllMPlayer.h"
 #include "cores/dlgcache.h"
 #include "Util.h"
-#include "filesystem/ShoutcastFile.h"
 #include "filesystem/SmbFile.h"
 #include "XBAudioConfig.h"
 #include "XBVideoConfig.h"
@@ -95,7 +94,6 @@ void audio_pause();
 void audio_resume();
 
 extern void tracker_free_mplayer_dlls(void);
-extern CShoutcastFile* m_pShoutCastRipper;
 extern "C" void dllReleaseAll( );
 
 const char * dvd_audio_stream_types[8] =
@@ -1732,29 +1730,6 @@ void CMPlayer::UnRegisterAudioCallback()
 {
   xbox_audio_unregistercallback();
 }
-
-bool CMPlayer::CanRecord()
-{
-  if (!m_pShoutCastRipper) return false;
-  return m_pShoutCastRipper->CanRecord();
-}
-bool CMPlayer::IsRecording()
-{
-  if (!m_pShoutCastRipper) return false;
-  return m_pShoutCastRipper->IsRecording();
-}
-bool CMPlayer::Record(bool bOnOff)
-{
-  if (!m_pShoutCastRipper) return false;
-  if (bOnOff && IsRecording()) return true;
-  if (bOnOff == false && IsRecording() == false) return true;
-  if (bOnOff)
-    return m_pShoutCastRipper->Record();
-
-  m_pShoutCastRipper->StopRecording();
-  return true;
-}
-
 
 void CMPlayer::SeekPercentage(float percent)
 {
