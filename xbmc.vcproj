@@ -1425,6 +1425,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\dialogs\GUIDialogContextMenu.cpp">
 				</File>
 				<File
+					RelativePath=".\xbmc\dialogs\GUIDialogExtendedProgressBar.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\dialogs\GUIDialogExtendedProgressBar.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\dialogs\GUIDialogFavourites.cpp">
 				</File>
 				<File
