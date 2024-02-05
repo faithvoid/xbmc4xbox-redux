@@ -158,7 +158,7 @@ void CGUIDialogSongInfo::OnInitWindow()
   db.Open();
 
   // no known db info - check if parent dir is an album
-  if (!g_guiSettings.GetBool("musiclibrary.enabled") || m_song->GetMusicInfoTag()->GetDatabaseId() == -1)
+  if (m_song->GetMusicInfoTag()->GetDatabaseId() == -1)
   {
     CStdString path;
     URIUtils::GetDirectory(m_song->GetPath(),path);

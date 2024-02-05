@@ -864,18 +864,6 @@ void CGUIWindowSettingsCategory::UpdateSettings()
           pControl->SetEnabled(addon->HasSettings());
       }
     }
-    else if (!strSetting.Equals("musiclibrary.enabled")
-      && strSetting.Left(13).Equals("musiclibrary."))
-    {
-      CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
-      if (pControl) pControl->SetEnabled(g_guiSettings.GetBool("musiclibrary.enabled"));
-    }
-    else if (!strSetting.Equals("videolibrary.enabled")
-      && strSetting.Left(13).Equals("videolibrary."))
-    {
-      CGUIControl *pControl = (CGUIControl *)GetControl(pSettingControl->GetID());
-      if (pControl) pControl->SetEnabled(g_guiSettings.GetBool("videolibrary.enabled"));
-    }
   }
 }
 

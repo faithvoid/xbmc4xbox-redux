@@ -2042,10 +2042,7 @@ bool CGUIWindowVideoBase::OnUnAssignContent(const CStdString &path, int label1, 
 }
 
 void CGUIWindowVideoBase::OnAssignContent(const CStdString &path)
-{
-  if (!g_guiSettings.GetBool("videolibrary.enabled")) 
-    return;
- 
+{ 
   bool bScan=false;
   CVideoDatabase db;
   db.Open();
