@@ -41,7 +41,7 @@ typedef struct tagTHREADNAME_INFO
   DWORD dwFlags; // reserved for future use, most be zero
 } THREADNAME_INFO;
 
-CThread::CThread()
+CThread::CThread(const char* ThreadName)
 {
   m_bStop = false;
 
@@ -54,9 +54,12 @@ CThread::CThread()
   m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=NULL;
+
+  if (ThreadName)
+    m_ThreadName = ThreadName;
 }
 
-CThread::CThread(IRunnable* pRunnable)
+CThread::CThread(IRunnable* pRunnable, const char* ThreadName)
 {
   m_bStop = false;
 
@@ -69,6 +72,9 @@ CThread::CThread(IRunnable* pRunnable)
   m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=pRunnable;
+
+  if (ThreadName)
+    m_ThreadName = ThreadName;
 }
 
 CThread::~CThread()
@@ -96,7 +102,11 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
   CUtil::InitRandomSeed();
 #endif
 
-//  CLog::Log(LOGDEBUG,"thread start, auto delete: %d",pThread->IsAutoDelete());
+  if (pThread->m_ThreadName.empty())
+    pThread->m_ThreadName = pThread->GetTypeName();
+  pThread->SetDebugCallStackName(pThread->m_ThreadName.c_str());
+
+  CLog::Log(LOGDEBUG,"Thread %s start, auto delete: %d", pThread->m_ThreadName.c_str(), pThread->IsAutoDelete());
 
   /* install win32 exception translator */
   win32_exception::install_handler();
@@ -119,7 +129,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread startup, aborting. auto delete: %d", __FUNCTION__, pThread->IsAutoDelete());
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread startup, aborting. auto delete: %d", __FUNCTION__, pThread->m_ThreadName.c_str(), pThread->IsAutoDelete());
     if( pThread->IsAutoDelete() )
     {
       delete pThread;
@@ -146,7 +156,7 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread process, attemping cleanup in OnExit", __FUNCTION__);
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread process, attemping cleanup in OnExit", __FUNCTION__, pThread->m_ThreadName.c_str());
   }
 
   try
@@ -165,17 +175,17 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 #endif
   catch(...)
   {
-    CLog::Log(LOGERROR, "%s - Unhandled exception caught in thread exit", __FUNCTION__);
+    CLog::Log(LOGERROR, "%s - thread %s, Unhandled exception caught in thread exit", __FUNCTION__, pThread->m_ThreadName.c_str());
   }
 
   if ( pThread->IsAutoDelete() )
   {
-//    CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating (autodelete)", (uint64_t)CThread::GetCurrentThreadId());
+    // CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating (autodelete)", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
     delete pThread;
     pThread = NULL;
   }
 //  else
-//    CLog::Log(LOGDEBUG,"Thread %"PRIu64" terminating", (uint64_t)CThread::GetCurrentThreadId());  
+    // CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
 #ifndef _LINUX
   _endthreadex(123);
 #endif
@@ -246,11 +256,11 @@ bool CThread::SetPriority(const int iPriority)
   }
 }
 
-void CThread::SetName( LPCTSTR szThreadName )
+void CThread::SetDebugCallStackName( const char *name )
 {
   THREADNAME_INFO info;
   info.dwType = 0x1000;
-  info.szName = szThreadName;
+  info.szName = name;
   info.dwThreadID = m_ThreadId;
   info.dwFlags = 0;
 #ifndef _LINUX
@@ -262,6 +272,34 @@ void CThread::SetName( LPCTSTR szThreadName )
   {
   }
 #endif
+}
+
+// Get the thread name using the implementation dependant typeid() class
+// and attempt to clean it.
+std::string CThread::GetTypeName(void)
+{
+  std::string name = typeid(*this).name();
+
+#if defined(_MSC_VER)
+  // Visual Studio 2010 returns the name as "class CThread" etc
+  if (name.substr(0, 6) == "class ")
+    name = name.substr(6, name.length() - 6);
+#elif defined(__GNUC__) && !defined(__clang__)
+  // gcc provides __cxa_demangle to demangle the name
+  char* demangled = NULL;
+  int   status;
+
+  demangled = __cxa_demangle(name.c_str(), NULL, 0, &status);
+  if (status == 0)
+    name = demangled;
+  else
+    CLog::Log(LOGDEBUG,"%s, __cxa_demangle(%s) failed with status %d", __FUNCTION__, name.c_str(), status);
+
+  if (demangled)
+    free(demangled);
+#endif
+
+  return name;
 }
 
 bool CThread::WaitForThreadExit(DWORD dwMilliseconds)

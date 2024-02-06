@@ -1,8 +1,7 @@
 #pragma once
-
 /*
- *      Copyright (C) 2005-2013 Team XBMC
- *      http://xbmc.org
+ *      Copyright (C) 2012-2013 Team XBMC
+ *      http://www.xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,21 +19,39 @@
  *
  */
 
-#include <stdint.h>
-#include <time.h>
+#include "Event.h"
+#include "Thread.h"
 
-class CDateTime;
-
-int64_t CurrentHostCounter(void);
-int64_t CurrentHostFrequency(void);
-
-class CTimeUtils
+class ITimerCallback
 {
 public:
-  static void UpdateFrameTime();      ///< update the frame time.  Not threadsafe
-  static unsigned int GetFrameTime(); ///< returns the frame time in MS.  Not threadsafe
-  static CDateTime GetLocalTime(time_t time);
-private:
-  static unsigned int frameTime;
+  virtual ~ITimerCallback() { }
+  
+  virtual void OnTimeout() = 0;
 };
 
+class CTimer : protected CThread
+{
+public:
+  CTimer(ITimerCallback *callback);
+  virtual ~CTimer();
+
+  bool Start(uint32_t timeout, bool interval = false);
+  bool Stop(bool wait = false);
+  bool Restart();
+
+  bool IsRunning() const { return CThread::IsRunning(); }
+
+  float GetElapsedSeconds() const;
+  float GetElapsedMilliseconds() const;
+  
+protected:
+  virtual void Process();
+  
+private:
+  ITimerCallback *m_callback;
+  uint32_t m_timeout;
+  bool m_interval;
+  uint32_t m_endTime;
+  CEvent m_eventTimeout;
+};

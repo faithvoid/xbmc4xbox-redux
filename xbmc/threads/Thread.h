@@ -29,7 +29,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-
+#include <string>
 #include "xbox/PlatformInclude.h"
 #include "Event.h"
 
@@ -50,8 +50,8 @@ public:
 class CThread
 {
 public:
-  CThread();
-  CThread(IRunnable* pRunnable);
+  CThread(const char* ThreadName = NULL);
+  CThread(IRunnable* pRunnable, const char* ThreadName = NULL);
   virtual ~CThread();
   void Create(bool bAutoDelete = false, unsigned stacksize = 0);
   bool WaitForThreadExit(DWORD dwMilliseconds);
@@ -59,12 +59,12 @@ public:
   DWORD WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
   void Sleep(DWORD dwMilliseconds);
   bool SetPriority(const int iPriority);
-  void SetName( LPCTSTR szThreadName );
   HANDLE ThreadHandle();
   operator HANDLE();
   operator HANDLE() const;
   bool IsAutoDelete() const;
   virtual void StopThread(bool bWait = true);
+  bool IsRunning() const { return m_ThreadHandle != NULL; };
   float GetRelativeUsage();  // returns the relative cpu usage of this thread since last call
   bool IsCurrentThread() const;
   int GetMinPriority(void);
@@ -81,6 +81,12 @@ protected:
   HANDLE m_ThreadHandle;
 
 private:
+  /*! \brief set the threadname for the debugger/callstack, implementation dependent.
+   */
+  void SetDebugCallStackName( const char *threadName );
+  std::string GetTypeName(void);
+
+private:
   ThreadIdentifier ThreadId() const;
   bool m_bAutoDelete;
   HANDLE m_StopEvent;
@@ -91,6 +97,8 @@ private:
   unsigned __int64 m_iLastUsage;
   unsigned __int64 m_iLastTime;
   float m_fLastUsage;
+
+  std::string m_ThreadName;
 
 private:
   static DWORD WINAPI staticThread(LPVOID* data);
