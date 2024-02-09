@@ -113,6 +113,7 @@ public:
 
 //  static bool Check(const CStdString& strSkinDir); // checks if everything is present and accounted for without loading the skin
   static double GetMinVersion();
+  void LoadIncludes();
   const INFO::CSkinVariableString* CreateSkinVariable(const CStdString& name, int context);
 protected:
   /*! \brief grab a resolution tag from a skin's configuration data
@@ -129,7 +130,6 @@ protected:
    */
   CStdString GetDirFromRes(RESOLUTION res) const;
 
-  void LoadIncludes();
   bool LoadStartupWindows(const cp_extension_t *ext);
 
   RESOLUTION_INFO m_defaultRes;

@@ -2020,6 +2020,8 @@ void CApplication::LoadSkin(const SkinPtr& skin)
 
   g_localizeStrings.LoadSkinStrings(langPath, g_guiSettings.GetString("locale.language"));
 
+  g_SkinInfo->LoadIncludes();
+
   int64_t start;
   start = CurrentHostCounter();
 

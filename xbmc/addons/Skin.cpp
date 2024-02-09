@@ -138,8 +138,6 @@ void CSkinInfo::Start()
     RESOLUTION_INFO& res = *std::min_element(m_resolutions.begin(), m_resolutions.end(), closestRes(target));
     m_currentAspect = res.strId;
   }
-
-  LoadIncludes(); // this should be removed in 371c73
 }
 
 CStdString CSkinInfo::GetSkinPath(const CStdString& strFile, RESOLUTION_INFO *res, const CStdString& strBaseDir /* = "" */) const
