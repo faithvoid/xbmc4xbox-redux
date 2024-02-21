@@ -35,6 +35,7 @@
 #include "settings/DisplaySettings.h"
 #include "settings/Settings.h"
 #include "utils/log.h"
+#include "utils/StringUtils.h"
 #include "view/ViewStateSettings.h"
 
 using namespace std;
@@ -601,6 +602,26 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
   BaseSettingControlPtr pSettingControl;
   CGUIControl *pControl = NULL;
 
+  // determine the label and any possible indentation in case of sub settings
+  string label = g_localizeStrings.Get(pSetting->GetLabel());
+  int parentLevels = 0;
+  CSetting *parentSetting = m_settings.GetSetting(pSetting->GetParent());
+  while (parentSetting != NULL)
+  {
+    parentLevels++;
+    parentSetting = m_settings.GetSetting(parentSetting->GetParent());
+  }
+
+  if (parentLevels > 0)
+  {
+    // add additional 2 spaces indentation for anything past one level
+    string indentation;
+    for (int index = 1; index < parentLevels; index++)
+      indentation.append("  ");
+    label = StringUtils2::Format(g_localizeStrings.Get(168).c_str(), indentation.c_str(), label.c_str());
+  }
+
+  // create the proper controls
   switch (pSetting->GetControl().GetType())
   {
     case SettingControlTypeCheckmark:
@@ -609,7 +630,7 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
       if (pControl == NULL)
         return NULL;
 
-      ((CGUIRadioButtonControl *)pControl)->SetLabel(g_localizeStrings.Get(pSetting->GetLabel()));
+      ((CGUIRadioButtonControl *)pControl)->SetLabel(label);
       pSettingControl.reset(new CGUIControlRadioButtonSetting((CGUIRadioButtonControl *)pControl, iControlID, pSetting));
       break;
     }
@@ -620,7 +641,7 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
       if (pControl == NULL)
         return NULL;
 
-      ((CGUISpinControlEx *)pControl)->SetText(g_localizeStrings.Get(pSetting->GetLabel()));
+      ((CGUISpinControlEx *)pControl)->SetText(label);
       pSettingControl.reset(new CGUIControlSpinExSetting((CGUISpinControlEx *)pControl, iControlID, pSetting));
       break;
     }
@@ -631,7 +652,7 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
       if (pControl == NULL)
         return NULL;
       
-      ((CGUIEditControl *)pControl)->SetLabel(g_localizeStrings.Get(pSetting->GetLabel()));
+      ((CGUIEditControl *)pControl)->SetLabel(label);
       pSettingControl.reset(new CGUIControlEditSetting((CGUIEditControl *)pControl, iControlID, pSetting));
       break;
     }
@@ -642,7 +663,7 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
       if (pControl == NULL)
         return NULL;
       
-      ((CGUIButtonControl *)pControl)->SetLabel(g_localizeStrings.Get(pSetting->GetLabel()));
+      ((CGUIButtonControl *)pControl)->SetLabel(label);
       pSettingControl.reset(new CGUIControlButtonSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
       break;
     }

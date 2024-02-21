@@ -277,7 +277,7 @@
             <formatlabel>14049</formatlabel>
           </control>
         </setting>
-        <setting id="cachevideo.lan" type="integer" label="14027" help="">
+        <setting id="cachevideo.lan" type="integer" parent="cachevideo.dvdrom" label="14035" help="">
           <level>3</level>
           <default>1024</default>
           <constraints>
@@ -292,7 +292,7 @@
             <formatlabel>14049</formatlabel>
           </control>
         </setting>
-        <setting id="cachevideo.internet" type="integer" label="14028" help="">
+        <setting id="cachevideo.internet" type="integer" parent="cachevideo.dvdrom" label="443" help="">
           <level>3</level>
           <default>1024</default>
           <constraints>
@@ -322,7 +322,7 @@
             <formatlabel>14049</formatlabel>
           </control>
         </setting>
-        <setting id="cacheaudio.lan" type="integer" label="14031" help="">
+        <setting id="cacheaudio.lan" type="integer" parent="cacheaudio.dvdrom" label="14035" help="">
           <level>3</level>
           <default>256</default>
           <constraints>
@@ -337,7 +337,7 @@
             <formatlabel>14049</formatlabel>
           </control>
         </setting>
-        <setting id="cacheaudio.internet" type="integer" label="14032" help="">
+        <setting id="cacheaudio.internet" type="integer" parent="cacheaudio.dvdrom" label="443" help="">
           <level>3</level>
           <default>256</default>
           <constraints>
@@ -367,7 +367,7 @@
             <formatlabel>14049</formatlabel>
           </control>
         </setting>
-        <setting id="cachedvd.lan" type="integer" label="14035" help="">
+        <setting id="cachedvd.lan" type="integer" parent="cachedvd.dvdrom" label="14035" help="">
           <level>3</level>
           <default>512</default>
           <constraints>
@@ -787,7 +787,7 @@
           <level>3</level>
           <default>false</default>
         </setting>
-        <setting id="services.ftpserveruser" type="string" label="1014" help="">
+        <setting id="services.ftpserveruser" type="string" parent="services.ftpserver" label="1014" help="">
           <level>3</level>
           <default>xbox</default>
           <dependencies>
@@ -795,7 +795,7 @@
           </dependencies>
           <control type="edit" format="string" />
         </setting>
-        <setting id="services.ftpserverpassword" type="string" label="15052" help="">
+        <setting id="services.ftpserverpassword" type="string" parent="services.ftpserver" label="15052" help="">
           <level>3</level>
           <default>xbox</default>
           <constraints>
@@ -1133,7 +1133,7 @@
         <setting id="audiooutput.passthroughaac">
           <visible>false</visible>
         </setting>
-        <setting id="audiooutput.aacpassthrough" type="boolean" label="38623" help="">
+        <setting id="audiooutput.aacpassthrough" type="boolean" parent="audiooutput.mode" label="38623" help="">
           <level>2</level>
           <default>false</default>
           <dependencies>
