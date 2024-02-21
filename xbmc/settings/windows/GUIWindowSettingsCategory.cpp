@@ -656,7 +656,18 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
       pSettingControl.reset(new CGUIControlEditSetting((CGUIEditControl *)pControl, iControlID, pSetting));
       break;
     }
-    
+
+    case SettingControlTypeList:
+    {
+      pControl = new CGUIButtonControl(*m_pOriginalButton);
+      if (pControl == NULL)
+        return NULL;
+
+      ((CGUIButtonControl *)pControl)->SetLabel(g_localizeStrings.Get(pSetting->GetLabel()));
+      pSettingControl.reset(new CGUIControlListSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
+      break;
+    }
+
     case SettingControlTypeButton:
     {
       pControl = new CGUIButtonControl(*m_pOriginalButton);
