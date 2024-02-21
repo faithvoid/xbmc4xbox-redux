@@ -1152,8 +1152,6 @@ void CGUIMediaWindow::ShowShareErrorMessage(CFileItem* pItem)
     idMessageText = 15303; // Workgroup not found
   else if (pItem->m_iDriveType == CMediaSource::SOURCE_TYPE_REMOTE || URIUtils::IsRemote(pItem->GetPath()))
     idMessageText = 15301; // Could not connect to network server
-  else if (url.GetProtocol() == "xbms" && strHostName.IsEmpty()) //  xbms server discover
-    idMessageText=15302;
   else
     idMessageText = 15300; // Path not found or invalid
 

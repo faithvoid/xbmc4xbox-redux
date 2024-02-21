@@ -135,7 +135,6 @@ void CGUIDialogNetworkSetup::OnInitWindow()
   pSpin->AddLabel(g_localizeStrings.Get(20171), NET_PROTOCOL_SMB);
   pSpin->AddLabel(g_localizeStrings.Get(20258), NET_PROTOCOL_MYTH);
   pSpin->AddLabel(g_localizeStrings.Get(21331), NET_PROTOCOL_TUXBOX);
-  pSpin->AddLabel(g_localizeStrings.Get(20172), NET_PROTOCOL_XBMSP);
   pSpin->AddLabel(g_localizeStrings.Get(20301), NET_PROTOCOL_HTTPS);
   pSpin->AddLabel(g_localizeStrings.Get(20300), NET_PROTOCOL_HTTP);
   pSpin->AddLabel(g_localizeStrings.Get(20254), NET_PROTOCOL_DAVS);
@@ -210,8 +209,6 @@ void CGUIDialogNetworkSetup::OnProtocolChange()
     m_port = "80";
   else if (m_protocol == NET_PROTOCOL_HTTPS || m_protocol == NET_PROTOCOL_DAVS)
     m_port = "443";
-  else if (m_protocol == NET_PROTOCOL_XBMSP)
-    m_port = "1400";
   else if (m_protocol == NET_PROTOCOL_DAAP)
     m_port = "3689";
   else if (m_protocol == NET_PROTOCOL_MYTH)
@@ -232,7 +229,7 @@ void CGUIDialogNetworkSetup::UpdateButtons()
   {
     SET_CONTROL_LABEL(CONTROL_SERVER_ADDRESS, 1009);  // Server Address
   }
-  if (m_protocol == NET_PROTOCOL_XBMSP || m_protocol == NET_PROTOCOL_DAAP)
+  if (m_protocol == NET_PROTOCOL_DAAP)
     SendMessage(GUI_MSG_SET_TYPE, CONTROL_SERVER_ADDRESS, CGUIEditControl::INPUT_TYPE_IPADDRESS, 1016);
   else
     SendMessage(GUI_MSG_SET_TYPE, CONTROL_SERVER_ADDRESS, CGUIEditControl::INPUT_TYPE_TEXT, 1016);
@@ -264,8 +261,7 @@ void CGUIDialogNetworkSetup::UpdateButtons()
 
   // port
   SET_CONTROL_LABEL2(CONTROL_PORT_NUMBER, m_port);
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_PORT_NUMBER, m_protocol == NET_PROTOCOL_XBMSP ||
-                                                   m_protocol == NET_PROTOCOL_FTP ||
+  CONTROL_ENABLE_ON_CONDITION(CONTROL_PORT_NUMBER, m_protocol == NET_PROTOCOL_FTP ||
                                                    m_protocol == NET_PROTOCOL_HTTP ||
                                                    m_protocol == NET_PROTOCOL_HTTPS ||
                                                    m_protocol == NET_PROTOCOL_DAV ||
@@ -300,8 +296,6 @@ CStdString CGUIDialogNetworkSetup::ConstructPath() const
   CURL url;
   if (m_protocol == NET_PROTOCOL_SMB)
     url.SetProtocol("smb");
-  else if (m_protocol == NET_PROTOCOL_XBMSP)
-    url.SetProtocol("xbms");
   else if (m_protocol == NET_PROTOCOL_FTP)
     url.SetProtocol("ftp");
   else if (m_protocol == NET_PROTOCOL_HTTP)
@@ -336,7 +330,6 @@ CStdString CGUIDialogNetworkSetup::ConstructPath() const
        (m_protocol == NET_PROTOCOL_DAV) ||
        (m_protocol == NET_PROTOCOL_DAVS) ||
        (m_protocol == NET_PROTOCOL_RSS) ||
-       (m_protocol == NET_PROTOCOL_XBMSP && !m_server.IsEmpty()) ||
        (m_protocol == NET_PROTOCOL_DAAP && !m_server.IsEmpty()) ||
        (m_protocol == NET_PROTOCOL_MYTH) ||
        (m_protocol == NET_PROTOCOL_TUXBOX))
@@ -355,8 +348,6 @@ void CGUIDialogNetworkSetup::SetPath(const CStdString &path)
   const CStdString &protocol = url.GetProtocol();
   if (protocol == "smb")
     m_protocol = NET_PROTOCOL_SMB;
-  else if (protocol == "xbms")
-    m_protocol = NET_PROTOCOL_XBMSP;
   else if (protocol == "ftp")
     m_protocol = NET_PROTOCOL_FTP;
   else if (protocol == "http")

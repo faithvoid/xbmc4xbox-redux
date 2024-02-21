@@ -30,7 +30,6 @@
 #ifdef HAS_FILESYSTEM
 #include "ISOFile.h"
 #include "SMBFile.h"
-#include "XBMSPFile.h"
 #include "RTVFile.h"
 #include "SndtrkFile.h"
 #include "CDDAFile.h"
@@ -103,7 +102,6 @@ IFile* CFileFactory::CreateLoader(const CURL& url)
     else if (strProtocol == "cmyth") return new CMythFile();
 #ifdef HAS_FILESYSTEM
     else if (strProtocol == "smb") return new CSmbFile();
-    else if (strProtocol == "xbms") return new CXBMSPFile();
     else if (strProtocol == "rtv") return new CRTVFile();
     else if (strProtocol == "daap") return new CDAAPFile();
     else if (strProtocol == "upnp") return new CUPnPFile();

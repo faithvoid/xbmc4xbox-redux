@@ -236,7 +236,6 @@ using namespace ANNOUNCEMENT;
 
 #if defined(_DEBUG) && !defined(USE_RELEASE_LIBS)
  #ifdef HAS_FILESYSTEM
-  #pragma comment (lib,"xbmc/lib/libXBMS/libXBMSd.lib")    // SECTIONNAME=LIBXBMS
   #pragma comment (lib,"xbmc/lib/libsmb/libsmbd.lib")      // SECTIONNAME=LIBSMB
   #pragma comment (lib,"xbmc/lib/libxdaap/libxdaapd.lib") // SECTIONNAME=LIBXDAAP
   #pragma comment (lib,"xbmc/lib/libRTV/libRTVd.lib")    // SECTIONNAME=LIBRTV
@@ -262,7 +261,6 @@ using namespace ANNOUNCEMENT;
  #endif
 #else
  #ifdef HAS_FILESYSTEM
-  #pragma comment (lib,"xbmc/lib/libXBMS/libXBMS.lib")
   #pragma comment (lib,"xbmc/lib/libsmb/libsmb.lib")
   #pragma comment (lib,"xbmc/lib/libxdaap/libxdaap.lib") // SECTIONNAME=LIBXDAAP
   #pragma comment (lib,"xbmc/lib/libRTV/libRTV.lib")

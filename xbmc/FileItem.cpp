@@ -849,11 +849,6 @@ bool CFileItem::IsSmb() const
   return URIUtils::IsSmb(m_strPath);
 }
 
-bool CFileItem::IsXBMS() const
-{
-  return URIUtils::IsXBMS(m_strPath);
-}
-
 bool CFileItem::IsURL() const
 {
   return URIUtils::IsURL(m_strPath);
@@ -2047,13 +2042,10 @@ void CFileItemList::StackFolders()
     if (item->m_bIsFolder && !item->IsPlugin())
     {
       // only check known fast sources?
-      // xbms included because it supports file existance
       // NOTES:
-      // 1. xbms would not have worked previously: item->GetPath().Left(5).Equals("xbms", false)
-      // 2. rars and zips may be on slow sources? is this supposed to be allowed?
+      // 1. rars and zips may be on slow sources? is this supposed to be allowed?
       if( !item->IsRemote()
         || item->IsSmb()
-        || item->IsXBMS()
         || URIUtils::IsInRAR(item->GetPath())
         || URIUtils::IsInZIP(item->GetPath())
         )
