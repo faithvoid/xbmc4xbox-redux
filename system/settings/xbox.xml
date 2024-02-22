@@ -29,6 +29,7 @@
         <setting id="locale.usedst" type="boolean" label="14075" help="">
           <level>2</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="4">
@@ -45,6 +46,7 @@
         <setting id="filelists.unrollarchives" type="boolean" label="38692" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
@@ -73,7 +75,7 @@
           <constraints>
             <options>resolutions</options>
           </constraints>
-          <control type="spinner" format="string" />
+          <control type="list" format="string" />
         </setting>
         <setting id="videoplayer.framerateconversions" type="integer" label="336" help="">
           <level>1</level>
@@ -111,6 +113,7 @@
         <setting id="videoplayer.soften" type="boolean" label="215" help="">
           <level>0</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="videoplayer.stretch43">
           <visible>false</visible>
@@ -149,6 +152,7 @@
           <dependencies>
             <dependency type="visible" setting="videoplayer.defaultplayer" operator="is">1</dependency>
           </dependencies>
+          <control type="toggle" />
         </setting>
         <setting id="videoplayer.fast" type="boolean" label="38786" help="">
           <level>3</level>
@@ -156,6 +160,7 @@
           <dependencies>
             <dependency type="visible" setting="videoplayer.defaultplayer" operator="is">1</dependency>
           </dependencies>
+          <control type="toggle" />
         </setting>
         <setting id="videoplayer.skiploopfilter" type="integer" label="38754" help="">
           <level>3</level>
@@ -413,6 +418,7 @@
         <setting id="subtitles.searchrars" type="boolean" label="13249" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
@@ -478,6 +484,7 @@
         <setting id="karaoke.enabled" type="boolean" label="13323" help="">
           <level>2</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="karaoke.autopopupselector">
           <visible>false</visible>
@@ -508,6 +515,7 @@
         <setting id="karaoke.voiceenabled" type="boolean" label="13361" help="">
           <level>2</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="karaoke.volume" type="integer" label="13376" help="">
           <level>2</level>
@@ -682,6 +690,7 @@
           <setting id="autodetect.onoff" type="boolean" label="38703" help="">
             <level>3</level>
             <default>false</default>
+            <control type="toggle" />
           </setting>
           <setting id="autodetect.popupinfo" type="boolean" label="38705" help="">
             <level>3</level>
@@ -689,6 +698,7 @@
             <dependencies>
               <dependency type="enable" setting="autodetect.onoff">true</dependency>
             </dependencies>
+            <control type="toggle" />
           </setting>
           <setting id="autodetect.nickname" type="string" label="38704" help="">
             <level>3</level>
@@ -709,6 +719,7 @@
             <dependencies>
               <dependency type="enable" setting="autodetect.onoff">true</dependency>
             </dependencies>
+            <control type="toggle" />
           </setting>
         </group>
       </group>
@@ -768,6 +779,7 @@
         <setting id="services.ftpserver" type="boolean" label="305" help="">
           <level>3</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="services.ftpserveruser" type="string" parent="services.ftpserver" label="1014" help="">
           <level>3</level>
@@ -793,6 +805,7 @@
         <setting id="services.ftpautofatx" type="boolean" label="38697" help="">
           <level>3</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
@@ -801,6 +814,7 @@
         <setting id="services.timeserver" type="boolean" label="38600" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="services.timeserveraddress" type="string" label="38696" help="">
           <level>1</level>
@@ -819,6 +833,7 @@
         <setting id="system.mceremote" type="boolean" label="38747" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="2">
@@ -870,12 +885,14 @@
               </and>
             </dependency>
           </dependencies>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="3">
         <setting id="system.fanspeedcontrol" type="boolean" label="13302" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="system.fanspeed" type="integer" label="13300" help="">
           <level>1</level>
@@ -896,6 +913,7 @@
         <setting id="system.autotemperature" type="boolean" label="13301" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="system.targettemperature" type="integer" label="13299" help="">
           <level>1</level>
@@ -927,40 +945,49 @@
         <setting id="autorun.dvd" type="boolean" label="38603" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.vcd" type="boolean" label="38604" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.cdda" type="boolean" label="38605" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.xbox" type="boolean" label="38606" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.video" type="boolean" label="38607" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.music" type="boolean" label="38608" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="autorun.pictures" type="boolean" label="38609" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="6">
         <setting id="myprograms.autoffpatch" type="boolean" label="38791" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="myprograms.gameautoregion" type="boolean" label="511" help="">
           <level>1</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="myprograms.ntscmode" type="integer" label="38766" help="">
           <level>1</level>
@@ -995,6 +1022,7 @@
         <setting id="myprograms.usedashpath" type="boolean" label="38720" help="">
           <level>1</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="myprograms.dashboard" type="string" label="38719" help="">
           <level>1</level>
@@ -1047,6 +1075,7 @@
         <setting id="videoscreen.soften" type="boolean" label="215" help="">
           <level>0</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
       <group id="4">
@@ -1066,21 +1095,42 @@
           <visible>has_hdtv</visible>
           <level>0</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="videooutput.hd720p" type="boolean" label="21379" help="">
           <visible>has_hdtv</visible>
           <level>0</level>
           <default>true</default>
+          <control type="toggle" />
         </setting>
         <setting id="videooutput.hd1080i" type="boolean" label="21380" help="">
           <visible>has_hdtv</visible>
           <level>0</level>
           <default>false</default>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
     <category id="audiooutput">
       <group id="1">
+        <setting id="audiooutput.audiodevice">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.channels">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.config">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.samplerate">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.stereoupmix">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.streamsilence">
+          <visible>false</visible>
+        </setting>
         <setting id="audiooutput.mode" type="integer" label="38629" help="">
           <level>0</level>
           <default>0</default> <!-- AUDIO_ANALOG -->
@@ -1092,30 +1142,32 @@
           </constraints>
           <control type="spinner" format="string" />
         </setting>
-        <setting id="audiooutput.channels">
+      </group>
+      <group id="2">
+        <visible>false</visible> <!-- not working for some reason -->
+        <setting id="audiooutput.guisoundmode">
           <visible>false</visible>
         </setting>
-        <setting id="audiooutput.processquality">
+      </group>
+      <group id="3">
+        <setting id="audiooutput.passthrough">
           <visible>false</visible>
         </setting>
-        <setting id="audiooutput.normalizelevels">
+        <setting id="audiooutput.passthroughdevice">
           <visible>false</visible>
         </setting>
-        <setting id="audiooutput.stereoupmix">
-          <visible>false</visible>
-        </setting>
-        <setting id="audiooutput.ac3passthrough">
+        <setting id="audiooutput.ac3passthrough" parent="audiooutput.mode">
           <dependencies>
             <dependency type="enable" setting="audiooutput.mode">1</dependency> <!-- AUDIO_DIGITAL -->
           </dependencies>
         </setting>
-        <setting id="audiooutput.dtspassthrough">
+        <setting id="audiooutput.eac3passthrough">
+          <visible>false</visible>
+        </setting>
+        <setting id="audiooutput.dtspassthrough" parent="audiooutput.mode">
           <dependencies>
             <dependency type="enable" setting="audiooutput.mode">1</dependency> <!-- AUDIO_DIGITAL -->
           </dependencies>
-        </setting>
-        <setting id="audiooutput.passthroughaac">
-          <visible>false</visible>
         </setting>
         <setting id="audiooutput.aacpassthrough" type="boolean" parent="audiooutput.mode" label="38623" help="">
           <level>2</level>
@@ -1123,20 +1175,12 @@
           <dependencies>
             <dependency type="enable" setting="audiooutput.mode">1</dependency> <!-- AUDIO_DIGITAL -->
           </dependencies>
-        </setting>
-        <setting id="audiooutput.multichannellpcm" >
-          <visible>false</visible>
-        </setting>
-        <setting id="audiooutput.truehdpassthrough">
-          <visible>false</visible>
+          <control type="toggle" />
         </setting>
         <setting id="audiooutput.truehdpassthrough">
           <visible>false</visible>
         </setting>
         <setting id="audiooutput.dtshdpassthrough">
-          <visible>false</visible>
-        </setting>
-        <setting id="audiooutput.streamsilence">
           <visible>false</visible>
         </setting>
         <setting id="musicplayer.outputtoallspeakers" type="boolean" label="38621" help="">
@@ -1145,25 +1189,12 @@
           <dependencies>
             <dependency type="enable" setting="audiooutput.mode">1</dependency> <!-- AUDIO_DIGITAL -->
           </dependencies>
+          <control type="toggle" />
         </setting>
         <setting id="audiooutput.downmixmultichannel" type="boolean" label="548" help=""> <!-- Move this to xbox.xml -->
           <level>0</level>
           <default>true</default>
-        </setting>
-      </group>
-      <group id="2">
-        <visible>false</visible> <!-- not working for some reason -->
-        <setting id="audiooutput.audiodevice">
-          <visible>false</visible>
-        </setting>
-        <setting id="audiooutput.passthroughdevice">
-          <visible>false</visible>
-        </setting>
-      </group>
-      <group id="3">
-        <visible>false</visible> <!-- not working for some reason -->
-        <setting id="audiooutput.guisoundmode">
-          <visible>false</visible>
+          <control type="toggle" />
         </setting>
       </group>
     </category>
@@ -1180,6 +1211,9 @@
         </setting>
         <setting id="input.enablemouse">
           <default>true</default>
+        </setting>
+        <setting id="input.enablesystemkeys">
+          <visible>false</visible>
         </setting>
       </group>
     </category>
@@ -1372,6 +1406,7 @@
               </and>
             </dependency>
           </dependencies>
+          <control type="toggle" />
         </setting>
       </group>
     </category>

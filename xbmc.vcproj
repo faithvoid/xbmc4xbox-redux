@@ -440,6 +440,15 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\settings\ISettingCallback.h">
 				</File>
 				<File
+					RelativePath=".\xbmc\settings\ISettingControl.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\ISettingControl.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\ISettingControlCreator.h">
+				</File>
+				<File
 					RelativePath=".\xbmc\settings\ISettingCreator.h">
 				</File>
 				<File
@@ -489,6 +498,9 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\settings\SettingControl.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\settings\SettingDefinitions.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\settings\SettingDependency.cpp">

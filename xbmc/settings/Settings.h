@@ -22,6 +22,7 @@
 #include <set>
 
 #include "settings/ISettingCallback.h"
+#include "settings/ISettingControlCreator.h"
 #include "settings/ISettingCreator.h"
 #include "threads/CriticalSection.h"
 
@@ -33,7 +34,7 @@ class CSettingsManager;
 class TiXmlElement;
 class TiXmlNode;
 
-class CSettings : public ISettingCreator
+class CSettings : public ISettingCreator, public ISettingControlCreator
 {
 public:
   CSettings();
@@ -43,6 +44,9 @@ public:
 
   // implementation of ISettingCreator
   virtual CSetting* CreateSetting(const std::string &settingType, const std::string &settingId, CSettingsManager *settingsManager = NULL) const;
+
+  // implementation of ISettingControlCreator
+  virtual ISettingControl* CreateControl(const std::string &controlType) const;
 
   bool Initialize();
   bool Load();
@@ -91,6 +95,7 @@ private:
   bool Initialize(const std::string &file);
   bool InitializeDefinitions();
   void InitializeSettingTypes();
+  void InitializeControls();
   void InitializeVisibility();
   void InitializeDefaults();
   void InitializeOptionFillers();

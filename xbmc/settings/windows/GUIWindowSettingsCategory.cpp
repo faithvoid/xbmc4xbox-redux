@@ -83,7 +83,7 @@ static const SettingGroup s_settingGroupMap[] = { { SETTINGS_PICTURES,    "pictu
                                                   { SETTINGS_SERVICE,     "services" },
                                                   { SETTINGS_APPEARANCE,  "appearance" },
                                                   { SETTINGS_PVR,         "pvr" } };
-                                                  
+
 #define SettingGroupSize sizeof(s_settingGroupMap) / sizeof(SettingGroup)
 
 CGUIWindowSettingsCategory::CGUIWindowSettingsCategory(void)
@@ -149,6 +149,7 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
       m_resetSetting = new CSettingAction(RESET_SETTING_ID);
       m_resetSetting->SetLabel(10041);
       m_resetSetting->SetHelp(10045);
+      m_resetSetting->SetControl(m_settings.CreateControl("button"));
 
       m_dummyCategory = new CSettingCategory(EMPTY_CATEGORY_ID);
       m_dummyCategory->SetLabel(10046);
@@ -169,12 +170,12 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
         CGUIMessage message(GUI_MSG_UPDATE_ITEM, GetID(), GetID());
         OnMessage(message);
       }
-      
+
       CGUIWindow::OnMessage(message);
       FreeControls();
       return true;
     }
-    
+
     case GUI_MSG_FOCUSED:
     {
       CGUIWindow::OnMessage(message);
@@ -233,7 +234,7 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
         m_returningFromSkinLoad = true;
       break;
     }
-    
+
     case GUI_MSG_UPDATE_ITEM:
     {
       if (m_delayedSetting != NULL)
@@ -248,7 +249,7 @@ bool CGUIWindowSettingsCategory::OnMessage(CGUIMessage &message)
       }
       break;
     }
-    
+
     case GUI_MSG_UPDATE:
     {
       if (IsActive() && HasID(message.GetSenderId()))
@@ -338,7 +339,7 @@ bool CGUIWindowSettingsCategory::OnBack(int actionID)
 {
   m_settings.Save();
   m_lastControlID = 0; // don't save the control as we go to a different window each time
-  
+
   return CGUIWindow::OnBack(actionID);
 }
 
@@ -419,7 +420,7 @@ void CGUIWindowSettingsCategory::SetupControls(bool createSettings /* = true */)
   CSettingSection *section = GetSection(m_iSection);
   if (section == NULL)
     return;
-  
+
   // update the screen string
   SET_CONTROL_LABEL(CONTROL_SETTINGS_LABEL, section->GetLabel());
 
@@ -638,69 +639,56 @@ CGUIControl* CGUIWindowSettingsCategory::AddSetting(CSetting *pSetting, float wi
   }
 
   // create the proper controls
-  switch (pSetting->GetControl().GetType())
+  std::string controlType = pSetting->GetControl()->GetType();
+  if (controlType == "toggle")
   {
-    case SettingControlTypeCheckmark:
-    {
-      pControl = new CGUIRadioButtonControl(*m_pOriginalRadioButton);
-      if (pControl == NULL)
-        return NULL;
-
-      ((CGUIRadioButtonControl *)pControl)->SetLabel(label);
-      pSettingControl.reset(new CGUIControlRadioButtonSetting((CGUIRadioButtonControl *)pControl, iControlID, pSetting));
-      break;
-    }
-    
-    case SettingControlTypeSpinner:
-    {
-      pControl = new CGUISpinControlEx(*m_pOriginalSpin);
-      if (pControl == NULL)
-        return NULL;
-
-      ((CGUISpinControlEx *)pControl)->SetText(label);
-      pSettingControl.reset(new CGUIControlSpinExSetting((CGUISpinControlEx *)pControl, iControlID, pSetting));
-      break;
-    }
-    
-    case SettingControlTypeEdit:
-    {
-      pControl = new CGUIEditControl(*m_pOriginalEdit);
-      if (pControl == NULL)
-        return NULL;
-      
-      ((CGUIEditControl *)pControl)->SetLabel(label);
-      pSettingControl.reset(new CGUIControlEditSetting((CGUIEditControl *)pControl, iControlID, pSetting));
-      break;
-    }
-
-    case SettingControlTypeList:
-    {
-      pControl = new CGUIButtonControl(*m_pOriginalButton);
-      if (pControl == NULL)
-        return NULL;
-
-      ((CGUIButtonControl *)pControl)->SetLabel(g_localizeStrings.Get(pSetting->GetLabel()));
-      pSettingControl.reset(new CGUIControlListSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
-      break;
-    }
-
-    case SettingControlTypeButton:
-    {
-      pControl = new CGUIButtonControl(*m_pOriginalButton);
-      if (pControl == NULL)
-        return NULL;
-      
-      ((CGUIButtonControl *)pControl)->SetLabel(label);
-      pSettingControl.reset(new CGUIControlButtonSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
-      break;
-    }
-    
-    case SettingControlTypeNone:
-    default:
+    pControl = new CGUIRadioButtonControl(*m_pOriginalRadioButton);
+    if (pControl == NULL)
       return NULL;
-  }
 
-  if (pSetting->GetControl().GetDelayed())
+    ((CGUIRadioButtonControl *)pControl)->SetLabel(label);
+    pSettingControl.reset(new CGUIControlRadioButtonSetting((CGUIRadioButtonControl *)pControl, iControlID, pSetting));
+  }
+  else if (controlType == "spinner")
+  {
+    pControl = new CGUISpinControlEx(*m_pOriginalSpin);
+    if (pControl == NULL)
+      return NULL;
+
+    ((CGUISpinControlEx *)pControl)->SetText(label);
+    pSettingControl.reset(new CGUIControlSpinExSetting((CGUISpinControlEx *)pControl, iControlID, pSetting));
+  }
+  else if (controlType == "edit")
+  {
+    pControl = new CGUIEditControl(*m_pOriginalEdit);
+    if (pControl == NULL)
+      return NULL;
+
+    ((CGUIEditControl *)pControl)->SetLabel(label);
+    pSettingControl.reset(new CGUIControlEditSetting((CGUIEditControl *)pControl, iControlID, pSetting));
+  }
+  else if (controlType == "list")
+  {
+    pControl = new CGUIButtonControl(*m_pOriginalButton);
+    if (pControl == NULL)
+      return NULL;
+
+    ((CGUIButtonControl *)pControl)->SetLabel(label);
+    pSettingControl.reset(new CGUIControlListSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
+  }
+  else if (controlType == "button")
+  {
+    pControl = new CGUIButtonControl(*m_pOriginalButton);
+    if (pControl == NULL)
+      return NULL;
+
+    ((CGUIButtonControl *)pControl)->SetLabel(label);
+    pSettingControl.reset(new CGUIControlButtonSetting((CGUIButtonControl *)pControl, iControlID, pSetting));
+  }
+  else
+    return NULL;
+
+  if (pSetting->GetControl()->GetDelayed())
     pSettingControl->SetDelayed();
 
   return AddSettingControl(pControl, pSettingControl, width, iControlID);
@@ -725,11 +713,11 @@ CGUIControl* CGUIWindowSettingsCategory::AddSettingControl(CGUIControl *pControl
     pSettingControl.reset();
     return NULL;
   }
-  
+
   pControl->SetID(iControlID++);
   pControl->SetVisible(true);
   pControl->SetWidth(width);
-  
+
   CGUIControlGroupList *group = (CGUIControlGroupList *)GetControl(SETTINGS_GROUP_ID);
   if (group != NULL)
   {
@@ -737,7 +725,7 @@ CGUIControl* CGUIWindowSettingsCategory::AddSettingControl(CGUIControl *pControl
     group->AddControl(pControl);
   }
   m_settingControls.push_back(pSettingControl);
-  
+
   return pControl;
 }
 
@@ -776,7 +764,7 @@ CSettingSection* CGUIWindowSettingsCategory::GetSection(int windowID) const
     if (s_settingGroupMap[index].id == windowID)
       return m_settings.GetSection(s_settingGroupMap[index].name);
   }
-  
+
   return NULL;
 }
 
