@@ -763,15 +763,16 @@ void CSettings::InitializeConditions()
 void CSettings::InitializeISettingsHandlers()
 {
   // register ISettingsHandler implementations
-  m_settingsManager->RegisterSettingsHandler(&g_application);
-  m_settingsManager->RegisterSettingsHandler(&CProfilesManager::Get());
+  // The order of these matters! Handlers are processed in the order they were registered.
   m_settingsManager->RegisterSettingsHandler(&g_advancedSettings);
   m_settingsManager->RegisterSettingsHandler(&CMediaSourceSettings::Get());
   m_settingsManager->RegisterSettingsHandler(&CPlayerCoreFactory::Get());
-  m_settingsManager->RegisterSettingsHandler(&CRssManager::Get());
+  m_settingsManager->RegisterSettingsHandler(&CProfilesManager::Get());
 #ifdef HAS_UPNP
   m_settingsManager->RegisterSettingsHandler(&CUPnPSettings::Get());
 #endif
+  m_settingsManager->RegisterSettingsHandler(&CRssManager::Get());
+  m_settingsManager->RegisterSettingsHandler(&g_application);
 #ifdef _XBOX
   m_settingsManager->RegisterSettingsHandler(&g_audioConfig);
   m_settingsManager->RegisterSettingsHandler(&g_videoConfig);
