@@ -10876,7 +10876,10 @@ msgctxt "#36260"
 msgid "No info available yet."
 msgstr ""
 
-#empty string with id 36261
+#: system/settings/settings.xml
+msgctxt "#36261"
+msgid "Path where taken screenshots will be stored."
+msgstr ""
 
 #. Description of setting "Music -> Library -> Export music library" with label #20196
 #: system/settings/settings.xml
