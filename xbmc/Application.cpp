@@ -1709,12 +1709,26 @@ bool CApplication::LoadSkin(const CStdString& skinID)
 
 void CApplication::LoadSkin(const SkinPtr& skin)
 {
+  string defaultSkin = ((const CSettingString*)CSettings::Get().GetSetting("lookandfeel.skin"))->GetDefault();
   if (!skin)
   {
-    CLog::Log(LOGERROR, "failed to load requested skin, fallback to \"%s\" skin", DEFAULT_SKIN);
-    CSettings::Get().SetString("lookandfeel.skin", DEFAULT_SKIN);
-    LoadSkin(DEFAULT_SKIN);
+    CLog::Log(LOGERROR, "failed to load requested skin, fallback to \"%s\" skin", defaultSkin.c_str());
+    CSettings::Get().GetSetting("lookandfeel.skin")->Reset();
     return ;
+  }
+
+  skin->Start();
+  if (!skin->HasSkinFile("Home.xml"))
+  {
+    // failed to find home.xml
+    // fallback to default skin
+    if (strcmpi(skin->ID().c_str(), defaultSkin.c_str()) != 0)
+    {
+      CLog::Log(LOGERROR, "home.xml doesn't exist in skin: %s, fallback to \"%s\" skin", skin->ID().c_str(), defaultSkin.c_str());
+      CSettings::Get().GetSetting("lookandfeel.skin")->Reset();
+      CGUIDialogKaiToast::QueueNotification(CGUIDialogKaiToast::Error, g_localizeStrings.Get(24102), g_localizeStrings.Get(24103));
+      return ;
+    }
   }
 
   bool bPreviousPlayingState=false;
@@ -1743,7 +1757,6 @@ void CApplication::LoadSkin(const SkinPtr& skin)
   vector<int> currentModelessWindows;
   g_windowManager.GetActiveModelessWindows(currentModelessWindows);
 
-  CLog::Log(LOGINFO, "  delete old skin...");
   UnloadSkin();
 
   CLog::Log(LOGINFO, "  load skin from:%s", skin->Path().c_str());
@@ -5661,7 +5674,15 @@ void CApplication::OnSettingChanged(const CSetting *setting)
   if (settingId == "lookandfeel.skin" ||
       settingId == "lookandfeel.font" ||
       settingId == "lookandfeel.skincolors")
-    ReloadSkin();
+  {
+    // if the skin changes and the current theme is not the default one, reset
+    // the theme to the default value (which will also change lookandfeel.skincolors
+    // which in turn will reload the skin
+    if (settingId == "lookandfeel.skin" && CSettings::Get().GetString("lookandfeel.skintheme") != "SKINDEFAULT")
+      CSettings::Get().SetString("lookandfeel.skintheme", "SKINDEFAULT");
+    else
+      m_applicationMessenger.ExecBuiltIn("ReloadSkin");
+  }
   else if (settingId == "lookandfeel.skintheme")
   {
     // also set the default color theme
@@ -5676,7 +5697,7 @@ void CApplication::OnSettingChanged(const CSetting *setting)
     if (!StringUtils2::EqualsNoCase(colorTheme, CSettings::Get().GetString("lookandfeel.skincolors")))
       CSettings::Get().SetString("lookandfeel.skincolors", colorTheme);
     else
-      ReloadSkin();
+      m_applicationMessenger.ExecBuiltIn("ReloadSkin");
   }
   else if (settingId == "lookandfeel.skinzoom")
 #ifdef _XBOX
