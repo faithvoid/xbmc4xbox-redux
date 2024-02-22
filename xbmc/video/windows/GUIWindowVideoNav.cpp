@@ -80,7 +80,6 @@ using namespace std;
 
 #define CONTROL_FILTER            15
 #define CONTROL_BTNPARTYMODE      16
-#define CONTROL_BTNFLATTEN        17
 #define CONTROL_LABELEMPTY        18
 
 CGUIWindowVideoNav::CGUIWindowVideoNav(void)
@@ -171,16 +170,6 @@ bool CGUIWindowVideoNav::OnMessage(CGUIMessage& message)
         CMediaSettings::Get().CycleWatchedMode(m_vecItems->GetContent());
         CSettings::Get().Save();
         OnFilterItems(GetProperty("filter").asString());
-        return true;
-      }
-      else if (iControl == CONTROL_BTNFLATTEN)
-      {
-        CSettings::Get().ToggleBool("myvideos.flatten");
-        CSettings::Get().Save();
-        SetProperty("flattened", CSettings::Get().GetBool("myvideos.flatten"));
-        CUtil::DeleteVideoDatabaseDirectoryCache();
-        SetupShares();
-        Update("");
         return true;
       }
       else if (iControl == CONTROL_BTNSHOWALL)
@@ -565,8 +554,6 @@ void CGUIWindowVideoNav::UpdateButtons()
   SET_CONTROL_SELECTED(GetID(), CONTROL_BTNSHOWALL, watchMode != WatchedModeAll);
 
   SET_CONTROL_SELECTED(GetID(),CONTROL_BTNPARTYMODE, g_partyModeManager.IsEnabled());
-
-  SET_CONTROL_SELECTED(GetID(),CONTROL_BTNFLATTEN, CSettings::Get().GetBool("myvideos.flatten"));
 }
 
 bool CGUIWindowVideoNav::GetFilteredItems(const CStdString &filter, CFileItemList &items)

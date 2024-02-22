@@ -82,7 +82,6 @@ using namespace ADDON;
 #define CONTROL_LABELFILES        12
 
 #define CONTROL_PLAY_DVD           6
-#define CONTROL_STACK              7
 #define CONTROL_BTNSCAN            8
 #define CONTROL_IMDB               9
 
@@ -148,14 +147,7 @@ bool CGUIWindowVideoBase::OnMessage(CGUIMessage& message)
   case GUI_MSG_CLICKED:
     {
       int iControl = message.GetSenderId();
-      if (iControl == CONTROL_STACK)
-      {
-        CSettings::Get().ToggleBool("myvideos.stackvideos");
-        CSettings::Get().Save();
-        UpdateButtons();
-        Update( m_vecItems->GetPath() );
-      }
-      else if (iControl == CONTROL_PLAY_DVD)
+      if (iControl == CONTROL_PLAY_DVD)
       {
         // play movie...
         CUtil::PlayDVD();
@@ -259,10 +251,6 @@ void CGUIWindowVideoBase::UpdateButtons()
 
   CONTROL_ENABLE(CONTROL_BTNSCAN);
   CONTROL_ENABLE(CONTROL_IMDB);
-
-  SET_CONTROL_LABEL(CONTROL_STACK, 14000);  // Stack
-  SET_CONTROL_SELECTED(GetID(), CONTROL_STACK, CSettings::Get().GetBool("myvideos.stackvideos"));
-  CONTROL_ENABLE_ON_CONDITION(CONTROL_STACK, m_stackingAvailable);
 
   CGUIMediaWindow::UpdateButtons();
 }
