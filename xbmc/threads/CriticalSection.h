@@ -1,25 +1,3 @@
-//////////////////////////////////////////////////////////////////////
-//
-// CriticalSection.h: interface for the CCriticalSection class.
-//
-//////////////////////////////////////////////////////////////////////
-#ifndef _CRITICAL_SECTION_H_
-#define _CRITICAL_SECTION_H_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-#ifdef _LINUX
-#include "PlatformDefs.h"
-#include "linux/XSyncUtils.h"
-#include "XCriticalSection.h"
-#elif defined(_XBOX)
-#include <xtl.h>
-#include "xbox/PlatformDefs.h"
-#else
-#include "win32/XCriticalSection.h"
-#endif
-
 /*
  *      Copyright (C) 2005-2013 Team XBMC
  *      http://xbmc.org
@@ -40,24 +18,6 @@
  *
  */
 
-class CCriticalSection
-{
-public:
-  CCriticalSection();
+#pragma once
 
-  // Conversion operator
-  operator LPCRITICAL_SECTION();
-  virtual ~CCriticalSection();
-  CCriticalSection(const CCriticalSection& section);
-  CCriticalSection& operator=(const CCriticalSection& section);
-
-private:
-
-  CRITICAL_SECTION m_critSection;
-};
-
-BOOL  NTAPI OwningCriticalSection(LPCRITICAL_SECTION section);               /* checks if current thread owns the critical section */
-DWORD NTAPI ExitCriticalSection(LPCRITICAL_SECTION section);                 /* leaves critical section fully, and returns count */ 
-VOID  NTAPI RestoreCriticalSection(LPCRITICAL_SECTION section, DWORD count); /* restores critical section count */
-
-#endif
+#include "threads/platform/CriticalSection.h"

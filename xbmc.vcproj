@@ -1132,9 +1132,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\music\infoscanner\MusicInfoScraper.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\utils\Mutex.cpp">
-				</File>
-				<File
 					RelativePath=".\xbmc\NfoFile.cpp">
 				</File>
 				<File
@@ -3040,7 +3037,7 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\threads\Atomics.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\threads\CriticalSection.cpp">
+					RelativePath=".\xbmc\threads\Condition.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\CriticalSection.h">
@@ -3052,13 +3049,19 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\threads\Event.h">
 				</File>
 				<File
-					RelativePath=".\xbmc\threads\SharedSection.cpp">
+					RelativePath=".\xbmc\threads\Helpers.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\threads\Lockables.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\threads\LockFree.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\threads\LockFree.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\SharedSection.h">
-				</File>
-				<File
-					RelativePath=".\xbmc\threads\SingleLock.cpp">
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\SingleLock.h">
@@ -3074,6 +3077,9 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\Thread.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\threads\ThreadLocal.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\threads\Timer.cpp">
@@ -3563,9 +3569,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 			</File>
 			<File
 				RelativePath=".\xbmc\music\tags\MusicInfoTagLoaderWMA.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\utils\Mutex.h">
 			</File>
 			<File
 				RelativePath=".\xbmc\NfoFile.h">

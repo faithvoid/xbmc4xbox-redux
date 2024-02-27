@@ -18,30 +18,39 @@
 * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#include "threads/SystemClock.h"
 #include "Thread.h"
+#ifndef _LINUX
 #include <process.h>
 #include "utils/win32exception.h"
-#include "utils/log.h"
-#include "Util.h"
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
 #ifndef _MT
 #pragma message( "Please compile using multithreaded run-time libraries" )
 #endif
 typedef unsigned (WINAPI *PBEGINTHREADEX_THREADFUNC)(LPVOID lpThreadParameter);
+#else
+#include "xbox/PlatformInclude.h"
+#include "XHandle.h"
+#include <signal.h>
+typedef int (*PBEGINTHREADEX_THREADFUNC)(LPVOID lpThreadParameter);
+#endif
 
-#define MS_VC_EXCEPTION 0x406d1388
-typedef struct tagTHREADNAME_INFO
-{
-  DWORD dwType; // must be 0x1000
-  LPCSTR szName; // pointer to name (in same addr space)
-  DWORD dwThreadID; // thread ID (-1 caller thread)
-  DWORD dwFlags; // reserved for future use, most be zero
-} THREADNAME_INFO;
+#if defined(__GNUC__) && !defined(__clang__)
+#include <cxxabi.h>
+using namespace __cxxabiv1;
+#endif
 
-CThread::CThread(const char* ThreadName)
+#include "Util.h"
+#include "utils/log.h"
+#include "utils/TimeUtils.h"
+#include "threads/ThreadLocal.h"
+
+static XbmcThreads::ThreadLocal<CThread> currentThread;
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+
+CThread::CThread(const char* ThreadName) : m_StopEvent(true,true)
 {
   m_bStop = false;
 
@@ -51,7 +60,6 @@ CThread::CThread(const char* ThreadName)
   m_iLastTime = 0;
   m_iLastUsage = 0;
   m_fLastUsage = 0.0f;
-  m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=NULL;
 
@@ -59,7 +67,7 @@ CThread::CThread(const char* ThreadName)
     m_ThreadName = ThreadName;
 }
 
-CThread::CThread(IRunnable* pRunnable, const char* ThreadName)
+CThread::CThread(IRunnable* pRunnable, const char* ThreadName) : m_StopEvent(true,true)
 {
   m_bStop = false;
 
@@ -69,7 +77,6 @@ CThread::CThread(IRunnable* pRunnable, const char* ThreadName)
   m_iLastTime = 0;
   m_iLastUsage = 0;
   m_fLastUsage = 0.0f;
-  m_StopEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
   m_pRunnable=pRunnable;
 
@@ -85,38 +92,67 @@ CThread::~CThread()
   }
   m_ThreadHandle = NULL;
 
-  if (m_StopEvent)
-    CloseHandle(m_StopEvent);
 }
 
+#ifndef _WIN32
+void CThread::term_handler (int signum)
+{
+  CLog::Log(LOGERROR,"thread 0x%lx (%lu) got signal %d. calling OnException and terminating thread abnormally.", (long unsigned int)pthread_self(), (long unsigned int)pthread_self(), signum);
 
+  CThread* curThread = currentThread.get();
+  if (curThread)
+  {
+    curThread->m_bStop = TRUE;
+    curThread->m_StopEvent.Set();
+
+    curThread->OnException();
+    if( curThread->IsAutoDelete() )
+      delete curThread;
+  }
+
+  pthread_exit(NULL);
+}
+
+int CThread::staticThread(void* data)
+#else
 DWORD WINAPI CThread::staticThread(LPVOID* data)
+#endif
 {
   CThread* pThread = (CThread*)(data);
   if (!pThread) {
     CLog::Log(LOGERROR,"%s, sanity failed. thread is NULL.",__FUNCTION__);
     return 1;
   }
-  
+
 #ifdef _XBOX
   CUtil::InitRandomSeed();
 #endif
 
   if (pThread->m_ThreadName.empty())
-    pThread->m_ThreadName = pThread->GetTypeName();
-  pThread->SetDebugCallStackName(pThread->m_ThreadName.c_str());
+    pThread->SetName(pThread->GetTypeName().c_str());
 
   CLog::Log(LOGDEBUG,"Thread %s start, auto delete: %d", pThread->m_ThreadName.c_str(), pThread->IsAutoDelete());
 
+  currentThread.set(pThread);
+#ifndef _LINUX
   /* install win32 exception translator */
   win32_exception::install_handler();
+#else
+  struct sigaction action;
+  action.sa_handler = term_handler;
+  sigemptyset (&action.sa_mask);
+  action.sa_flags = 0;
+  //sigaction (SIGABRT, &action, NULL);
+  //sigaction (SIGSEGV, &action, NULL);
+#endif
 
-  try 
+
+  try
   {
     pThread->OnStartup();
   }
 #ifndef _LINUX
-  catch (const win32_exception &e) 
+  catch (const win32_exception &e)
   {
     e.writelog(__FUNCTION__);
     if( pThread->IsAutoDelete() )
@@ -180,12 +216,16 @@ DWORD WINAPI CThread::staticThread(LPVOID* data)
 
   if ( pThread->IsAutoDelete() )
   {
-    // CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating (autodelete)", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
+    CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating (autodelete)", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
     delete pThread;
     pThread = NULL;
   }
-//  else
-    // CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
+  else
+    CLog::Log(LOGDEBUG,"Thread %s %"PRIu64" terminating", pThread->m_ThreadName.c_str(), (uint64_t)CThread::GetCurrentThreadId());
+
+// DXMERGE - this looks like it might have used to have been useful for something...
+//  g_graphicsContext.DeleteThreadContext();
+
 #ifndef _LINUX
   _endthreadex(123);
 #endif
@@ -198,15 +238,25 @@ void CThread::Create(bool bAutoDelete, unsigned stacksize)
   {
     throw 1; //ERROR should not b possible!!!
   }
-  m_iLastTime = GetTickCount() * 10000;
+  m_iLastTime = XbmcThreads::SystemClockMillis() * 10000;
   m_iLastUsage = 0;
   m_fLastUsage = 0.0f;
   m_bAutoDelete = bAutoDelete;
   m_bStop = false;
-  ::ResetEvent(m_StopEvent);
+  m_StopEvent.Reset();
 
   m_ThreadHandle = (HANDLE)_beginthreadex(NULL, stacksize, (PBEGINTHREADEX_THREADFUNC)staticThread, (void*)this, 0, &m_ThreadId);
 
+#ifdef _LINUX
+  if (m_ThreadHandle && m_ThreadHandle->m_threadValid && m_bAutoDelete)
+    // FIXME: WinAPI can truncate 64bit pthread ids
+    pthread_detach(m_ThreadHandle->m_hThread);
+#endif
+}
+
+bool CThread::IsRunning() const
+{
+  return m_ThreadId ? true : false;
 }
 
 bool CThread::IsAutoDelete() const
@@ -217,7 +267,7 @@ bool CThread::IsAutoDelete() const
 void CThread::StopThread(bool bWait /*= true*/)
 {
   m_bStop = true;
-  SetEvent(m_StopEvent);
+  m_StopEvent.Set();
   if (m_ThreadHandle && bWait)
   {
     WaitForThreadExit(INFINITE);
@@ -226,9 +276,16 @@ void CThread::StopThread(bool bWait /*= true*/)
   }
 }
 
-DWORD CThread::ThreadId() const
+ThreadIdentifier CThread::ThreadId() const
 {
-  return (DWORD)m_ThreadId;
+#ifdef _LINUX
+  if (m_ThreadHandle && m_ThreadHandle->m_threadValid)
+    return m_ThreadHandle->m_hThread;
+  else
+    return 0;
+#else
+  return m_ThreadId;
+#endif
 }
 
 
@@ -246,27 +303,112 @@ bool CThread::SetPriority(const int iPriority)
 // Set thread priority
 // Return true for success
 {
+  bool rtn = false;
+
   if (m_ThreadHandle)
   {
-    return ( SetThreadPriority( m_ThreadHandle, iPriority ) == TRUE );
+    rtn = SetThreadPriority( m_ThreadHandle, iPriority ) == TRUE;
   }
-  else
-  {
-    return false;
-  }
+
+  return(rtn);
 }
 
-void CThread::SetDebugCallStackName( const char *name )
+void CThread::SetPrioritySched_RR(void)
 {
-  THREADNAME_INFO info;
+#ifdef __APPLE__
+  // Changing to SCHED_RR is safe under OSX, you don't need elevated privileges and the
+  // OSX scheduler will monitor SCHED_RR threads and drop to SCHED_OTHER if it detects
+  // the thread running away. OSX automatically does this with the CoreAudio audio
+  // device handler thread.
+  int32_t result;
+  thread_extended_policy_data_t theFixedPolicy;
+
+  // make thread fixed, set to 'true' for a non-fixed thread
+  theFixedPolicy.timeshare = false;
+  result = thread_policy_set(pthread_mach_thread_np(ThreadId()), THREAD_EXTENDED_POLICY,
+    (thread_policy_t)&theFixedPolicy, THREAD_EXTENDED_POLICY_COUNT);
+
+  int policy;
+  struct sched_param param;
+  result = pthread_getschedparam(ThreadId(), &policy, &param );
+  // change from default SCHED_OTHER to SCHED_RR
+  policy = SCHED_RR;
+  result = pthread_setschedparam(ThreadId(), policy, &param );
+#endif
+}
+
+int CThread::GetMinPriority(void)
+{
+#if 0
+//#if defined(__APPLE__)
+  struct sched_param sched;
+  int rtn, policy;
+
+  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+  int min = sched_get_priority_min(policy);
+
+  return(min);
+#else
+  return(THREAD_PRIORITY_IDLE);
+#endif
+}
+
+int CThread::GetMaxPriority(void)
+{
+#if 0
+//#if defined(__APPLE__)
+  struct sched_param sched;
+  int rtn, policy;
+
+  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+  int max = sched_get_priority_max(policy);
+
+  return(max);
+#else
+  return(THREAD_PRIORITY_HIGHEST);
+#endif
+}
+
+int CThread::GetNormalPriority(void)
+{
+#if 0
+//#if defined(__APPLE__)
+  struct sched_param sched;
+  int rtn, policy;
+
+  rtn = pthread_getschedparam(ThreadId(), &policy, &sched);
+  int min = sched_get_priority_min(policy);
+  int max = sched_get_priority_max(policy);
+
+  return( min + ((max-min) / 2)  );
+#else
+  return(THREAD_PRIORITY_NORMAL);
+#endif
+}
+
+
+void CThread::SetName( LPCTSTR szThreadName )
+{
+  m_ThreadName = szThreadName;
+
+#ifdef _WIN32
+  const unsigned int MS_VC_EXCEPTION = 0x406d1388;
+  struct THREADNAME_INFO
+  {
+    DWORD dwType;     // must be 0x1000
+    LPCSTR szName;    // pointer to name (in same addr space)
+    DWORD dwThreadID; // thread ID (-1 caller thread)
+    DWORD dwFlags;    // reserved for future use, most be zero
+  } info;
+
   info.dwType = 0x1000;
-  info.szName = name;
+  info.szName = szThreadName;
   info.dwThreadID = m_ThreadId;
   info.dwFlags = 0;
-#ifndef _LINUX
+
   try
   {
-    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (DWORD *)&info);
+    RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
   }
   catch(...)
   {
@@ -302,24 +444,32 @@ std::string CThread::GetTypeName(void)
   return name;
 }
 
-bool CThread::WaitForThreadExit(DWORD dwMilliseconds)
+bool CThread::WaitForThreadExit(unsigned int milliseconds)
 // Waits for thread to exit, timeout in given number of msec.
 // Returns true when thread ended
 {
   if (!m_ThreadHandle) return true;
 
+#ifndef _LINUX
   // boost priority of thread we are waiting on to same as caller
   int callee = GetThreadPriority(m_ThreadHandle);
   int caller = GetThreadPriority(GetCurrentThread());
   if(caller > callee)
     SetThreadPriority(m_ThreadHandle, caller);
 
-  if (::WaitForSingleObject(m_ThreadHandle, dwMilliseconds) != WAIT_TIMEOUT)
+  if (::WaitForSingleObject(m_ThreadHandle, milliseconds) != WAIT_TIMEOUT)
     return true;
 
   // restore thread priority if thread hasn't exited
   if(caller > callee)
     SetThreadPriority(m_ThreadHandle, callee);
+#else
+  if (!(m_ThreadHandle->m_threadValid) || pthread_join(m_ThreadHandle->m_hThread, NULL) == 0)
+  {
+    m_ThreadHandle->m_threadValid = false;
+    return true;
+  }
+#endif
 
   return false;
 }
@@ -337,7 +487,7 @@ void CThread::Process()
 
 float CThread::GetRelativeUsage()
 {
-  unsigned __int64 iTime = GetTickCount();
+  unsigned __int64 iTime = XbmcThreads::SystemClockMillis();
   iTime *= 10000; // convert into 100ns tics
 
   // only update every 1 second
@@ -352,7 +502,7 @@ float CThread::GetRelativeUsage()
 
     if(m_iLastUsage > 0 && m_iLastTime > 0)
       m_fLastUsage = (float)( iUsage - m_iLastUsage ) / (float)( iTime - m_iLastTime );
-      
+
     m_iLastUsage = iUsage;
     m_iLastTime = iTime;
 
@@ -369,58 +519,28 @@ bool CThread::IsCurrentThread() const
 
 ThreadIdentifier CThread::GetCurrentThreadId()
 {
+#ifdef _LINUX
+  return pthread_self();
+#else
   return ::GetCurrentThreadId();
+#endif
 }
 
 bool CThread::IsCurrentThread(const ThreadIdentifier tid)
 {
+#ifdef _LINUX
+  return pthread_equal(pthread_self(), tid);
+#else
   return (::GetCurrentThreadId() == tid);
+#endif
 }
 
-int CThread::GetMinPriority(void)
+void CThread::Sleep(unsigned int milliseconds)
 {
-  return(THREAD_PRIORITY_IDLE);
-}
-
-int CThread::GetMaxPriority(void)
-{
-  return(THREAD_PRIORITY_HIGHEST);
-}
-
-int CThread::GetNormalPriority(void)
-{
-  return(THREAD_PRIORITY_NORMAL);
-}
-
-DWORD CThread::WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-{
-  if(dwMilliseconds > 10 && IsCurrentThread())
-  {
-    HANDLE handles[2] = {hHandle, m_StopEvent};
-    DWORD result = ::WaitForMultipleObjects(2, handles, false, dwMilliseconds);
-
-    if(result == WAIT_TIMEOUT || result == WAIT_OBJECT_0)
-      return result;
-
-    if( dwMilliseconds == INFINITE )
-      return WAIT_ABANDONED;
-    else
-      return WAIT_TIMEOUT;
-  }
+  if(milliseconds > 10 && IsCurrentThread())
+    m_StopEvent.WaitMSec(milliseconds);
   else
-    return ::WaitForSingleObject(hHandle, dwMilliseconds);
+    ::Sleep(milliseconds);
 }
 
-DWORD CThread::WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, DWORD dwMilliseconds)
-{
-  // for now not implemented
-  return ::WaitForMultipleObjects(nCount, lpHandles, bWaitAll, dwMilliseconds);
-}
 
-void CThread::Sleep(DWORD dwMilliseconds)
-{
-  if(dwMilliseconds > 10 && IsCurrentThread())
-    ::WaitForSingleObject(m_StopEvent, dwMilliseconds);
-  else
-    ::Sleep(dwMilliseconds);
-}

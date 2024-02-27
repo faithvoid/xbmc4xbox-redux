@@ -29,8 +29,11 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include "system.h" // for HANDLE
 #include <string>
-#include "xbox/PlatformInclude.h"
+#ifdef _LINUX
+#include "PlatformInclude.h"
+#endif
 #include "Event.h"
 
 class IRunnable
@@ -54,42 +57,64 @@ public:
   CThread(IRunnable* pRunnable, const char* ThreadName = NULL);
   virtual ~CThread();
   void Create(bool bAutoDelete = false, unsigned stacksize = 0);
-  bool WaitForThreadExit(DWORD dwMilliseconds);
-  DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
-  DWORD WaitForMultipleObjects(DWORD nCount, HANDLE *lpHandles, BOOL bWaitAll, DWORD dwMilliseconds);
-  void Sleep(DWORD dwMilliseconds);
+  bool WaitForThreadExit(unsigned int milliseconds);
+  void Sleep(unsigned int milliseconds);
   bool SetPriority(const int iPriority);
+  void SetPrioritySched_RR(void);
+  int GetMinPriority(void);
+  int GetMaxPriority(void);
+  int GetNormalPriority(void);
+  void SetName( LPCTSTR szThreadName );
   HANDLE ThreadHandle();
   operator HANDLE();
   operator HANDLE() const;
   bool IsAutoDelete() const;
   virtual void StopThread(bool bWait = true);
-  bool IsRunning() const { return m_ThreadHandle != NULL; };
+  bool IsRunning() const;
   float GetRelativeUsage();  // returns the relative cpu usage of this thread since last call
   bool IsCurrentThread() const;
-  int GetMinPriority(void);
-  int GetMaxPriority(void);
-  int GetNormalPriority(void);
 
   static bool IsCurrentThread(const ThreadIdentifier tid);
   static ThreadIdentifier GetCurrentThreadId();
 protected:
   virtual void OnStartup(){};
   virtual void OnExit(){};
-  virtual void Process(); 
+  virtual void OnException(){} // signal termination handler
+  virtual void Process();
+
   volatile bool m_bStop;
   HANDLE m_ThreadHandle;
 
-private:
-  /*! \brief set the threadname for the debugger/callstack, implementation dependent.
+  enum WaitResponse { WAIT_INTERRUPTED = -1, WAIT_SIGNALED = 0, WAIT_TIMEDOUT = 1 };
+
+  /**
+   * This call will wait on a CEvent in an interruptible way such that if
+   *  stop is called on the thread the wait will return with a respone
+   *  indicating what happened.
    */
-  void SetDebugCallStackName( const char *threadName );
+  inline WaitResponse AbortableWait(CEvent& event, int timeoutMillis)
+  {
+    XbmcThreads::CEventGroup group(&event, &m_StopEvent, NULL);
+    CEvent* result = group.wait(timeoutMillis);
+    return  result == &event ? WAIT_SIGNALED : 
+      (result == NULL ? WAIT_TIMEDOUT : WAIT_INTERRUPTED);
+  }
+
+  inline WaitResponse AbortableWait(CEvent& event)
+  {
+    XbmcThreads::CEventGroup group(&event, &m_StopEvent, NULL);
+    CEvent* result = group.wait();
+    return  result == &event ? WAIT_SIGNALED : 
+      (result == NULL ? WAIT_TIMEDOUT : WAIT_INTERRUPTED);
+  }
+
+private:
   std::string GetTypeName(void);
 
 private:
   ThreadIdentifier ThreadId() const;
   bool m_bAutoDelete;
-  HANDLE m_StopEvent;
+  CEvent m_StopEvent;
   unsigned m_ThreadId; // This value is unreliable on platforms using pthreads
                        // Use m_ThreadHandle->m_hThread instead
   IRunnable* m_pRunnable;
@@ -100,8 +125,17 @@ private:
 
   std::string m_ThreadName;
 
-private:
+#ifdef _LINUX
+  static void term_handler (int signum);
+#endif
+
+#ifndef _WIN32
+  static int staticThread(void* data);
+#else
   static DWORD WINAPI staticThread(LPVOID* data);
+#endif
+
+private:
 };
 
 #endif // !defined(AFX_THREAD_H__ACFB7357_B961_4AC1_9FB2_779526219817__INCLUDED_)
