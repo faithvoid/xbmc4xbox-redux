@@ -20,7 +20,7 @@
 
 #include "GUIPythonWindowXMLDialog.h"
 #include "GUIWindowManager.h"
-#include "Application.h"
+#include "ApplicationMessenger.h"
 #include "threads/SingleLock.h"
 
 CGUIPythonWindowXMLDialog::CGUIPythonWindowXMLDialog(int id, CStdString strXML, CStdString strFallBackPath)
@@ -51,7 +51,7 @@ void CGUIPythonWindowXMLDialog::Show(bool show /* = true */)
   CSingleExit leaveIt(g_graphicsContext);
   ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, 1, show ? 1 : 0};
   tMsg.lpVoid = this;
-  g_application.getApplicationMessenger().SendMessage(tMsg, true);
+  CApplicationMessenger::Get().SendMessage(tMsg, true);
 }
 
 void CGUIPythonWindowXMLDialog::Show_Internal(bool show /* = true */)

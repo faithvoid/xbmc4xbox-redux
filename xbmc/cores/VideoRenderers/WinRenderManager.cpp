@@ -18,10 +18,10 @@
  *
  */
  
-#include "utils/log.h"
 #include "WinRenderManager.h"
-#include "ApplicationMessenger.h"
 #include "Application.h"
+#include "ApplicationMessenger.h"
+#include "utils/log.h"
 
 
 CWinRenderManager g_renderManager;
@@ -66,7 +66,7 @@ bool CWinRenderManager::Configure(unsigned int width, unsigned int height, unsig
     if( flags & CONF_FLAGS_FULLSCREEN )
     {
       lock.Leave();
-      g_application.getApplicationMessenger().SwitchToFullscreen();
+      CApplicationMessenger::Get().SwitchToFullscreen();
       lock.Enter();
     }
     m_pRenderer->Update(false);

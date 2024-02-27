@@ -23,7 +23,6 @@
 #include <wchar.h>
 #include "addons/Skin.h"
 #include "utils/XBMCTinyXML.h"
-#include "Application.h"
 #include "ApplicationMessenger.h"
 #include "CharsetConverter.h"
 
@@ -96,7 +95,7 @@ namespace PYXBMC
   {
     CPyThreadState pyState;
     ThreadMessage tMsg = {message, param1, param2};
-    g_application.getApplicationMessenger().SendMessage(tMsg, true);
+    CApplicationMessenger::Get().SendMessage(tMsg, true);
   }
 
   static char defaultImage[1024];

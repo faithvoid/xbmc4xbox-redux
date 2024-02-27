@@ -24,6 +24,8 @@
 #include "guilib/Key.h"
 #include "threads/Event.h"
 
+#include "xbox/PlatformDefs.h"
+
 #include <queue>
 
 class CFileItem;
@@ -96,9 +98,12 @@ ThreadMessage;
 
 class CApplicationMessenger
 {
-
 public:
-  ~CApplicationMessenger();
+  /*!
+   \brief The only way through which the global instance of the CApplicationMessenger should be accessed.
+   \return the global instance.
+   */
+  static CApplicationMessenger& Get();
 
   void Cleanup();
   // if a message has to be send to the gui, use MSG_TYPE_WINDOW instead
@@ -166,15 +171,18 @@ public:
   void ShowVolumeBar(bool up);
 
 private:
+  // private construction, and no assignements; use the provided singleton methods
+  CApplicationMessenger();
+  CApplicationMessenger(const CApplicationMessenger&);
+  CApplicationMessenger const& operator=(CApplicationMessenger const&);
+  virtual ~CApplicationMessenger();
   void ProcessMessage(ThreadMessage *pMsg);
-
 
   std::queue<ThreadMessage*> m_vecMessages;
   std::queue<ThreadMessage*> m_vecWindowMessages;
   CCriticalSection m_critSection;
   CCriticalSection m_critBuffer;
   CStdString bufferResponse;
-
 };
 
 extern CApplicationMessenger g_applicationMessenger;

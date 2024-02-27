@@ -20,7 +20,6 @@
 
 #include "GUIPassword.h"
 #include "GUIUserMessages.h"
-#include "Application.h"
 #include "ApplicationMessenger.h"
 #include "dialogs/GUIDialogGamepad.h"
 #include "dialogs/GUIDialogKeyboard.h"
@@ -160,7 +159,7 @@ bool CGUIPassword::CheckStartUpLock()
   }
   else
   {
-    g_application.getApplicationMessenger().Shutdown(); // Turn off the box
+    CApplicationMessenger::Get().Shutdown(); // Turn off the box
     return false;
   }
 }
@@ -281,7 +280,7 @@ void CGUIPassword::UpdateMasterLockRetryCount(bool bResetCount)
         {
           // Shutdown enabled, tell the user we're shutting off
           CGUIDialogOK::ShowAndGetInput(12345, 12346, 12347, 0);
-          g_application.getApplicationMessenger().Shutdown();
+          CApplicationMessenger::Get().Shutdown();
           return ;
         }
         // Tell the user they ran out of retry attempts

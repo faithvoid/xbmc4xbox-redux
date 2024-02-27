@@ -26,7 +26,7 @@
 #include "guilib/LocalizeStrings.h"
 #include "filesystem/Directory.h"
 #include "settings/Settings.h"
-#include "Application.h"
+#include "ApplicationMessenger.h"
 #include "utils/JobManager.h"
 #include "dialogs/GUIDialogYesNo.h"
 #include "addons/AddonManager.h"
@@ -457,7 +457,7 @@ bool CAddonInstallJob::OnPreInstall()
   // check whether this is an active skin - we need to unload it if so
   if (CSettings::Get().GetString("lookandfeel.skin") == m_addon->ID())
   {
-    g_application.getApplicationMessenger().ExecBuiltIn("UnloadSkin", true);
+    CApplicationMessenger::Get().ExecBuiltIn("UnloadSkin", true);
     return true;
   }
   return false;

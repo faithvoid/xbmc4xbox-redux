@@ -54,6 +54,16 @@ using namespace std;
 
 extern HWND g_hWnd;
 
+CApplicationMessenger& CApplicationMessenger::Get()
+{
+  static CApplicationMessenger s_messenger;
+  return s_messenger;
+}
+
+CApplicationMessenger::CApplicationMessenger()
+{
+}
+
 CApplicationMessenger::~CApplicationMessenger()
 {
   Cleanup();
@@ -475,19 +485,19 @@ case TMSG_POWERDOWN:
       switch (m_pXbmcHttp->xbmcCommand(pMsg->strParam))
       {
       case 1:
-        g_application.getApplicationMessenger().Restart();
+        Restart();
         break;
       case 2:
-        g_application.getApplicationMessenger().Shutdown();
+        Shutdown();
         break;
       case 3:
-        g_application.getApplicationMessenger().RebootToDashBoard();
+        RebootToDashBoard();
         break;
       case 4:
-        g_application.getApplicationMessenger().Reset();
+        Reset();
         break;
       case 5:
-        g_application.getApplicationMessenger().RestartApp();
+        RestartApp();
         break;
       }
     }

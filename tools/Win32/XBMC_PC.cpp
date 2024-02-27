@@ -121,25 +121,25 @@ LRESULT CXBMC_PC::MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
           }
 					break;
         case ID_RESOLUTION_PAL4X3:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(PAL)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(PAL)");
           break;
         case ID_RESOLUTION_PAL16X9:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(PAL16x9)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(PAL16x9)");
           break;
         case ID_RESOLUTION_NTSC4X3:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(NTSC)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(NTSC)");
           break;
         case ID_RESOLUTION_NTSC16X9:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(NTSC16x9)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(NTSC16x9)");
           break;
         case ID_RESOLUTION_720P:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(720p)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(720p)");
           break;
         case ID_RESOLUTION_1080I:
-          g_application.getApplicationMessenger().ExecBuiltIn("Resolution(1080i)");
+          CApplicationMessenger::Get().ExecBuiltIn("Resolution(1080i)");
           break;
         case ID_SKIN_RELOAD:
-          g_application.getApplicationMessenger().ExecBuiltIn("ReloadSkin");
+          CApplicationMessenger::Get().ExecBuiltIn("ReloadSkin");
           break;
         case ID_SKIN_ACTIVATEWINDOW:
           OnActivateWindow();
@@ -179,7 +179,7 @@ void CXBMC_PC::OnActivateWindow()
     {
       CStdString command;
       command.Format("ActivateWindow(%s)", window.c_str());
-      g_application.getApplicationMessenger().ExecBuiltIn(command);
+      CApplicationMessenger::Get().ExecBuiltIn(command);
     }
   }
   m_inDialog = false;
@@ -197,7 +197,7 @@ void CXBMC_PC::OnExecuteBuiltin()
     // now activate the window
     if (!command.IsEmpty())
     {
-      g_application.getApplicationMessenger().ExecBuiltIn(command);
+      CApplicationMessenger::Get().ExecBuiltIn(command);
     }
   }
   m_inDialog = false;

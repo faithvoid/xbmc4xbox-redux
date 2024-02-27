@@ -24,7 +24,7 @@
 #include "XBApplicationEx.h"
 
 #include "IMsgTargetCallback.h"
-#include "Key.h"
+#include "guilib/Key.h"
 #include "utils/GlobalsHandling.h"
 
 class CFileItem;
@@ -49,7 +49,6 @@ namespace ADDON
 #include "Autorun.h"
 #include "video/Bookmark.h"
 #include "utils/Stopwatch.h"
-#include "ApplicationMessenger.h"
 
 class CNetwork;
 
@@ -84,7 +83,6 @@ struct VOICE_MASK {
 };
 
 class CCdgParser;
-class CApplicationMessenger;
 class CProfile;
 class CSplash;
 class CGUITextLayout;
@@ -206,7 +204,6 @@ public:
   void UpdateLibraries();
   void CheckMusicPlaylist();
 
-  CApplicationMessenger& getApplicationMessenger();
   CNetwork& getNetwork();
 
   bool ExecuteXBMCAction(std::string action);
@@ -240,6 +237,10 @@ public:
   bool SetLanguage(const CStdString &strLanguage);
 
   ReplayGainSettings& GetReplayGainSettings() { return m_replayGainSettings; }
+
+  bool SwitchToFullScreen();
+
+  CSplash* GetSplash() { return m_splash; }
 protected:
   virtual bool OnSettingsSaving() const;
 
@@ -252,7 +253,6 @@ protected:
 
   void LoadSkin(const boost::shared_ptr<ADDON::CSkinInfo>& skin);
 
-  friend class CApplicationMessenger;
   // screensaver
   bool m_bScreenSave;
   ADDON::AddonPtr m_screenSaver;
@@ -306,7 +306,6 @@ protected:
   void InitBasicD3D();
 
   bool PlayStack(const CFileItem& item, bool bRestart);
-  bool SwitchToFullScreen();
   bool ProcessMouse();
   bool ProcessHTTPApiButtons();
   bool ProcessKeyboard();
@@ -325,7 +324,6 @@ protected:
 
   void InitDirectoriesXbox();
 
-  CApplicationMessenger m_applicationMessenger;
   CNetwork    *m_network;
   
 #ifdef HAS_EVENT_SERVER

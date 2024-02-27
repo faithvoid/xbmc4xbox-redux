@@ -20,7 +20,7 @@
 
 #include "GUIPythonWindowDialog.h"
 #include "GUIWindowManager.h"
-#include "Application.h"
+#include "ApplicationMessenger.h"
 #include "threads/SingleLock.h"
 
 CGUIPythonWindowDialog::CGUIPythonWindowDialog(int id)
@@ -61,7 +61,7 @@ void CGUIPythonWindowDialog::Show(bool show /* = true */)
   CSingleExit leaveIt(g_graphicsContext);
   ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, 0, show ? 1 : 0};
   tMsg.lpVoid = this;
-  g_application.getApplicationMessenger().SendMessage(tMsg, true);
+  CApplicationMessenger::Get().SendMessage(tMsg, true);
 }
 
 void CGUIPythonWindowDialog::Show_Internal(bool show /* = true */)

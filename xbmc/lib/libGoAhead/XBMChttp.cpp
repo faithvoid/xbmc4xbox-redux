@@ -361,12 +361,12 @@ int CXbmcHttp::SetResponse(const CStdString &response)
   if (response.length()>=closeTag.length())
   {
     if ((response.Right(closeTag.length())!=closeTag) && closeFinalTag) 
-      return g_application.getApplicationMessenger().SetResponse(response+closeTag);
+      return CApplicationMessenger::Get().SetResponse(response+closeTag);
   }
   else 
     if (closeFinalTag)
-      return g_application.getApplicationMessenger().SetResponse(response+closeTag);
-  return g_application.getApplicationMessenger().SetResponse(response);
+      return CApplicationMessenger::Get().SetResponse(response+closeTag);
+  return CApplicationMessenger::Get().SetResponse(response);
 }
 
 int CXbmcHttp::displayDir(int numParas, CStdString paras[]) 
@@ -539,7 +539,7 @@ bool CXbmcHttp::LoadPlayList(CStdString strPath, int iPlaylist, bool clearList, 
   if ((playlist.size() == 1) && (autoStart))
   {
     // just 1 song? then play it (no need to have a playlist of 1 song)
-    g_application.getApplicationMessenger().MediaPlay(playlistItem->GetPath());
+    CApplicationMessenger::Get().MediaPlay(playlistItem->GetPath());
     return true;
   }
 
@@ -553,7 +553,7 @@ bool CXbmcHttp::LoadPlayList(CStdString strPath, int iPlaylist, bool clearList, 
     {
       g_playlistPlayer.SetCurrentPlaylist(iPlaylist);
       g_playlistPlayer.Reset();
-      g_application.getApplicationMessenger().PlayListPlayerPlay();
+      CApplicationMessenger::Get().PlayListPlayerPlay();
       return true;
     } 
     else
@@ -1922,7 +1922,7 @@ int CXbmcHttp::xbmcPlayerPlayFile(int numParas, CStdString paras[])
   }
   else
   {
-    g_application.getApplicationMessenger().MediaPlay(paras[0]);
+    CApplicationMessenger::Get().MediaPlay(paras[0]);
     if(g_application.IsPlaying())
       return SetResponse(openTag+"OK");
   }
@@ -2201,7 +2201,7 @@ int CXbmcHttp::xbmcAction(int numParas, CStdString paras[], int theAction)
         pSlideShow->OnAction(CAction(ACTION_PAUSE));
     }
     else
-      g_application.getApplicationMessenger().MediaPause();
+      CApplicationMessenger::Get().MediaPause();
     return SetResponse(openTag+"OK");
     break;
   case 2:
@@ -2212,7 +2212,7 @@ int CXbmcHttp::xbmcAction(int numParas, CStdString paras[], int theAction)
     }
     else
       //g_application.StopPlaying();
-      g_application.getApplicationMessenger().MediaStop();
+      CApplicationMessenger::Get().MediaStop();
     return SetResponse(openTag+"OK");
     break;
   case 3:
@@ -2583,7 +2583,7 @@ int CXbmcHttp::xbmcShowPicture(int numParas, CStdString paras[])
   {
     if (!playableFile(paras[0]))
       return SetResponse(openTag+"Error:Unable to open file");
-    g_application.getApplicationMessenger().PictureShow(paras[0]);
+    CApplicationMessenger::Get().PictureShow(paras[0]);
     return SetResponse(openTag+"OK");
   }
 }
@@ -2608,7 +2608,7 @@ int CXbmcHttp::xbmcExecBuiltIn(int numParas, CStdString paras[])
     return SetResponse(openTag+"Error:Missing parameter");
   else
   {
-    g_application.getApplicationMessenger().ExecBuiltIn(paras[0]);
+    CApplicationMessenger::Get().ExecBuiltIn(paras[0]);
     return SetResponse(openTag+"OK");
   }
 }
@@ -3425,15 +3425,15 @@ CStdString CXbmcHttpShim::xbmcProcessCommand( int eid, webs_t wp, char_t *comman
   if (legalCmd)
   {
     if (paras!="")
-      g_application.getApplicationMessenger().HttpApi(cmd+"; "+paras, true);
+      CApplicationMessenger::Get().HttpApi(cmd+"; "+paras, true);
     else
-      g_application.getApplicationMessenger().HttpApi(cmd, true);
+      CApplicationMessenger::Get().HttpApi(cmd, true);
     //wait for response - max 20s
     Sleep(0);
-    response=g_application.getApplicationMessenger().GetResponse();
+    response=CApplicationMessenger::Get().GetResponse();
     while (response=="[No response yet]" && cnt++<200) 
     {
-      response=g_application.getApplicationMessenger().GetResponse();
+      response=CApplicationMessenger::Get().GetResponse();
       CLog::Log(LOGDEBUG, "XBMCHTTPShim: waiting %d", cnt);
       Sleep(100);
     }

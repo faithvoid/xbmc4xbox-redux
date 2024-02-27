@@ -230,11 +230,11 @@ int CBuiltins::Execute(const CStdString& execString)
   
   if (execute.Equals("reboot") || execute.Equals("restart"))  //Will reboot the xbox, aka cold reboot
   {
-    g_application.getApplicationMessenger().Restart();
+    CApplicationMessenger::Get().Restart();
   }
   else if (execute.Equals("shutdown"))
   {
-    g_application.getApplicationMessenger().Shutdown();
+    CApplicationMessenger::Get().Shutdown();
   }
   else if (execute.Equals("dashboard"))
   {
@@ -245,23 +245,23 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("powerdown"))
   {
-    g_application.getApplicationMessenger().Powerdown();
+    CApplicationMessenger::Get().Powerdown();
   }
   else if (execute.Equals("restartapp"))
   {
-    g_application.getApplicationMessenger().RestartApp();
+    CApplicationMessenger::Get().RestartApp();
   }
   else if (execute.Equals("hibernate"))
   {
-    g_application.getApplicationMessenger().Hibernate();
+    CApplicationMessenger::Get().Hibernate();
   }
   else if (execute.Equals("suspend"))
   {
-    g_application.getApplicationMessenger().Suspend();
+    CApplicationMessenger::Get().Suspend();
   }
   else if (execute.Equals("quit"))
   {
-    g_application.getApplicationMessenger().Quit();
+    CApplicationMessenger::Get().Quit();
   }
   else if (execute.Equals("loadprofile") && CProfilesManager::Get().GetMasterProfile().getLockMode() == LOCK_MODE_EVERYONE)
   {
@@ -300,7 +300,7 @@ int CBuiltins::Execute(const CStdString& execString)
   }
   else if (execute.Equals("reset")) //Will reset the xbox, aka soft reset
   {
-    g_application.getApplicationMessenger().Reset();
+    CApplicationMessenger::Get().Reset();
   }
   else if (execute.Equals("activatewindow") || execute.Equals("replacewindow"))
   {
@@ -686,7 +686,7 @@ int CBuiltins::Execute(const CStdString& execString)
       if( g_application.IsPlaying() && g_application.m_pPlayer && g_application.m_pPlayer->CanRecord())
       {
         if (m_pXbmcHttp && CSettings::Get().GetInt("services.httpapibroadcastlevel")>=1)
-          g_application.getApplicationMessenger().HttpApi(g_application.m_pPlayer->IsRecording()?"broadcastlevel; RecordStopping;1":"broadcastlevel; RecordStarting;1");
+          CApplicationMessenger::Get().HttpApi(g_application.m_pPlayer->IsRecording()?"broadcastlevel; RecordStopping;1":"broadcastlevel; RecordStarting;1");
         g_application.m_pPlayer->Record(!g_application.m_pPlayer->IsRecording());
       }
     }
@@ -806,7 +806,7 @@ int CBuiltins::Execute(const CStdString& execString)
     {
       if(params.size() > 1 && params[1].Equals("showVolumeBar"))    
       {
-        g_application.getApplicationMessenger().ShowVolumeBar(oldVolume < volume);
+        CApplicationMessenger::Get().ShowVolumeBar(oldVolume < volume);
       }
     }
   }
@@ -1398,7 +1398,7 @@ int CBuiltins::Execute(const CStdString& execString)
     if (CButtonTranslator::TranslateActionString(params[0].c_str(), actionID))
     {
       int windowID = params.size() == 2 ? CButtonTranslator::TranslateWindow(params[1]) : WINDOW_INVALID;
-      g_application.getApplicationMessenger().SendAction(CAction(actionID), windowID);
+      CApplicationMessenger::Get().SendAction(CAction(actionID), windowID);
     }
   }
   else if (execute.Equals("setproperty") && params.size() >= 2)

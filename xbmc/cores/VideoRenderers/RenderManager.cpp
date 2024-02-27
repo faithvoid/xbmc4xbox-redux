@@ -90,7 +90,7 @@ bool CXBoxRenderManager::Configure(unsigned int width, unsigned int height, unsi
     if( flags & CONF_FLAGS_FULLSCREEN )
     {
       lock.Leave();
-      g_application.getApplicationMessenger().SwitchToFullscreen();
+      CApplicationMessenger::Get().SwitchToFullscreen();
       lock.Enter();
     }
     m_pRenderer->Update(false);

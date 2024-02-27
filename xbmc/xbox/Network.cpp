@@ -24,7 +24,6 @@
 #ifdef HAS_XBOX_NETWORK
 #include "Undocumented.h"
 #endif
-#include "Application.h"
 #include "ApplicationMessenger.h"
 #include "network/NetworkServices.h"
 #include "settings/Settings.h"
@@ -295,7 +294,7 @@ void CNetwork::NetworkDown()
   m_lastlink = 0;
   m_laststate = 0;
   m_networkup = false;
-  g_application.getApplicationMessenger().NetworkMessage(SERVICES_DOWN, 0);
+  CApplicationMessenger::Get().NetworkMessage(SERVICES_DOWN, 0);
 }
 
 void CNetwork::NetworkUp()
@@ -320,7 +319,7 @@ void CNetwork::NetworkUp()
 
   m_networkup = true;
   
-  g_application.getApplicationMessenger().NetworkMessage(SERVICES_UP, 0);
+  CApplicationMessenger::Get().NetworkMessage(SERVICES_UP, 0);
 }
 
 /* update network state, call repeatedly while return value is XNET_GET_XNADDR_PENDING */

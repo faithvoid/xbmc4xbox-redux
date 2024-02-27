@@ -32,6 +32,7 @@
 #include "GUIWindowManager.h"
 #include "settings/DisplaySettings.h"
 #include "Application.h"
+#include "ApplicationMessenger.h"
 #include "utils/Variant.h"
 
 using namespace std;
@@ -407,13 +408,13 @@ namespace PYXBMC
       CPyThreadState pyState;
       ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, 1, 1};
       tMsg.lpVoid = self->pWindow;
-      g_application.getApplicationMessenger().SendMessage(tMsg, true);
+      CApplicationMessenger::Get().SendMessage(tMsg, true);
     }
     else
     {
       CPyThreadState pyState;
       vector<CStdString> params;
-      g_application.getApplicationMessenger().ActivateWindow(self->iWindowId, params, false);
+      CApplicationMessenger::Get().ActivateWindow(self->iWindowId, params, false);
     }
 
     Py_INCREF(Py_None);
@@ -445,13 +446,13 @@ namespace PYXBMC
       CPyThreadState pyState;
       ThreadMessage tMsg = {TMSG_GUI_PYTHON_DIALOG, 1, 0};
       tMsg.lpVoid = self->pWindow;
-      g_application.getApplicationMessenger().SendMessage(tMsg, true);
+      CApplicationMessenger::Get().SendMessage(tMsg, true);
     }
     else
     {
       CPyThreadState pyState;
       vector<CStdString> params;
-      g_application.getApplicationMessenger().ActivateWindow(self->iOldWindowId, params, false);
+      CApplicationMessenger::Get().ActivateWindow(self->iOldWindowId, params, false);
     }
     self->iOldWindowId = 0;
 

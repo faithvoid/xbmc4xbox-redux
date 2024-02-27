@@ -1144,7 +1144,7 @@ void CGUIWindowFileManager::OnJobComplete(unsigned int jobID, bool success, CJob
   if (IsActive())
   {
     CGUIMessage msg(GUI_MSG_NOTIFY_ALL, GetID(), 0, GUI_MSG_UPDATE);
-    g_application.getApplicationMessenger().SendGUIMessage(msg, GetID(), false);
+    CApplicationMessenger::Get().SendGUIMessage(msg, GetID(), false);
   }
 
   if (success)

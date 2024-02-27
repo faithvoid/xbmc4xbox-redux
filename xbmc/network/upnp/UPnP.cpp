@@ -1831,7 +1831,7 @@ CUPnPRenderer::GetMetadata(NPT_String& meta)
 NPT_Result
 CUPnPRenderer::OnNext(PLT_ActionReference& action)
 {
-    g_application.getApplicationMessenger().PlayListPlayerNext();
+    CApplicationMessenger::Get().PlayListPlayerNext();
     return NPT_SUCCESS;
 }
 
@@ -1842,7 +1842,7 @@ NPT_Result
 CUPnPRenderer::OnPause(PLT_ActionReference& action)
 {
     if (!g_application.IsPaused())
-        g_application.getApplicationMessenger().MediaPause();
+        CApplicationMessenger::Get().MediaPause();
     return NPT_SUCCESS;
 }
 
@@ -1853,7 +1853,7 @@ NPT_Result
 CUPnPRenderer::OnPlay(PLT_ActionReference& action)
 {
     if (g_application.IsPaused()) {
-        g_application.getApplicationMessenger().MediaPause();
+        CApplicationMessenger::Get().MediaPause();
     } else if (!g_application.IsPlaying()) {
         NPT_String uri, meta;
         PLT_Service* service;
@@ -1874,7 +1874,7 @@ CUPnPRenderer::OnPlay(PLT_ActionReference& action)
 NPT_Result
 CUPnPRenderer::OnPrevious(PLT_ActionReference& action)
 {
-    g_application.getApplicationMessenger().PlayListPlayerPrevious();
+    CApplicationMessenger::Get().PlayListPlayerPrevious();
     return NPT_SUCCESS;
 }
 
@@ -1884,7 +1884,7 @@ CUPnPRenderer::OnPrevious(PLT_ActionReference& action)
 NPT_Result
 CUPnPRenderer::OnStop(PLT_ActionReference& action)
 {
-    g_application.getApplicationMessenger().MediaStop();
+    CApplicationMessenger::Get().MediaStop();
     return NPT_SUCCESS;
 }
 
@@ -1974,13 +1974,13 @@ CUPnPRenderer::PlayMedia(const char* uri, const char* meta, PLT_Action* action)
         } else if(object->m_ObjectClass.type.StartsWith("object.item.imageItem")) {
             bImageFile = true;
         }
-        bImageFile?g_application.getApplicationMessenger().PictureShow(item.GetPath())
-                  :g_application.getApplicationMessenger().MediaPlay(item);
+        bImageFile?CApplicationMessenger::Get().PictureShow(item.GetPath())
+                  :CApplicationMessenger::Get().MediaPlay(item);
     } else {
         bImageFile = NPT_String(PLT_MediaObject::GetUPnPClass(uri)).StartsWith("object.item.imageItem", true);
 
-        bImageFile?g_application.getApplicationMessenger().PictureShow((const char*)uri)
-                  :g_application.getApplicationMessenger().MediaPlay((const char*)uri);
+        bImageFile?CApplicationMessenger::Get().PictureShow((const char*)uri)
+                  :CApplicationMessenger::Get().MediaPlay((const char*)uri);
     }
 
     if (!g_application.IsPlaying()) {

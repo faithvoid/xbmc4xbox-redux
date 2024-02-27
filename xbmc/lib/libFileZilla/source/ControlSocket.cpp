@@ -37,7 +37,7 @@
 #include "Utils/log.h"
 #include "settings/Settings.h"
 #include "settings/AdvancedSettings.h"
-#include "Application.h"
+#include "ApplicationMessenger.h"
 #include "utils/MemoryUnitManager.h"
 #endif
 
@@ -2213,7 +2213,7 @@ void CControlSocket::ParseCommand()
           // send using a threadmessage...
           ThreadMessage tMsg = {TMSG_EXECUTE_BUILT_IN};
           tMsg.strParam = fullcommand;
-          g_application.getApplicationMessenger().SendMessage(tMsg, true);
+          CApplicationMessenger::Get().SendMessage(tMsg, true);
           Send(_T("200 Executed built in function."));
         }
 		    return;

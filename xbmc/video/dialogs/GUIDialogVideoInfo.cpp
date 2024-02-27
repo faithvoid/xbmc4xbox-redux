@@ -46,7 +46,6 @@
 #include "settings/Settings.h"
 #include "GUIUserMessages.h"
 #include "LocalizeStrings.h"
-#include "Application.h"
 #include "ApplicationMessenger.h"
 #include "ThumbLoader.h"
 
@@ -850,9 +849,9 @@ void CGUIDialogVideoInfo::PlayTrailer()
   Close(true);
 
   if (item.IsPlayList())
-    g_application.getApplicationMessenger().MediaPlay(item);
+    CApplicationMessenger::Get().MediaPlay(item);
   else
-    g_application.getApplicationMessenger().PlayFile(item);
+    CApplicationMessenger::Get().PlayFile(item);
 }
 
 void CGUIDialogVideoInfo::SetLabel(int iControl, const CStdString &strLabel)

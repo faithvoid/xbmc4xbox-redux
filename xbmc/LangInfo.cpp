@@ -19,7 +19,6 @@
  */
 
 #include "LangInfo.h"
-#include "Application.h"
 #include "ApplicationMessenger.h"
 #include "FileItem.h"
 #include "Util.h"
@@ -464,7 +463,7 @@ bool CLangInfo::SetLanguage(const std::string &strLanguage)
 
   // also tell our weather and skin to reload as these are localized
   g_weatherManager.Refresh();
-  g_application.getApplicationMessenger().ExecBuiltIn("ReloadSkin", false);
+  CApplicationMessenger::Get().ExecBuiltIn("ReloadSkin", false);
 
   return true;
 }

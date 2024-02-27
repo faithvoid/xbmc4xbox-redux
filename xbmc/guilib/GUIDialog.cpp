@@ -222,20 +222,20 @@ void CGUIDialog::Close(bool forceClose /* = false */)
   {
     // make sure graphics lock is not held
     CSingleExit leaveIt(g_graphicsContext);
-    g_application.getApplicationMessenger().Close(this, forceClose);
+    CApplicationMessenger::Get().Close(this, forceClose);
   }
   else
-    g_application.getApplicationMessenger().Close(this, forceClose);
+    CApplicationMessenger::Get().Close(this, forceClose);
 }
 
 void CGUIDialog::DoModal(int iWindowID /*= WINDOW_INVALID */, const CStdString &param)
 {
-  g_application.getApplicationMessenger().DoModal(this, iWindowID, param);
+  CApplicationMessenger::Get().DoModal(this, iWindowID, param);
 }
 
 void CGUIDialog::Show()
 {
-  g_application.getApplicationMessenger().Show(this);
+  CApplicationMessenger::Get().Show(this);
 }
 
 bool CGUIDialog::RenderAnimation(unsigned int time)

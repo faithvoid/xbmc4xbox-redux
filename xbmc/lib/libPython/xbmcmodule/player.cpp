@@ -139,7 +139,7 @@ namespace PYXBMC
       {
         g_playlistPlayer.SetCurrentPlaylist(self->iPlayList);
       }
-      g_application.getApplicationMessenger().PlayListPlayerPlay(g_playlistPlayer.GetCurrentSong());
+      CApplicationMessenger::Get().PlayListPlayerPlay(g_playlistPlayer.GetCurrentSong());
     }
     else if ((PyString_Check(pObject) || PyUnicode_Check(pObject)) && pObjectListItem != NULL && ListItem_CheckExact(pObjectListItem))
     {
@@ -150,12 +150,12 @@ namespace PYXBMC
       // set m_strPath to the passed url
       pListItem->item->SetPath(PyString_AsString(pObject));
 
-      g_application.getApplicationMessenger().PlayFile((const CFileItem)*pListItem->item, false);
+      CApplicationMessenger::Get().PlayFile((const CFileItem)*pListItem->item, false);
     }
     else if (PyString_Check(pObject) || PyUnicode_Check(pObject))
     {
       CFileItem item(PyString_AsString(pObject), false);
-      g_application.getApplicationMessenger().MediaPlay(item.GetPath());
+      CApplicationMessenger::Get().MediaPlay(item.GetPath());
     }
     else if (PlayList_Check(pObject))
     {
@@ -163,7 +163,7 @@ namespace PYXBMC
       PlayList* pPlayList = (PlayList*)pObject;
       self->iPlayList = pPlayList->iPlayList;
       g_playlistPlayer.SetCurrentPlaylist(pPlayList->iPlayList);
-      g_application.getApplicationMessenger().PlayListPlayerPlay();
+      CApplicationMessenger::Get().PlayListPlayerPlay();
     }
 
     Py_INCREF(Py_None);
@@ -176,7 +176,7 @@ namespace PYXBMC
 
   PyObject* pyPlayer_Stop(PyObject *self, PyObject *args)
   {
-    g_application.getApplicationMessenger().MediaStop();
+    CApplicationMessenger::Get().MediaStop();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -188,7 +188,7 @@ namespace PYXBMC
 
   PyObject* Player_Pause(PyObject *self, PyObject *args)
   {
-    g_application.getApplicationMessenger().MediaPause();
+    CApplicationMessenger::Get().MediaPause();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -203,7 +203,7 @@ namespace PYXBMC
     // force a playercore before playing
     g_application.m_eForcedNextPlayer = self->playerCore;
 
-    g_application.getApplicationMessenger().PlayListPlayerNext();
+    CApplicationMessenger::Get().PlayListPlayerNext();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -218,7 +218,7 @@ namespace PYXBMC
     // force a playercore before playing
     g_application.m_eForcedNextPlayer = self->playerCore;
 
-    g_application.getApplicationMessenger().PlayListPlayerPrevious();
+    CApplicationMessenger::Get().PlayListPlayerPrevious();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -242,7 +242,7 @@ namespace PYXBMC
     }
     g_playlistPlayer.SetCurrentSong(iItem);
 
-    g_application.getApplicationMessenger().PlayListPlayerPlay(iItem);
+    CApplicationMessenger::Get().PlayListPlayerPlay(iItem);
     //g_playlistPlayer.Play(iItem);
     //CLog::Log(LOGNOTICE, "Current Song After Play: %i", g_playlistPlayer.GetCurrentSong());
 

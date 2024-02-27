@@ -23,6 +23,7 @@
 #include "GUIAudioManager.h"
 #include "GUIDialog.h"
 #include "Application.h"
+#include "ApplicationMessenger.h"
 #include "GUIPassword.h"
 #include "GUIInfoManager.h"
 #include "Util.h"
@@ -345,7 +346,7 @@ void CGUIWindowManager::ActivateWindow(int iWindowID, const vector<CStdString>& 
   {
     // make sure graphics lock is not held
     CSingleExit leaveIt(g_graphicsContext);
-    g_application.getApplicationMessenger().ActivateWindow(iWindowID, params, swappingWindows);
+    CApplicationMessenger::Get().ActivateWindow(iWindowID, params, swappingWindows);
   }
   else
     ActivateWindow_Internal(iWindowID, params, swappingWindows);
