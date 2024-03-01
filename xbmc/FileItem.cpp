@@ -71,8 +71,8 @@ CFileItem::CFileItem(const CSong& song)
   m_strPath = song.strFileName;
   GetMusicInfoTag()->SetSong(song);
   m_lStartOffset = song.iStartOffset;
-  SetProperty("item_start", song.iStartOffset);
   m_lStartPartNumber = 1;
+  SetProperty("item_start", song.iStartOffset);
   m_lEndOffset = song.iEndOffset;
   m_strThumbnailImage = song.strThumb;
 }
@@ -93,16 +93,6 @@ CFileItem::CFileItem(const CStdString &path, const CAlbum& album)
     m_strThumbnailImage = album.thumbURL.m_url[0].m_url;
   else
     m_strThumbnailImage.clear();
-
-  /* TODO: remove when we remove old properties */
-  SetProperty("description", album.strReview);
-  SetProperty("theme", StringUtils::Join(album.themes, g_advancedSettings.m_musicItemSeparator));
-  SetProperty("mood", StringUtils::Join(album.moods, g_advancedSettings.m_musicItemSeparator));
-  SetProperty("style", StringUtils::Join(album.styles, g_advancedSettings.m_musicItemSeparator));
-  SetProperty("type", album.strType);
-  SetProperty("label", album.strLabel);
-  if (album.iRating > 0)
-    SetProperty("rating", album.iRating);
 
   CMusicDatabase::SetPropertiesFromAlbum(*this,album);
 }
