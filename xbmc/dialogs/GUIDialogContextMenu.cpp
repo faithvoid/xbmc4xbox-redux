@@ -288,7 +288,7 @@ void CGUIDialogContextMenu::GetContextButtons(const CStdString &type, const CFil
     if ( MEDIA_DETECT::CDetectDVDMedia::IsDiscInDrive() )
     {
       buttons.Add(CONTEXT_BUTTON_PLAY_DISC, 341); // Play CD/DVD!
-      if (CGUIWindowVideoBase::GetResumeItemOffset(item.get()) > 0)
+      if (CGUIWindowVideoBase::HasResumeItemOffset(item.get()))
       {
         buttons.Add(CONTEXT_BUTTON_RESUME_DISC, CGUIWindowVideoBase::GetResumeString(*(item.get())));     // Resume Disc
       }

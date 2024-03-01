@@ -45,7 +45,8 @@ public:
   virtual bool OnAction(const CAction &action);
 
   void PlayMovie(const CFileItem *item);
-  static int GetResumeItemOffset(const CFileItem *item);
+  static void GetResumeItemOffset(const CFileItem *item, int& startoffset, int& partNumber);
+  static bool HasResumeItemOffset(const CFileItem *item);
 
   void AddToDatabase(int iItem);
   static void OnScan(const CStdString& strPath, bool scanAll = false);
