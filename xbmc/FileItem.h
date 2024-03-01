@@ -304,6 +304,25 @@ public:
   bool IsSamePath(const CFileItem *item) const;
 
   bool IsAlbum() const;
+
+  /*! \brief Sets details using the information from the CVideoInfoTag object
+   Sets the videoinfotag and uses its information to set the label and path.
+   \param video video details to use and set
+   */
+  void SetFromVideoInfoTag(const CVideoInfoTag &video);
+  /*! \brief Sets details using the information from the CAlbum object
+   Sets the album in the music info tag and uses its information to set the
+   label and album-specific properties.
+   \param album album details to use and set
+   */
+  void SetFromAlbum(const CAlbum &album);
+  /*! \brief Sets details using the information from the CSong object
+   Sets the song in the music info tag and uses its information to set the
+   label, path, song-specific properties and artwork.
+   \param song song details to use and set
+   */
+  void SetFromSong(const CSong &song);
+
 private:
   // Gets the previously cached thumb file (with existence checks)
   CStdString GetPreviouslyCachedMusicThumb() const;
