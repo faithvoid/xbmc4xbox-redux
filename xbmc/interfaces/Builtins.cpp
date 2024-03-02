@@ -43,6 +43,7 @@
 #include "addons/Addon.h" // for TranslateType, TranslateContent
 #include "addons/AddonInstaller.h"
 #include "addons/AddonManager.h"
+#include "addons/PluginSource.h"
 #include "network/NetworkServices.h"
 #include "LCD.h"
 #include "log.h"
@@ -123,6 +124,7 @@ const BUILT_IN commands[] = {
   { "StopScript",                 true,   "Stop the script by ID or path, if running" },
   { "RunXBE",                     true,   "Run the specified executeable" },
   { "RunPlugin",                  true,   "Run the specified plugin" },
+  { "RunAddon",                   true,   "Run the specified plugin/script" },
   { "Extract",                    true,   "Extracts the specified archive" },
   { "PlayMedia",                  true,   "Play the specified media file (or playlist)" },
   { "SlideShow",                  true,   "Run a slideshow from the specified directory" },
@@ -443,6 +445,39 @@ int CBuiltins::Execute(const CStdString& execString)
     else
     {
       CLog::Log(LOGERROR, "CBuiltins::Execute, runplugin called with no arguments.");
+    }
+  }
+  else if (execute.Equals("runaddon"))
+  {
+    if (params.size())
+    {
+      AddonPtr addon;
+      if (CAddonMgr::Get().GetAddon(params[0],addon) && addon)
+      {
+        PluginPtr plugin = boost::dynamic_pointer_cast<CPluginSource>(addon);
+        CStdString cmd;
+        if (plugin && addon->Type() == ADDON_PLUGIN)
+        {
+          if (plugin->Provides(CPluginSource::VIDEO))
+            cmd.Format("ActivateWindow(Video,plugin://%s)",params[0]);
+          if (plugin->Provides(CPluginSource::AUDIO))
+            cmd.Format("ActivateWindow(Music,plugin://%s)",params[0]);
+          if (plugin->Provides(CPluginSource::EXECUTABLE))
+            cmd.Format("ActivateWindow(Programs,plugin://%s)",params[0]);
+          if (plugin->Provides(CPluginSource::IMAGE))
+            cmd.Format("ActivateWindow(Pictures,plugin://%s)",params[0]);
+        }
+        if (addon->Type() == ADDON_SCRIPT)
+          // Pass the script name (params[0]) and all the parameters
+          // (params[1] ... params[x]) separated by a comma to RunScript
+          cmd.Format("RunScript(%s)", StringUtils::JoinString(params, ","));
+
+        return Execute(cmd);
+      }
+    }
+    else
+    {
+      CLog::Log(LOGERROR, "XBMC.RunAddon called with no arguments.");
     }
   }
   else if (execute.Equals("playmedia"))

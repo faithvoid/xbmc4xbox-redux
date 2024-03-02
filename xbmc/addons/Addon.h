@@ -25,6 +25,7 @@
 #include "Util.h"
 #include "URL.h"
 #include "guilib/LocalizeStrings.h"
+#include "utils/ISerializable.h"
 
 class CURL;
 class TiXmlElement;
@@ -42,7 +43,7 @@ const CStdString    TranslateType(const TYPE &type, bool pretty=false);
 const CStdString    GetIcon(const TYPE &type);
       TYPE          TranslateType(const CStdString &string);
 
-class AddonProps
+class AddonProps : public ISerializable
 {
 public:
   AddonProps(const CStdString &id, TYPE type, const CStdString &versionstr, const CStdString &minversionstr)
@@ -63,6 +64,8 @@ public:
            && (*this).type == rhs.type
            && (*this).version == rhs.version;
   }
+
+  void Serialize(CVariant &variant);
 
   CStdString id;
   TYPE type;
