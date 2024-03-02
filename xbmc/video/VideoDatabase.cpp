@@ -6620,7 +6620,7 @@ ScraperPtr CVideoDatabase::GetScraperForPath(const CStdString& strPath, SScanSet
       if (!scraperID.empty() &&
         CAddonMgr::Get().GetAddon(scraperID, addon))
       {
-        scraper = boost::dynamic_pointer_cast<CScraper>(addon->Clone(addon));
+        scraper = boost::dynamic_pointer_cast<CScraper>(addon->Clone());
         if (!scraper)
           return ScraperPtr();
 
@@ -6663,7 +6663,7 @@ ScraperPtr CVideoDatabase::GetScraperForPath(const CStdString& strPath, SScanSet
           if (content != CONTENT_NONE &&
               CAddonMgr::Get().GetAddon(m_pDS->fv("path.strScraper").get_asString(), addon))
           {
-            scraper = boost::dynamic_pointer_cast<CScraper>(addon->Clone(addon));
+            scraper = boost::dynamic_pointer_cast<CScraper>(addon->Clone());
             scraper->SetPathSettings(content, m_pDS->fv("path.strSettings").get_asString());
             settings.parent_name = m_pDS->fv("path.useFolderNames").get_asBool();
             settings.recurse = m_pDS->fv("path.scanRecursive").get_asInt();

@@ -178,7 +178,6 @@ void AddonProps::Serialize(CVariant &variant)
   variant["version"] = version.c_str();
   variant["minversion"] = minversion.c_str();
   variant["name"] = name;
-  variant["parent"] = parent;
   variant["license"] = license;
   variant["summary"] = summary;
   variant["description"] = description;
@@ -241,7 +240,6 @@ void AddonProps::BuildDependencies(const cp_plugin_info_t *plugin)
 
 CAddon::CAddon(const cp_extension_t *ext)
   : m_props(ext)
-  , m_parent(AddonPtr())
 {
   BuildLibName(ext);
   BuildProfilePath();
@@ -256,7 +254,6 @@ CAddon::CAddon(const cp_extension_t *ext)
 
 CAddon::CAddon(const cp_plugin_info_t *plugin)
   : m_props(plugin)
-  , m_parent(AddonPtr())
 {
   m_enabled = true;
   m_hasSettings = false;
@@ -268,7 +265,6 @@ CAddon::CAddon(const cp_plugin_info_t *plugin)
 
 CAddon::CAddon(const AddonProps &props)
   : m_props(props)
-  , m_parent(AddonPtr())
 {
   if (props.libname.IsEmpty()) BuildLibName();
   else m_strLibName = props.libname;
@@ -282,9 +278,8 @@ CAddon::CAddon(const AddonProps &props)
   m_userSettingsLoaded = false;
 }
 
-CAddon::CAddon(const CAddon &rhs, const AddonPtr &parent)
+CAddon::CAddon(const CAddon &rhs)
   : m_props(rhs.Props())
-  , m_parent(parent)
 {
   m_settings  = rhs.m_settings;
   m_addonXmlDoc = rhs.m_addonXmlDoc;
@@ -299,9 +294,9 @@ CAddon::CAddon(const CAddon &rhs, const AddonPtr &parent)
   m_checkedStrings  = false;
 }
 
-AddonPtr CAddon::Clone(const AddonPtr &parent) const
+AddonPtr CAddon::Clone() const
 {
-  return AddonPtr(new CAddon(*this, parent));
+  return AddonPtr(new CAddon(*this));
 }
 
 bool CAddon::MeetsVersion(const AddonVersion &version) const
@@ -599,6 +594,11 @@ CAddonLibrary::CAddonLibrary(const AddonProps& props)
   : CAddon(props)
   , m_addonType(SetAddonType())
 {
+}
+
+AddonPtr CAddonLibrary::Clone() const
+{
+  return AddonPtr(new CAddonLibrary(*this));
 }
 
 TYPE CAddonLibrary::SetAddonType()

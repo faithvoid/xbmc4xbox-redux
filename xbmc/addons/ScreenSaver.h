@@ -35,6 +35,7 @@ public:
   CScreenSaver(const cp_extension_t *ext) : ADDON::CAddonDll<DllScreenSaver, ScreenSaver, SCR_PROPS>(ext) {};
   CScreenSaver(const char *addonID);
   virtual ~CScreenSaver() {}
+  virtual AddonPtr Clone() const;
 
   // Things that MUST be supplied by the child classes
   bool CreateScreenSaver();

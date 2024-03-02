@@ -72,7 +72,6 @@ public:
   AddonVersion version;
   AddonVersion minversion;
   CStdString name;
-  CStdString parent;
   CStdString license;
   CStdString summary;
   CStdString description;
@@ -101,7 +100,7 @@ public:
   CAddon(const cp_extension_t *ext);
   CAddon(const cp_plugin_info_t *plugin);
   virtual ~CAddon() {}
-  virtual AddonPtr Clone(const AddonPtr& parent) const;
+  virtual AddonPtr Clone() const;
 
   /*! \brief Check whether the this addon can be configured or not
    \return true if the addon has settings, false otherwise
@@ -171,9 +170,7 @@ public:
   virtual bool ReloadSettings();
 
 protected:
-  CAddon(const CAddon&); // protected as all copying is handled by Clone()
-  CAddon(const CAddon&, const AddonPtr&);
-  const AddonPtr Parent() const { return m_parent; }
+  CAddon(const CAddon &rhs); // protected as all copying is handled by Clone()
   virtual void BuildLibName(const cp_extension_t *ext = NULL);
 
   /*! \brief Load the default settings and override these with any previously configured user settings
@@ -211,7 +208,6 @@ protected:
 private:
   friend class AddonMgr;
   AddonProps m_props;
-  const AddonPtr    m_parent;
   CStdString        m_userSettingsPath;
   void BuildProfilePath();
 
@@ -237,6 +233,8 @@ class CAddonLibrary : public CAddon
 public:
   CAddonLibrary(const AddonProps &props);
   CAddonLibrary(const cp_extension_t *ext);
+
+  virtual AddonPtr Clone() const;
 
 private:
   virtual bool IsAddonLibrary() { return true; }

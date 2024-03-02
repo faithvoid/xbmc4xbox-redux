@@ -34,7 +34,7 @@ namespace ADDON
   class CRepository : public CAddon
   {
   public:
-    AddonPtr Clone(const AddonPtr &self) const;
+    virtual AddonPtr Clone() const;
     CRepository(const AddonProps& props);
     CRepository(const cp_extension_t *props);
     virtual ~CRepository();
@@ -49,7 +49,7 @@ namespace ADDON
     VECADDONS Parse();
   private:
     CStdString FetchChecksum(const CStdString& url);
-    CRepository(const CRepository&, const AddonPtr&);
+    CRepository(const CRepository &rhs);
     CStdString m_info;
     CStdString m_checksum;
     CStdString m_datadir;

@@ -52,6 +52,7 @@ public:
   CSkinInfo(const AddonProps &props, const RESOLUTION_INFO &res = RESOLUTION_INFO());
   CSkinInfo(const cp_extension_t *ext);
   virtual ~CSkinInfo();
+  virtual AddonPtr Clone() const;
 
   /*! \brief Load resultion information from directories in Path().
    */

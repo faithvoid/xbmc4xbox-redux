@@ -83,7 +83,7 @@ namespace ADDON
   {
   public:
     virtual ~IAddon() {};
-    virtual AddonPtr Clone(const AddonPtr& self) const =0;
+    virtual AddonPtr Clone() const =0;
     virtual TYPE Type() const =0;
     virtual bool IsType(TYPE type) const =0;
     virtual AddonProps Props() const =0;
@@ -117,7 +117,6 @@ namespace ADDON
     virtual bool ReloadSettings() =0;
 
   protected:
-    virtual const AddonPtr Parent() const =0;
     virtual bool LoadSettings(bool bForce = false) =0;
 
   private:

@@ -104,6 +104,11 @@ CSkinInfo::~CSkinInfo()
 {
 }
 
+AddonPtr CSkinInfo::Clone() const
+{
+  return AddonPtr(new CSkinInfo(*this));
+}
+
 struct closestRes
 {
   closestRes(const RESOLUTION_INFO &target) : m_target(target) { };
