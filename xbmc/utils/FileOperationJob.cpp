@@ -118,7 +118,7 @@ bool CFileOperationJob::DoProcessFolder(FileAction action, const CStdString& str
 {
   // check whether this folder is a filedirectory - if so, we don't process it's contents
   CFileItem item(strPath, false);
-  IFileDirectory *file = CFactoryFileDirectory::Create(strPath, &item);
+  IFileDirectory *file = CFactoryFileDirectory::Create(item.GetURL(), &item);
   if (file)
   {
     delete file;
@@ -156,6 +156,11 @@ bool CFileOperationJob::DoProcess(FileAction action, CFileItemList & items, cons
       CStdString strNoSlash = pItem->GetPath();
       URIUtils::RemoveSlashAtEnd(strNoSlash);
       CStdString strFileName = URIUtils::GetFileName(strNoSlash);
+
+      // URL Decode for cases where source uses URL encoding and target does not 
+      if ( URIUtils::ProtocolHasEncodedFilename(CURL(pItem->GetPath()).GetProtocol() )
+       && !URIUtils::ProtocolHasEncodedFilename(CURL(strDestFile).GetProtocol() ) )
+        CURL::Decode(strFileName);
 
       // special case for upnp
       if (URIUtils::IsUPnP(items.GetPath()) || URIUtils::IsUPnP(pItem->GetPath()))
@@ -258,7 +263,7 @@ bool CFileOperationJob::CFileOperation::ExecuteOperation(CFileOperationJob *base
     {
       CLog::Log(LOGDEBUG,"FileManager: copy %s->%s\n", m_strFileA.c_str(), m_strFileB.c_str());
 
-      bResult = CFile::Cache(m_strFileA, m_strFileB, this, &data);
+      bResult = CFile::Copy(m_strFileA, m_strFileB, this, &data);
     }
     break;
     case ActionMove:
@@ -267,7 +272,7 @@ bool CFileOperationJob::CFileOperation::ExecuteOperation(CFileOperationJob *base
 
       if (CanBeRenamed(m_strFileA, m_strFileB))
         bResult = CFile::Rename(m_strFileA, m_strFileB);
-      else if (CFile::Cache(m_strFileA, m_strFileB, this, &data))
+      else if (CFile::Copy(m_strFileA, m_strFileB, this, &data))
         bResult = CFile::Delete(m_strFileA);
       else
         bResult = false;

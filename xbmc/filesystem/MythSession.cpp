@@ -120,14 +120,14 @@ CDateTime CMythSession::GetValue(cmyth_timestamp_t t)
   return result;
 }
 
-CStdString CMythSession::GetValue(char *str)
+std::string CMythSession::GetValue(char *str)
 {
-  CStdString result;
+  std::string result;
   if (str)
   {
     result = str;
     m_dll->ref_release(str);
-    result.Trim();
+    StringUtils2::Trim(result);
   }
   return result;
 }

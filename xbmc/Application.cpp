@@ -794,7 +794,7 @@ HRESULT CApplication::Create(HWND hWnd)
       CFileItemList items;
       CUtil::GetRecursiveListing("special://xbmc/userdata",items,"");
       for (int i=0;i<items.Size();++i)
-          CFile::Cache(items[i]->GetPath(),"special://masterprofile/"+URIUtils::GetFileName(items[i]->GetPath()));
+          CFile::Copy(items[i]->GetPath(),"special://masterprofile/"+URIUtils::GetFileName(items[i]->GetPath()));
     }
     g_advancedSettings.m_logFolder = "special://masterprofile/";
   }
@@ -3480,7 +3480,7 @@ bool CApplication::PlayMedia(const CFileItem& item, int iPlaylist)
     {
       CSmartPlaylist smartpl;
       //get name and type of smartplaylist, this will always succeed as GetDirectory also did this.
-      smartpl.OpenAndReadName(item.GetPath());
+      smartpl.OpenAndReadName(item.GetURL());
       CPlayList playlist;
       playlist.Add(items);
       return ProcessAndStartPlaylist(smartpl.GetName(), playlist, (smartpl.GetType() == "songs" || smartpl.GetType() == "albums") ? PLAYLIST_MUSIC:PLAYLIST_VIDEO);
@@ -3530,7 +3530,7 @@ bool CApplication::PlayStack(const CFileItem& item, bool bRestart)
   {
     CStackDirectory dir;
     CFileItemList movieList;
-    dir.GetDirectory(item.GetPath(), movieList);
+    dir.GetDirectory(item.GetURL(), movieList);
 
     // first assume values passed to the stack
     int selectedFile = item.m_lStartPartNumber;
@@ -3592,7 +3592,7 @@ bool CApplication::PlayStack(const CFileItem& item, bool bRestart)
 
     // calculate the total time of the stack
     CStackDirectory dir;
-    dir.GetDirectory(item.GetPath(), *m_currentStack);
+    dir.GetDirectory(item.GetURL(), *m_currentStack);
     long totalTime = 0;
     for (int i = 0; i < m_currentStack->Size(); i++)
     {
@@ -3694,7 +3694,7 @@ bool CApplication::PlayFile(const CFileItem& item, bool bRestart)
   if (URIUtils::IsUPnP(item.GetPath()))
   {
     CFileItem item_new(item);
-    if (XFILE::CUPnPDirectory::GetResource(item.GetPath(), item_new))
+    if (XFILE::CUPnPDirectory::GetResource(item.GetURL(), item_new))
       return PlayFile(item_new, false);
     return false;
   }

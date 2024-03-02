@@ -63,20 +63,22 @@ using namespace MUSIC_INFO;
 
 CFileItem::CFileItem(const CSong& song)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
-
+  Initialize();
   SetFromSong(song);
+}
+
+CFileItem::CFileItem(const CURL &url, const CAlbum& album)
+{
+  Initialize();
+
+  m_strPath = url.Get();
+  URIUtils::AddSlashAtEnd(m_strPath);
+  SetFromAlbum(album);
 }
 
 CFileItem::CFileItem(const CStdString &path, const CAlbum& album)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
 
   m_strPath = path;
   URIUtils::AddSlashAtEnd(m_strPath);
@@ -84,10 +86,7 @@ CFileItem::CFileItem(const CStdString &path, const CAlbum& album)
 
 CFileItem::CFileItem(const CMusicInfoTag& music)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   SetLabel(music.GetTitle());
   m_strPath = music.GetURL();
   m_bIsFolder = URIUtils::HasSlashAtEnd(m_strPath);
@@ -98,20 +97,13 @@ CFileItem::CFileItem(const CMusicInfoTag& music)
 
 CFileItem::CFileItem(const CVideoInfoTag& movie)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
-
+  Initialize();
   SetFromVideoInfoTag(movie);
 }
 
 CFileItem::CFileItem(const CArtist& artist)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   SetLabel(artist.strArtist);
   m_strPath = artist.strArtist;
   m_bIsFolder = true;
@@ -121,10 +113,7 @@ CFileItem::CFileItem(const CArtist& artist)
 
 CFileItem::CFileItem(const CGenre& genre)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   SetLabel(genre.strGenre);
   m_strPath = genre.strGenre;
   m_bIsFolder = true;
@@ -142,39 +131,37 @@ CFileItem::CFileItem(const CFileItem& item): CGUIListItem()
 
 CFileItem::CFileItem(const CGUIListItem& item)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
-  // not particularly pretty, but it gets around the issue of Reset() defaulting
+  Initialize();
+  // not particularly pretty, but it gets around the issue of Initialize() defaulting
   // parameters in the CGUIListItem base class.
   *((CGUIListItem *)this) = item;
 }
 
 CFileItem::CFileItem(void)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
 }
 
 CFileItem::CFileItem(const CStdString& strLabel)
     : CGUIListItem()
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   SetLabel(strLabel);
+}
+
+CFileItem::CFileItem(const CURL& path, bool bIsFolder)
+{
+  Initialize();
+  m_strPath = path.Get();
+  m_bIsFolder = bIsFolder;
+  // tuxbox urls cannot have a / at end
+  if (m_bIsFolder && !m_strPath.empty() && !IsFileFolder() && !URIUtils::IsTuxBox(m_strPath))
+    URIUtils::AddSlashAtEnd(m_strPath);
 }
 
 CFileItem::CFileItem(const CStdString& strPath, bool bIsFolder)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   m_strPath = strPath;
   m_bIsFolder = bIsFolder;
   // tuxbox urls cannot have a / at end
@@ -184,10 +171,7 @@ CFileItem::CFileItem(const CStdString& strPath, bool bIsFolder)
 
 CFileItem::CFileItem(const CMediaSource& share)
 {
-  m_musicInfoTag = NULL;
-  m_videoInfoTag = NULL;
-  m_pictureInfoTag = NULL;
-  Reset();
+  Initialize();
   m_bIsFolder = true;
   m_bIsShareOrDrive = true;
   m_strPath = share.strPath;
@@ -288,23 +272,16 @@ const CFileItem& CFileItem::operator=(const CFileItem& item)
   return *this;
 }
 
-void CFileItem::Reset()
+void CFileItem::Initialize()
 {
-  m_strLabel2.Empty();
-  SetLabel("");
+  m_musicInfoTag = NULL;
+  m_videoInfoTag = NULL;
+  m_pictureInfoTag = NULL;
   m_bLabelPreformated=false;
-  FreeIcons();
-  m_overlayIcon = ICON_OVERLAY_NONE;
-  m_bSelected = false;
   m_bIsAlbum = false;
-  m_strDVDLabel.Empty();
-  m_strTitle.Empty();
-  m_strPath.Empty();
   m_dwSize = 0;
-  m_bIsFolder = false;
   m_bIsParentFolder=false;
   m_bIsShareOrDrive = false;
-  m_dateTime.Reset();
   m_iDriveType = CMediaSource::SOURCE_TYPE_UNKNOWN;
   m_lStartOffset = 0;
   m_lStartPartNumber = 1;
@@ -312,11 +289,28 @@ void CFileItem::Reset()
   m_iprogramCount = 0;
   m_idepth = 1;
   m_iLockMode = LOCK_MODE_EVERYONE;
-  m_strLockCode = "";
   m_iBadPwdCount = 0;
   m_iHasLock = 0;
   m_bCanQueue=true;
-  m_mimetype = "";
+  m_specialSort = SortSpecialNone;
+}
+
+void CFileItem::Reset()
+{
+  // CGUIListItem members...
+  m_strLabel2.clear();
+  SetLabel("");
+  FreeIcons();
+  m_overlayIcon = ICON_OVERLAY_NONE;
+  m_bSelected = false;
+  m_bIsFolder = false;
+
+  m_strDVDLabel.clear();
+  m_strTitle.clear();
+  m_strPath.clear();
+  m_dateTime.Reset();
+  m_strLockCode.clear();
+  m_mimetype.clear();
   delete m_musicInfoTag;
   m_musicInfoTag=NULL;
   delete m_videoInfoTag;
@@ -324,7 +318,8 @@ void CFileItem::Reset()
   delete m_pictureInfoTag;
   m_pictureInfoTag=NULL;
   m_extrainfo.Empty();
-  m_specialSort = SortSpecialNone;
+
+  Initialize();
   SetInvalid();
 }
 
@@ -767,11 +762,6 @@ bool CFileItem::IsStack() const
 bool CFileItem::IsPlugin() const
 {
   return URIUtils::IsPlugin(m_strPath);
-}
-
-bool CFileItem::IsPluginRoot() const
-{
-  return URIUtils::IsPluginRoot(m_strPath);
 }
 
 bool CFileItem::IsAddonsPath() const
@@ -1271,6 +1261,24 @@ void CFileItem::SetFromSong(const CSong &song)
   SetProperty("item_start", song.iStartOffset);
   m_lEndOffset = song.iEndOffset;
   m_strThumbnailImage = song.strThumb;
+}
+
+/*
+ TODO: Ideally this (and SetPath) would not be available outside of construction
+ for CFileItem objects, or at least restricted to essentially be equivalent
+ to construction. This would require re-formulating a bunch of CFileItem
+ construction, and also allowing CFileItemList to have it's own (public)
+ SetURL() function, so for now we give direct access.
+ */
+void CFileItem::SetURL(const CURL& url)
+{
+  m_strPath = url.Get();
+}
+
+const CURL CFileItem::GetURL() const
+{
+  CURL url(m_strPath);
+  return url;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -2196,6 +2204,9 @@ void CFileItemList::StackFiles()
     VECCREGEXP::iterator  expr        = stackRegExps.begin();
 
     URIUtils::Split(item1->GetPath(), filePath, file1);
+    if (URIUtils::ProtocolHasEncodedFilename(CURL(filePath).GetProtocol() ) )
+      CURL::Decode(file1);
+
     int j;
     while (expr != stackRegExps.end())
     {
@@ -2226,6 +2237,8 @@ void CFileItemList::StackFiles()
 
           CStdString file2, filePath2;
           URIUtils::Split(item2->GetPath(), filePath2, file2);
+          if (URIUtils::ProtocolHasEncodedFilename(CURL(filePath2).GetProtocol() ) )
+            CURL::Decode(file2);
 
           if (expr->RegFind(file2, offset) != -1)
           {
@@ -2313,7 +2326,7 @@ void CFileItemList::StackFiles()
         // the label is converted from utf8, but the filename is not)
         if (!CSettings::Get().GetBool("filelists.showextensions"))
           URIUtils::RemoveExtension(stackName);
-        CURL::Decode(stackName);
+
         item1->SetLabel(stackName);
         item1->m_dwSize = size;
         break;

@@ -310,31 +310,37 @@ CUtil::~CUtil(void)
 
 CStdString CUtil::GetTitleFromPath(const CStdString& strFileNameAndPath, bool bIsFolder /* = false */)
 {
+  CURL pathToUrl(strFileNameAndPath);
+  return GetTitleFromPath(pathToUrl, bIsFolder);
+}
+
+CStdString CUtil::GetTitleFromPath(const CURL& url, bool bIsFolder /* = false */)
+{
   // use above to get the filename
-  CStdString path(strFileNameAndPath);
+  CStdString path(url.Get());
   URIUtils::RemoveSlashAtEnd(path);
   CStdString strFilename = URIUtils::GetFileName(path);
 
-  CURL url(strFileNameAndPath);
   CStdString strHostname = url.GetHostName();
 
 #ifdef HAS_UPNP
   // UPNP
   if (url.GetProtocol() == "upnp")
-    strFilename = CUPnPDirectory::GetFriendlyName(strFileNameAndPath.c_str());
+    strFilename = CUPnPDirectory::GetFriendlyName(url);
 #endif
 
   if (url.GetProtocol() == "rss")
   {
     CRSSDirectory dir;
     CFileItemList items;
-    if(dir.GetDirectory(strFileNameAndPath, items) && !items.m_strTitle.IsEmpty())
+    if(dir.GetDirectory(url, items) && !items.m_strTitle.empty())
       return items.m_strTitle;
   }
 
   // Shoutcast
   else if (url.GetProtocol() == "shout")
   {
+    const CStdString strFileNameAndPath = url.Get();
     const int genre = strFileNameAndPath.find_first_of('=');
     if(genre <0)
       strFilename = g_localizeStrings.Get(260);
@@ -1826,7 +1832,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
             {
               strLExt = strItem.Right(strItem.GetLength() - 9);
               strDest.Format("special://temp/subtitle.alt-%s", strLExt);
-              if (CFile::Cache(items[j]->GetPath(), strDest, pCallback, NULL))
+              if (CFile::Copy(items[j]->GetPath(), strDest, pCallback, NULL))
               {
                 CLog::Log(LOGINFO, " cached subtitle %s->%s\n", strItem.c_str(), strDest.c_str());
                 strExtensionCached = strLExt;
@@ -1838,7 +1844,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
             {
               strLExt = strItem.Right(strItem.size() - fnl);
               strDest.Format("special://temp/subtitle%s", strLExt);
-              if (CFile::Cache(items[j]->GetPath(), strDest, pCallback, NULL))
+              if (CFile::Copy(items[j]->GetPath(), strDest, pCallback, NULL))
                 CLog::Log(LOGINFO, " cached subtitle %s->%s\n", strItem.c_str(), strDest.c_str());
             }
           }
@@ -1872,7 +1878,7 @@ void CUtil::CacheSubtitles(const CStdString& strMovie, CStdString& strExtensionC
           for (unsigned int k = 0; k < TagConv.m_Langclass.size(); k++)
           {
             strDest.Format("special://temp/subtitle.%s%s", TagConv.m_Langclass[k].Name, strLExt);
-            if (CFile::Cache(items[i]->GetPath(), strDest, pCallback, NULL))
+            if (CFile::Copy(items[i]->GetPath(), strDest, pCallback, NULL))
               CLog::Log(LOGINFO, " cached subtitle %s->%s\n", filename.c_str(), strDest.c_str());
             CStdString strTemp;
             strTemp.Format(".%s%s", TagConv.m_Langclass[k].Name, strLExt);
@@ -1949,7 +1955,7 @@ bool CUtil::CacheRarSubtitles(const CStdString& strRarPath,
           CStdString strDestFile;
           strDestFile.Format("special://temp/subtitle%s", sub_exts[iPos]);
 
-          if (CFile::Cache(strSourceUrl,strDestFile))
+          if (CFile::Copy(strSourceUrl,strDestFile))
           {
             CLog::Log(LOGINFO, " cached subtitle %s->%s", strPathInRar.c_str(), strDestFile.c_str());
             bFoundSubs = true;
@@ -2007,7 +2013,7 @@ void CUtil::PrepareSubtitleFonts()
         {
           CStdString strSource = URIUtils::AddFileToFolder(strPath, wfd.cFileName);
           CStdString strDest = URIUtils::AddFileToFolder(strFontPath, wfd.cFileName);
-          CFile::Cache(strSource, strDest);
+          CFile::Copy(strSource, strDest);
         }
       }
       while (FindNextFile((HANDLE)hFind, &wfd));
@@ -2251,7 +2257,7 @@ void CUtil::TakeScreenshot()
           for (unsigned int i = 0; i < screenShots.size(); i++)
           {
             CStdString file = CUtil::GetNextFilename(URIUtils::AddFileToFolder(newDir, "screenshot%03d.bmp"), 999);
-            CFile::Cache(screenShots[i], file);
+            CFile::Copy(screenShots[i], file);
           }
           screenShots.clear();
         }

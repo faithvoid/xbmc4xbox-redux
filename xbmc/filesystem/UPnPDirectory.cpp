@@ -28,6 +28,7 @@
 #include "video/VideoInfoTag.h"
 #include "FileItem.h"
 #include "utils/log.h"
+#include "utils/StringUtils.h"
 
 using namespace MUSIC_INFO;
 using namespace XFILE;
@@ -116,9 +117,9 @@ static bool FindDeviceWait(CUPnP* upnp, const char* uuid, PLT_DeviceDataReferenc
 |   CUPnPDirectory::GetFriendlyName
 +---------------------------------------------------------------------*/
 const char*
-CUPnPDirectory::GetFriendlyName(const char* url)
+CUPnPDirectory::GetFriendlyName(const CURL& url)
 {
-    NPT_String path = url;
+    NPT_String path = url.Get().c_str();
     if (!path.EndsWith("/")) path += "/";
 
     if (path.Left(7).Compare("upnp://", true) != 0) {
@@ -247,7 +248,7 @@ bool CUPnPDirectory::GetResource(const CURL& path, CFileItem &item)
 |   CUPnPDirectory::GetDirectory
 +---------------------------------------------------------------------*/
 bool
-CUPnPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
+CUPnPDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 {
     CUPnP* upnp = CUPnP::GetInstance();
 
@@ -255,7 +256,7 @@ CUPnPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
     items.SetCacheToDisc(CFileItemList::CACHE_NEVER);
 
     // We accept upnp://devuuid/[item_id/]
-    NPT_String path = strPath.c_str();
+    NPT_String path = url.Get().c_str();
     if (!path.StartsWith("upnp://", true)) {
         return false;
     }
@@ -310,11 +311,11 @@ CUPnPDirectory::GetDirectory(const CStdString& strPath, CFileItemList &items)
         bool video = true;
         bool audio = true;
         bool image = true;
-        m_strFileMask.TrimLeft("/");
-        if (!m_strFileMask.IsEmpty()) {
-            video = m_strFileMask.Find(".wmv") >= 0;
-            audio = m_strFileMask.Find(".wma") >= 0;
-            image = m_strFileMask.Find(".jpg") >= 0;
+        StringUtils2::TrimLeft(m_strFileMask, "/");
+        if (!m_strFileMask.empty()) {
+            video = m_strFileMask.find(".wmv") != std::string::npos;
+            audio = m_strFileMask.find(".wma") != std::string::npos;
+            image = m_strFileMask.find(".jpg") != std::string::npos;
         }
 
         // special case for Windows Media Connect and WMP11 when looking for root

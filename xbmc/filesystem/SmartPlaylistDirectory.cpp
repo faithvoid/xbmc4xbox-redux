@@ -51,11 +51,11 @@ namespace XFILE
   {
   }
 
-  bool CSmartPlaylistDirectory::GetDirectory(const CStdString& strPath, CFileItemList& items)
+  bool CSmartPlaylistDirectory::GetDirectory(const CURL& url, CFileItemList& items)
   {
     // Load in the SmartPlaylist and get the WHERE query
     CSmartPlaylist playlist;
-    if (!playlist.Load(strPath))
+    if (!playlist.Load(url))
       return false;
     bool result = GetDirectory(playlist, items);
     if (result)
@@ -87,10 +87,13 @@ namespace XFILE
     for (std::vector<CStdString>::const_iterator virtualFolder = virtualFolders.begin(); virtualFolder != virtualFolders.end(); virtualFolder++)
     {
       CFileItemPtr pItem = CFileItemPtr(new CFileItem(*virtualFolder, true));
-      if (CFactoryFileDirectory::Create(*virtualFolder, pItem.get()) != NULL)
+      IFileDirectory *dir = CFactoryFileDirectory::Create(pItem->GetURL(), pItem.get());
+
+      if (dir != NULL)
       {
         pItem->SetSpecialSort(SortSpecialOnTop);
         items.Add(pItem);
+        delete dir;
       }
     }
 
@@ -319,7 +322,7 @@ namespace XFILE
       return success;
   }
 
-  bool CSmartPlaylistDirectory::ContainsFiles(const CStdString& strPath)
+  bool CSmartPlaylistDirectory::ContainsFiles(const CURL& url)
   {
     // smart playlists always have files??
     return true;
@@ -330,26 +333,28 @@ namespace XFILE
     CFileItemList list;
     bool filesExist = false;
     if (CSmartPlaylist::IsMusicType(playlistType))
-      filesExist = CDirectory::GetDirectory("special://musicplaylists/", list, "*.xsp");
+      filesExist = CDirectory::GetDirectory("special://musicplaylists/", list, ".xsp", false);
     else // all others are video
-      filesExist = CDirectory::GetDirectory("special://videoplaylists/", list, "*.xsp");
+      filesExist = CDirectory::GetDirectory("special://videoplaylists/", list, ".xsp", false);
     if (filesExist)
     {
       for (int i = 0; i < list.Size(); i++)
       {
         CFileItemPtr item = list[i];
-        if (item->GetLabel().CompareNoCase(name) == 0)
-        { // found :)
-          return item->GetPath();
+        CSmartPlaylist playlist;
+        if (playlist.OpenAndReadName(item->GetURL()))
+        {
+          if (playlist.GetName().CompareNoCase(name) == 0)
+            return item->GetPath();
         } 
       }
     }
     return "";
   }
 
-  bool CSmartPlaylistDirectory::Remove(const char *strPath)
+  bool CSmartPlaylistDirectory::Remove(const CURL& url)
   { 
-    return XFILE::CFile::Delete(strPath); 
+    return XFILE::CFile::Delete(url);
   }
 }
 

@@ -644,6 +644,8 @@ void CGUIMediaWindow::FormatAndSort(CFileItemList &items)
   */
 bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList &items)
 {
+  const CURL pathToUrl(strDirectory);
+
   // cleanup items
   if (items.Size())
     items.Clear();
@@ -666,7 +668,7 @@ bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList
     if (strDirectory.IsEmpty())
       SetupShares();
 
-    if (!m_rootDir.GetDirectory(strDirectory, items))
+    if (!m_rootDir.GetDirectory(pathToUrl, items))
       return false;
 
     // took over a second, and not normally cached, so cache it
@@ -958,7 +960,7 @@ bool CGUIMediaWindow::OnClick(int iItem)
   if (!pItem->m_bIsFolder && pItem->IsFileFolder())
   {
     XFILE::IFileDirectory *pFileDirectory = NULL;
-    pFileDirectory = XFILE::CFactoryFileDirectory::Create(pItem->GetPath(), pItem.get(), "");
+    pFileDirectory = XFILE::CFactoryFileDirectory::Create(pItem->GetURL(), pItem.get(), "");
     if(pFileDirectory)
       pItem->m_bIsFolder = true;
     else if(pItem->m_bIsFolder)
@@ -1283,7 +1285,7 @@ void CGUIMediaWindow::SetHistoryForPath(const CStdString& strDirectory)
     URIUtils::RemoveSlashAtEnd(strPath);
 
     CFileItemList items;
-    m_rootDir.GetDirectory("", items);
+    m_rootDir.GetDirectory(CURL(), items);
 
     m_history.ClearPathHistory();
 

@@ -71,6 +71,9 @@ public:
   CFile();
   virtual ~CFile();
 
+  bool Open(const CURL& file, const unsigned int flags = 0);
+  bool OpenForWrite(const CURL& file, bool bOverWrite = false);
+
   bool Open(const CStdString& strFileName, const unsigned int flags = 0);
   bool OpenForWrite(const CStdString& strFileName, bool bOverWrite = false);
   unsigned int Read(void* lpBuf, int64_t uiBufSize);
@@ -100,12 +103,21 @@ public:
 
   IFile *GetImplemenation() { return m_pFile; }
 
+  // CURL interface
+  static bool Exists(const CURL& file, bool bUseCache = true);
+  static bool Delete(const CURL& file);
+  static int  Stat(const CURL& file, struct __stat64* buffer);
+  static bool Rename(const CURL& file, const CURL& urlNew);
+  static bool Copy(const CURL& file, const CURL& dest, XFILE::IFileCallback* pCallback = NULL, void* pContext = NULL);
+  static bool SetHidden(const CURL& file, bool hidden);
+
+  // string interface
   static bool Exists(const CStdString& strFileName, bool bUseCache = true);
   static int  Stat(const CStdString& strFileName, struct __stat64* buffer);
   int Stat(struct __stat64 *buffer);
   static bool Delete(const CStdString& strFileName);
   static bool Rename(const CStdString& strFileName, const CStdString& strNewFileName);
-  static bool Cache(const CStdString& strFileName, const CStdString& strDest, XFILE::IFileCallback* pCallback = NULL, void* pContext = NULL);
+  static bool Copy(const CStdString& strFileName, const CStdString& strDest, XFILE::IFileCallback* pCallback = NULL, void* pContext = NULL);
   static bool SetHidden(const CStdString& fileName, bool hidden);
 
 private:
