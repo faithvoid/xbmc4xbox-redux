@@ -29,6 +29,7 @@
 //
 
 #include "filesystem/DirectoryFactory.h"
+#include "utils/StdString.h"
 
 class CSetting;
 

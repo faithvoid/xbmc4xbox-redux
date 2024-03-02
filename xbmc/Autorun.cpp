@@ -18,27 +18,34 @@
  *
  */
 
-#include "interfaces/Builtins.h"
 #include "Autorun.h"
 #include "Application.h"
-#include "storage/DetectDVDType.h"
-#include "Util.h"
 #include "GUIPassword.h"
-#include "PlayListPlayer.h"
-#include "xbox/xbeheader.h"
-#include "filesystem/StackDirectory.h"
-#include "ProgramDatabase.h"
-#include "utils/Trainer.h"
-#include "GUIWindowManager.h"
 #include "GUIUserMessages.h"
-#include "dialogs/GUIDialogYesNo.h"
+#include "PlayListPlayer.h"
+#include "filesystem/StackDirectory.h"
 #include "filesystem/Directory.h"
+#include "filesystem/DirectoryFactory.h"
 #include "filesystem/File.h"
 #include "profiles/ProfilesManager.h"
 #include "settings/Settings.h"
-#include "settings/AdvancedSettings.h"
 #include "playlists/PlayList.h"
+#include "guilib/GUIWindowManager.h"
 #include "guilib/LocalizeStrings.h"
+#include "storage/MediaManager.h"
+#include "video/VideoDatabase.h"
+#include "dialogs/GUIDialogYesNo.h"
+#include "utils/URIUtils.h"
+#include "utils/log.h"
+#ifdef HAS_CDDA_RIPPER
+#include "cdrip/CDDARipper.h"
+#endif
+#ifdef _XBOX
+#include "interfaces/Builtins.h"
+#include "utils/Trainer.h"
+#include "xbox/xbeheader.h"
+#include "ProgramDatabase.h"
+#endif
 
 #include "defs_from_settings.h"
 

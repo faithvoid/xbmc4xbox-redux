@@ -18,16 +18,17 @@
 * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "utils/log.h"
 #include "File.h"
+#include "IFile.h"
 #include "FileFactory.h"
 #include "Application.h"
-#include "Util.h"
-#include "utils/URIUtils.h"
-#include "utils/BitstreamStats.h"
 #include "DirectoryCache.h"
 #include "Directory.h"
 #include "FileCache.h"
+#include "utils/log.h"
+#include "utils/URIUtils.h"
+#include "utils/BitstreamStats.h"
+#include "Util.h"
 
 #include "commons/Exception.h"
 #include "URL.h"
@@ -425,6 +426,13 @@ int CFile::Stat(struct __stat64 *buffer)
     return -1;
 
   return m_pFile->Stat(buffer);
+}
+
+bool CFile::SkipNext()
+{
+  if (m_pFile)
+    return m_pFile->SkipNext();
+  return false;
 }
 
 int CFile::Stat(const CStdString& strFileName, struct __stat64* buffer)
@@ -826,6 +834,13 @@ int CFile::IoControl(EIoControl request, void* param)
   }
 
   return result;
+}
+
+int CFile::GetChunkSize()
+{
+  if (m_pFile)
+    return m_pFile->GetChunkSize();
+  return 0;
 }
 
 //*********************************************************************************************

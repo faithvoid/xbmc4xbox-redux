@@ -24,7 +24,6 @@
 #include "music/infoscanner/MusicArtistInfo.h"
 #include "addons/Scraper.h"
 #include "threads/Thread.h"
-#include "filesystem/CurlFile.h"
 
 namespace XFILE { class CCurlFile; }
 
@@ -83,7 +82,7 @@ protected:
   int m_iArtist;
   bool m_bSucceeded;
   bool m_bCanceled;
-  XFILE::CCurlFile m_http;
+  XFILE::CCurlFile* m_http;
   ADDON::ScraperPtr m_scraper;
 };
 

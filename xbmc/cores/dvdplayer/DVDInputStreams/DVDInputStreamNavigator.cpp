@@ -25,7 +25,6 @@
 #include "DVDDemuxSPU.h"
 #include "DVDStateSerializer.h"
 #include "settings/Settings.h"
-#include "filesystem/IFile.h"
 #include "LangInfo.h"
 
 #include "guilib/Geometry.h"

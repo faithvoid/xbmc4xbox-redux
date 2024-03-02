@@ -29,8 +29,9 @@
 #include "log.h"
 #include "Util.h"
 #include "URIUtils.h"
+#include "URL.h"
 #include "settings/AdvancedSettings.h"
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
 #include "guilib/GUIWindowManager.h"
 #include "dialogs/GUIDialogExtendedProgressBar.h"
 #ifdef HAS_FILESYSTEM_RAR

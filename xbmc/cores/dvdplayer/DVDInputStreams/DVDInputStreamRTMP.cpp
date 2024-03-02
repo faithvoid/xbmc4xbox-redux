@@ -22,7 +22,6 @@
 
 #include "settings/AdvancedSettings.h"
 #include "DVDInputStreamRTMP.h"
-#include "filesystem/IFile.h"
 #include "threads/SingleLock.h"
 #include "utils/log.h"
 #include "utils/Variant.h"

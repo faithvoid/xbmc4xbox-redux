@@ -20,6 +20,7 @@
  
 #include "DVDInputStreamFile.h"
 #include "filesystem/File.h"
+#include "filesystem/IFile.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/URIUtils.h"
 #include "utils/log.h"
