@@ -973,7 +973,7 @@ bool CGUIMediaWindow::OnClick(int iItem)
   {
     // execute the script
     AddonPtr addon;
-    if (CAddonMgr::Get().GetAddon(url.GetHostName(), addon))
+    if (CAddonMgr::Get().GetAddon(url.GetHostName(), addon, ADDON_SCRIPT))
     {
 #ifdef HAS_PYTHON
       if (!g_pythonParser.StopScript(addon->LibPath()))
