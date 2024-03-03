@@ -450,9 +450,14 @@ int CSmbFile::Stat(const CURL& url, struct __stat64* buffer)
   return iResult;
 }
 
-unsigned int CSmbFile::Read(void *lpBuf, int64_t uiBufSize)
+ssize_t CSmbFile::Read(void *lpBuf, size_t uiBufSize)
 {
-  if (m_fd == -1) return 0;
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
+
+  if (m_fd == -1)
+    return -1;
+
   CSingleLock lock(smb); // Init not called since it has to be "inited" by now
 
   /* work around stupid bug in samba */
@@ -465,7 +470,7 @@ unsigned int CSmbFile::Read(void *lpBuf, int64_t uiBufSize)
   if( uiBufSize >= 64*1024-2 )
     uiBufSize = 64*1024-2;
 
-  int bytesRead = smbc_read(m_fd, lpBuf, (int)uiBufSize);
+  ssize_t bytesRead = smbc_read(m_fd, lpBuf, (int)uiBufSize);
 
   if ( bytesRead < 0 && errno == EINVAL )
   {
@@ -474,12 +479,9 @@ unsigned int CSmbFile::Read(void *lpBuf, int64_t uiBufSize)
   }
 
   if ( bytesRead < 0 )
-  {
     CLog::Log(LOGERROR, "%s - Error( %s )", __FUNCTION__, get_friendly_nt_error_msg(smb.ConvertUnixToNT(errno)));
-    return 0;
-  }
 
-  return (unsigned int)bytesRead;
+  return bytesRead;
 }
 
 int64_t CSmbFile::Seek(int64_t iFilePosition, int iWhence)

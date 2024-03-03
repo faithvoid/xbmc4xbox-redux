@@ -106,8 +106,11 @@ bool CHomeRunFile::Open(const CURL &url)
   return true;
 }
 
-unsigned int CHomeRunFile::Read(void* lpBuf, int64_t uiBufSize)
+ssize_t CHomeRunFile::Read(void* lpBuf, size_t uiBufSize)
 {
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
+
   unsigned int datasize;
 
   if(uiBufSize < VIDEO_DATA_PACKET_SIZE)

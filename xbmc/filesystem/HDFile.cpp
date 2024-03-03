@@ -144,16 +144,22 @@ bool CFileHD::OpenForWrite(const CURL& url, bool bOverWrite)
 }
 
 //*********************************************************************************************
-unsigned int CFileHD::Read(void *lpBuf, int64_t uiBufSize)
+ssize_t CFileHD::Read(void *lpBuf, size_t uiBufSize)
 {
-  if (!m_hFile.isValid()) return 0;
+  assert(lpBuf != NULL);
+  if (!m_hFile.isValid()) 
+    return -1;
+
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
+  
   DWORD nBytesRead;
   if ( ReadFile((HANDLE)m_hFile, lpBuf, (DWORD)uiBufSize, &nBytesRead, NULL) )
   {
     m_i64FilePos += nBytesRead;
     return nBytesRead;
   }
-  return 0;
+  return -1;
 }
 
 //*********************************************************************************************

@@ -349,13 +349,13 @@ int CFileCache::Stat(const CURL& url, struct __stat64* buffer)
   return CFile::Stat(url.Get(), buffer);
 }
 
-unsigned int CFileCache::Read(void* lpBuf, int64_t uiBufSize)
+ssize_t CFileCache::Read(void* lpBuf, size_t uiBufSize)
 {
   CSingleLock lock(m_sync);
   if (!m_pCache)
   {
     CLog::Log(LOGERROR,"%s - sanity failed. no cache strategy!", __FUNCTION__);
-    return 0;
+    return -1;
   }
   int64_t iRc;
 
@@ -379,7 +379,7 @@ retry:
   if (iRc == CACHE_RC_TIMEOUT)
   {
     CLog::Log(LOGWARNING, "%s - timeout waiting for data", __FUNCTION__);
-    return 0;
+    return -1;
   }
 
   if (iRc == 0)
@@ -387,7 +387,7 @@ retry:
 
   // unknown error code
   CLog::Log(LOGERROR, "%s - cache strategy returned unknown error code %d", __FUNCTION__, (int)iRc);
-  return 0;
+  return -1;
 }
 
 int64_t CFileCache::Seek(int64_t iFilePosition, int iWhence)

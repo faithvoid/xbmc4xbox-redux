@@ -103,15 +103,18 @@ int CCDDAFile::Stat(const CURL& url, struct __stat64* buffer)
   return -1;
 }
 
-unsigned int CCDDAFile::Read(void* lpBuf, int64_t uiBufSize)
+ssize_t CCDDAFile::Read(void* lpBuf, size_t uiBufSize)
 {
   if (!m_pCdIo || !CDetectDVDMedia::IsDiscInDrive())
-    return 0;
+    return -1;
+
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
 
   int iSectorCount = (int)uiBufSize / CDIO_CD_FRAMESIZE_RAW;
 
   if (iSectorCount <= 0)
-    return 0;
+    return -1;
 
   // Are there enough sectors left to read
   if (m_lsnCurrent + iSectorCount > m_lsnEnd)
@@ -120,7 +123,7 @@ unsigned int CCDDAFile::Read(void* lpBuf, int64_t uiBufSize)
   if (m_cdio->cdio_read_audio_sectors(m_pCdIo, lpBuf, m_lsnCurrent, iSectorCount) != DRIVER_OP_SUCCESS)
   {
     CLog::Log(LOGERROR, "file cdda: Reading %d sectors of audio data starting at lsn %d failed", iSectorCount, m_lsnCurrent);
-    return 0;
+    return -1;
   }
 
   m_lsnCurrent += iSectorCount;

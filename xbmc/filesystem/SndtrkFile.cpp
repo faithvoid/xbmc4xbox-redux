@@ -65,16 +65,21 @@ bool CSndtrkFile::OpenForWrite(const char* strFileName)
 }
 
 //*********************************************************************************************
-unsigned int CSndtrkFile::Read(void *lpBuf, int64_t uiBufSize)
+ssize_t CSndtrkFile::Read(void *lpBuf, size_t uiBufSize)
 {
-  if (!m_hFile.isValid()) return 0;
+  if (!m_hFile.isValid())
+    return -1;
+
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
+
   DWORD nBytesRead;
   if ( ReadFile((HANDLE)m_hFile, lpBuf, (DWORD)uiBufSize, &nBytesRead, NULL) )
   {
     m_i64FilePos += nBytesRead;
     return nBytesRead;
   }
-  return 0;
+  return -1;
 }
 
 //*********************************************************************************************

@@ -30,8 +30,20 @@
 
 #include "URL.h"
 
+#include "xbox/PlatformDefs.h" // for __stat64, ssize_t
+
 #include <stdint.h>
 #include <sys/stat.h>
+
+#if !defined(SIZE_MAX) || !defined(SSIZE_MAX)
+#include <limits.h>
+#ifndef SIZE_MAX
+#define SIZE_MAX _UI32_MAX
+#endif // ! SIZE_MAX
+#ifndef SSIZE_MAX
+#define SSIZE_MAX _I32_MAX
+#endif // ! SSIZE_MAX
+#endif // ! SIZE_MAX || ! SSIZE_MAX
 
 #include "IFileTypes.h"
 
@@ -49,7 +61,15 @@ public:
   virtual bool Exists(const CURL& url) = 0;
   virtual int Stat(const CURL& url, struct __stat64* buffer) = 0;
   virtual int Stat(struct __stat64* buffer);
-  virtual unsigned int Read(void* lpBuf, int64_t uiBufSize) = 0;
+  /**
+   * Attempt to read bufSize bytes from currently opened file into buffer bufPtr.
+   * @param bufPtr  pointer to buffer
+   * @param bufSize size of the buffer
+   * @return number of successfully read bytes if any bytes were read and stored in
+   *         buffer, zero if no bytes are available to read (end of file was reached)
+   *         or undetectable error occur, -1 in case of any explicit error
+   */
+  virtual ssize_t Read(void* bufPtr, size_t bufSize) = 0;
   virtual int Write(const void* lpBuf, int64_t uiBufSize) { return -1;};
   virtual bool ReadString(char *szLine, int iLineLength);
   virtual int64_t Seek(int64_t iFilePosition, int iWhence = SEEK_SET) = 0;

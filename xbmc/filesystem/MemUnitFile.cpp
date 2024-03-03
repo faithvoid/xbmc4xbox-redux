@@ -62,9 +62,14 @@ bool CMemUnitFile::OpenForWrite(const CURL& url, bool bOverWrite)
 }
 
 //*********************************************************************************************
-unsigned int CMemUnitFile::Read(void *lpBuf, int64_t uiBufSize)
+ssize_t CMemUnitFile::Read(void *lpBuf, size_t uiBufSize)
 {
-  if (!m_fileSystem) return 0;
+  if (!m_fileSystem)
+    return -1;
+
+  if (uiBufSize > SSIZE_MAX)
+    uiBufSize = SSIZE_MAX;
+
   return m_fileSystem->Read(lpBuf, uiBufSize);
 }
 

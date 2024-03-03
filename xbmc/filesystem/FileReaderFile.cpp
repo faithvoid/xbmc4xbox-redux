@@ -64,7 +64,7 @@ bool CFileFileReader::OpenForWrite(const CURL& url, bool bOverWrite)
 }
 
 //*********************************************************************************************
-unsigned int CFileFileReader::Read(void *lpBuf, int64_t uiBufSize)
+ssize_t CFileFileReader::Read(void *lpBuf, size_t uiBufSize)
 {
   return m_reader.Read(lpBuf,uiBufSize);
 }
