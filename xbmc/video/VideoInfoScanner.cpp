@@ -1065,8 +1065,9 @@ namespace VIDEO
     return episodeInfo.cDate.IsValid();
   }
 
-  long CVideoInfoScanner::AddVideo(CFileItem *pItem, const CONTENT_TYPE &content, bool videoFolder, int idShow)
+  long CVideoInfoScanner::AddVideo(CFileItem *pItem, const CONTENT_TYPE &content, bool videoFolder /* = false */, bool useLocal /* = true */, int idShow /* = -1 */, bool libraryImport /* = false */)
   {
+    // KEEP IN MIND!: useLocal is not used currently. It's added in PR919 which still isn't backported
     // ensure our database is open (this can get called via other classes)
     if (!m_database.Open())
       return -1;
@@ -1148,8 +1149,12 @@ namespace VIDEO
       movieDetails.m_iDbId = lResult;
     }
 
-    if (g_advancedSettings.m_bVideoLibraryImportWatchedState)
+    if (g_advancedSettings.m_bVideoLibraryImportWatchedState || libraryImport)
       m_database.SetPlayCount(*pItem, movieDetails.m_playCount, movieDetails.m_lastPlayed);
+
+    if ((g_advancedSettings.m_bVideoLibraryImportResumePoint || libraryImport) &&
+        movieDetails.m_resumePoint.timeInSeconds > 0.0f && movieDetails.m_resumePoint.totalTimeInSeconds > 0.0f)
+      m_database.AddBookMarkToFile(pItem->GetPath(), movieDetails.m_resumePoint, CBookmark::EType::RESUME);
 
     m_database.Close();
     return lResult;

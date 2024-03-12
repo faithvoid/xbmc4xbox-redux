@@ -8803,8 +8803,7 @@ void CVideoDatabase::ImportFromXML(const CStdString &path)
         info.Load(movie);
         CFileItem item(info);
         bool useFolders = info.m_basePath.IsEmpty() ? LookupByFolders(item.GetPath()) : false;
-        scanner.AddVideo(&item, CONTENT_MOVIES, useFolders);
-        SetPlayCount(item, info.m_playCount, info.m_lastPlayed);
+        scanner.AddVideo(&item, CONTENT_MOVIES, useFolders, true, -1, true);
         CStdString file(GetSafeFile(moviesDir, info.m_strTitle));
         CFile::Copy(file + ".tbn", item.GetCachedVideoThumb());
         CFile::Copy(file + "-fanart.jpg", item.GetCachedFanart());
@@ -8817,8 +8816,7 @@ void CVideoDatabase::ImportFromXML(const CStdString &path)
         info.Load(movie);
         CFileItem item(info);
         bool useFolders = info.m_basePath.IsEmpty() ? LookupByFolders(item.GetPath()) : false;
-        scanner.AddVideo(&item, CONTENT_MUSICVIDEOS, useFolders);
-        SetPlayCount(item, info.m_playCount, info.m_lastPlayed);
+        scanner.AddVideo(&item, CONTENT_MUSICVIDEOS, useFolders, true, -1, true);
         CStdString file(GetSafeFile(musicvideosDir, StringUtils::Join(info.m_artist, g_advancedSettings.m_videoItemSeparator) + "." + info.m_strTitle));
         CFile::Copy(file + ".tbn", item.GetCachedVideoThumb());
         current++;
@@ -8832,7 +8830,7 @@ void CVideoDatabase::ImportFromXML(const CStdString &path)
         DeleteTvShow(info.m_strPath);
         CFileItem item(info);
         bool useFolders = info.m_basePath.IsEmpty() ? LookupByFolders(item.GetPath(), true) : false;
-        int showID = scanner.AddVideo(&item, CONTENT_TVSHOWS, useFolders);
+        int showID = scanner.AddVideo(&item, CONTENT_TVSHOWS, useFolders, true, -1, true);
         current++;
         CStdString showDir(GetSafeFile(tvshowsDir, info.m_strTitle));
         CFile::Copy(URIUtils::AddFileToFolder(showDir, "folder.jpg"), item.GetCachedVideoThumb());
@@ -8847,8 +8845,7 @@ void CVideoDatabase::ImportFromXML(const CStdString &path)
           CVideoInfoTag info;
           info.Load(episode);
           CFileItem item(info);
-          scanner.AddVideo(&item, CONTENT_TVSHOWS, false, showID);
-          SetPlayCount(item, info.m_playCount, info.m_lastPlayed);
+          scanner.AddVideo(&item,CONTENT_TVSHOWS, false, false, showID, true);
           CStdString file;
           file.Format("s%02ie%02i.tbn", info.m_iSeason, info.m_iEpisode);
           CFile::Copy(URIUtils::AddFileToFolder(showDir, file), item.GetCachedVideoThumb());
