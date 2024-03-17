@@ -457,9 +457,9 @@ void CGUISpinControl::Render()
   if (m_label.GetLabelInfo().font)
   {
     if (arrowsOnRight)
-      RenderText(m_posX - space - textWidth, textWidth);
+      RenderText(m_posX - space - textWidth, m_posY, textWidth, m_height);
     else
-      RenderText(m_posX + m_imgspinDown.GetWidth() + m_imgspinUp.GetWidth() + space, textWidth);
+      RenderText(m_posX + m_imgspinDown.GetWidth() + m_imgspinUp.GetWidth() + space, m_posY, textWidth, m_height);
 
     // set our hit rectangle for MouseOver events
     m_hitRect = m_label.GetRenderRect();
@@ -467,9 +467,9 @@ void CGUISpinControl::Render()
   CGUIControl::Render();
 }
 
-void CGUISpinControl::RenderText(float posX, float width)
+void CGUISpinControl::RenderText(float posX, float posY, float width, float height)
 {
-  m_label.SetMaxRect(posX, m_posY, width, m_height);
+  m_label.SetMaxRect(posX, posY, width, height);
   m_label.SetColor(GetTextColor());
   m_label.Render();
 }

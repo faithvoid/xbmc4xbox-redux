@@ -26,7 +26,7 @@ CGUISettingsSliderControl::CGUISettingsSliderControl(int parentID, int controlID
     , m_buttonControl(parentID, controlID, posX, posY, width, height, textureFocus, textureNoFocus, labelInfo)
     , m_label(posX, posY, width, height, labelInfo)
 {
-  m_label.SetAlign(XBFONT_CENTER_Y | XBFONT_RIGHT);
+  m_label.SetAlign((labelInfo.align & XBFONT_CENTER_Y) | XBFONT_RIGHT);
   ControlType = GUICONTROL_SETTINGS_SLIDER;
 }
 
@@ -47,7 +47,7 @@ void CGUISettingsSliderControl::Render()
   CGUISliderControl::Render();
 
   // now render our text
-  m_label.SetMaxRect(m_buttonControl.GetXPosition(), m_posY, m_posX - m_buttonControl.GetXPosition(), m_height);
+  m_label.SetMaxRect(m_buttonControl.GetXPosition(), m_buttonControl.GetYPosition(), m_posX - m_buttonControl.GetXPosition(), m_buttonControl.GetHeight());
   m_label.SetText(CGUISliderControl::GetDescription());
   m_label.SetColor(HasFocus() ? CGUILabel::COLOR_FOCUSED : CGUILabel::COLOR_TEXT);
   m_label.Render();

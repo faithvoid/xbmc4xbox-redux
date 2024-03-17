@@ -65,7 +65,7 @@ public:
 
   void SettingsCategorySetSpinTextColor(const CGUIInfoColor &color);
 protected:
-  virtual void RenderText(float posX, float width);
+  virtual void RenderText(float posX, float posY, float width, float height);
   virtual void UpdateColors();
   CGUIButtonControl m_buttonControl;
   float m_spinPosX;

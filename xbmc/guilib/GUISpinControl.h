@@ -94,9 +94,11 @@ protected:
   virtual void UpdateColors();
   /*! \brief Render the spinner text
    \param posX position of the left edge of the text
+   \param posY positing of the top edge of the text
    \param width width of the text
+   \param height height of the text
    */
-  virtual void RenderText(float posX, float width);
+  virtual void RenderText(float posX, float posY, float width, float height);
   CGUILabel::COLOR GetTextColor() const;
   void PageUp();
   void PageDown();
