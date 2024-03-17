@@ -645,10 +645,6 @@ bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList
 {
   const CURL pathToUrl(strDirectory);
 
-  // cleanup items
-  if (items.Size())
-    items.Clear();
-
   CStdString strParentPath = m_history.GetParentPath();
 
   CLog::Log(LOGDEBUG,"CGUIMediaWindow::GetDirectory (%s)", strDirectory.c_str());
@@ -667,8 +663,12 @@ bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList
     if (strDirectory.IsEmpty())
       SetupShares();
 
-    if (!m_rootDir.GetDirectory(pathToUrl, items))
+    CFileItemList dirItems;
+    if (!m_rootDir.GetDirectory(pathToUrl, dirItems))
       return false;
+
+    // assign fetched directory items
+    items.Assign(dirItems);
 
     // took over a second, and not normally cached, so cache it
     if ((XbmcThreads::SystemClockMillis() - time) > 1000  && items.CacheToDiscIfSlow())
