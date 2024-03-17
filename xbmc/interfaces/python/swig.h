@@ -56,6 +56,9 @@ namespace PythonBindings
     const XbmcCommons::type_index typeIndex;
 
     TypeInfo(const std::type_info& ti);
+#ifdef _XBOX
+    void reset();
+#endif
   };
 
   // This will hold the pointer to the api type, whether known or unknown

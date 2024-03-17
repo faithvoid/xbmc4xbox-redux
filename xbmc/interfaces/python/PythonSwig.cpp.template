@@ -568,6 +568,9 @@ void doClassMethodInfo(Node clazz, List initTypeCalls)
                 );
 <%  } %>
 
+#ifdef _XBOX
+    Ty${classNameAsVariable}_Type.reset();
+#endif
     PyTypeObject& pythonType = Ty${classNameAsVariable}_Type.pythonType;
     pythonType.tp_name = (char*)"${module.@name}.${clazz.@sym_name}";
     pythonType.tp_basicsize = sizeof(PyHolder);
@@ -787,10 +790,14 @@ namespace PythonBindings
   //  for all of the classes in this module
   static void initTypes()
   {
+#ifndef _XBOX
     static bool typesAlreadyInitialized = false;
     if (!typesAlreadyInitialized)
     {
       typesAlreadyInitialized = true;
+#else
+    {
+#endif
 <%
       initTypeCalls.each { %>
       ${it}();<%

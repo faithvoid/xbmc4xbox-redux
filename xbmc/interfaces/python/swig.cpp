@@ -29,10 +29,22 @@ namespace PythonBindings
 {
   TypeInfo::TypeInfo(const std::type_info& ti) : swigType(NULL), parentType(NULL), typeIndex(ti)
   {
+#ifndef _XBOX
     static PyTypeObject py_type_object_header = { PyObject_HEAD_INIT(NULL) 0};
     static int size = (long*)&(py_type_object_header.tp_name) - (long*)&py_type_object_header;
     memcpy(&(this->pythonType), &py_type_object_header, size);
+#endif
   }
+
+#ifdef _XBOX
+  void TypeInfo::reset()
+  {
+    static PyTypeObject py_type_object_header = { PyObject_HEAD_INIT(NULL) 0};
+    int size = (long*)&(py_type_object_header.tp_name) - (long*)&py_type_object_header;
+    memset(&(this->pythonType), 0, sizeof(PyTypeObject));
+    memcpy(&(this->pythonType), &py_type_object_header, size);
+  }
+#endif
 
   class PyObjectDecrementor
   {
@@ -331,6 +343,10 @@ namespace PythonBindings
 
   void registerAddonClassTypeInformation(const TypeInfo* classInfo)
   {
+#ifdef _XBOX
+    if (typeInfoLookup.find(classInfo->typeIndex) != typeInfoLookup.end())
+      return;
+#endif
     typeInfoLookup[classInfo->typeIndex] = classInfo;
   }
 
