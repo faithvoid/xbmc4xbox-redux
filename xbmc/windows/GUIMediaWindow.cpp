@@ -679,8 +679,7 @@ bool CGUIMediaWindow::GetDirectory(const CStdString &strDirectory, CFileItemList
       m_history.RemoveParentPath();
   }
 
-  // update the view state to the currently fetched items
-  // TODO we should remove the second call m_guiState.reset() in Update() and pass the right file item ref here
+  // update the view state's reference to the current items
   m_guiState.reset(CGUIViewState::GetViewState(GetID(), items));
 
   if (m_guiState.get() && !m_guiState->HideParentDirItems() && !items.GetPath().IsEmpty())
@@ -754,8 +753,8 @@ bool CGUIMediaWindow::Update(const CStdString &strDirectory, bool updateFilterPa
   if (canfilter && url.HasOption("filter"))
     directory = RemoveParameterFromPath(directory, "filter");
 
-  CFileItemList items;
-  if (!GetDirectory(directory, items))
+  ClearFileItems();
+  if (!GetDirectory(directory, *m_vecItems))
   {
     CLog::Log(LOGERROR,"CGUIMediaWindow::GetDirectory(%s) failed", strDirectory.c_str());
     // Try to return to the previous directory, if not the same
@@ -768,14 +767,11 @@ bool CGUIMediaWindow::Update(const CStdString &strDirectory, bool updateFilterPa
     return false;
   }
 
-  if (items.GetLabel().IsEmpty())
-    items.SetLabel(CUtil::GetTitleFromPath(items.GetPath(), true));
-
-  ClearFileItems();
-  m_vecItems->Copy(items);
+  if (m_vecItems->GetLabel().empty())
+    m_vecItems->SetLabel(CUtil::GetTitleFromPath(m_vecItems->GetPath(), true));
 
   // check the given path for filter data
-  UpdateFilterPath(strDirectory, items, updateFilterPath);
+  UpdateFilterPath(strDirectory, *m_vecItems, updateFilterPath);
 
   // if we're getting the root source listing
   // make sure the path history is clean
@@ -827,8 +823,6 @@ bool CGUIMediaWindow::Update(const CStdString &strDirectory, bool updateFilterPa
   OnPrepareFileItems(*m_vecItems);
 
   m_vecItems->FillInDefaultIcons();
-
-  m_guiState.reset(CGUIViewState::GetViewState(GetID(), *m_vecItems));
 
   // remember the original (untouched) list of items (for filtering etc)
   m_unfilteredItems->SetPath(m_vecItems->GetPath()); // use the original path - it'll likely be relied on for other things later.
