@@ -184,10 +184,10 @@ VECADDONS CRepository::Parse(const DirInfo& dir)
       AddonPtr addon = *i;
       if (dir.zipped)
       {
-        string file = StringUtils2::Format("%s/%s-%s.zip", addon->ID().c_str(), addon->ID().c_str(), addon->Version().c_str());
+        string file = StringUtils2::Format("%s/%s-%s.zip", addon->ID().c_str(), addon->ID().c_str(), addon->Version().asString().c_str());
         addon->Props().path = URIUtils::AddFileToFolder(dir.datadir,file);
         SET_IF_NOT_EMPTY(addon->Props().icon,URIUtils::AddFileToFolder(dir.datadir,addon->ID()+"/icon.png"))
-        file = StringUtils2::Format("%s/changelog-%s.txt", addon->ID().c_str(), addon->Version().c_str());
+        file = StringUtils2::Format("%s/changelog-%s.txt", addon->ID().c_str(), addon->Version().asString().c_str());
         SET_IF_NOT_EMPTY(addon->Props().changelog,URIUtils::AddFileToFolder(dir.datadir,file))
         SET_IF_NOT_EMPTY(addon->Props().fanart,URIUtils::AddFileToFolder(dir.datadir,addon->ID()+"/fanart.jpg"))
       }
@@ -254,14 +254,14 @@ bool CRepositoryUpdateJob::DoWork()
     AddonPtr addon;
     CAddonMgr::Get().GetAddon(newAddon->ID(),addon);
     if (addon && newAddon->Version() > addon->Version() &&
-        !database.IsAddonBlacklisted(newAddon->ID(),newAddon->Version().c_str()) &&
+        !database.IsAddonBlacklisted(newAddon->ID(),newAddon->Version().asString()) &&
         deps_met)
     {
       if (CSettings::Get().GetBool("general.addonautoupdate") || addon->Type() >= ADDON_VIZ_LIBRARY)
       {
         string referer;
         if (URIUtils::IsInternetStream(newAddon->Path()))
-          referer = StringUtils2::Format("Referer=%s-%s.zip",addon->ID().c_str(),addon->Version().c_str());
+          referer = StringUtils2::Format("Referer=%s-%s.zip",addon->ID().c_str(),addon->Version().asString().c_str());
 
         CAddonInstaller::Get().Install(addon->ID(), true, referer);
       }

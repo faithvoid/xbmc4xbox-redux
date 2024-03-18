@@ -128,10 +128,12 @@ const CStdString GetIcon(const ADDON::TYPE& type)
       y.Empty(); \
   }
 
+#define SS(x) (x) ? x : ""
+
 AddonProps::AddonProps(const cp_extension_t *ext)
   : id(ext->plugin->identifier)
-  , version(ext->plugin->version)
-  , minversion(ext->plugin->abi_bw_compatibility)
+  , version(SS(ext->plugin->version))
+  , minversion(SS(ext->plugin->abi_bw_compatibility))
   , name(ext->plugin->name)
   , path(ext->plugin->plugin_path)
   , author(ext->plugin->provider_name)
@@ -167,8 +169,8 @@ AddonProps::AddonProps(const cp_extension_t *ext)
 
 AddonProps::AddonProps(const cp_plugin_info_t *plugin)
   : id(plugin->identifier)
-  , version(plugin->version)
-  , minversion(plugin->abi_bw_compatibility)
+  , version(SS(plugin->version))
+  , minversion(SS(plugin->abi_bw_compatibility))
   , name(plugin->name)
   , path(plugin->plugin_path)
   , author(plugin->provider_name)
@@ -181,8 +183,8 @@ void AddonProps::Serialize(CVariant &variant)
 {
   variant["addonid"] = id;
   variant["type"] = TranslateType(type);
-  variant["version"] = version.c_str();
-  variant["minversion"] = minversion.c_str();
+  variant["version"] = version.asString();
+  variant["minversion"] = minversion.asString();
   variant["name"] = name;
   variant["license"] = license;
   variant["summary"] = summary;
@@ -211,7 +213,7 @@ void AddonProps::Serialize(CVariant &variant)
   {
     CVariant dep(CVariant::VariantTypeObject);
     dep["addonid"] = it->first;
-    dep["version"] = it->second.first.c_str();
+    dep["version"] = it->second.first.asString();
     dep["optional"] = it->second.second;
     variant["dependencies"].push_back(dep);
   }
@@ -236,7 +238,7 @@ void AddonProps::BuildDependencies(const cp_plugin_info_t *plugin)
     return;
   for (unsigned int i = 0; i < plugin->num_imports; ++i)
     dependencies.insert(make_pair(CStdString(plugin->imports[i].plugin_id),
-                        make_pair(AddonVersion(plugin->imports[i].version), plugin->imports[i].optional != 0)));
+                        make_pair(AddonVersion(SS(plugin->imports[i].version)), plugin->imports[i].optional != 0)));
 }
 
 /**
@@ -310,8 +312,7 @@ bool CAddon::MeetsVersion(const AddonVersion &version) const
   // if the addon is one of xbmc's extension point definitions (addonid starts with "xbmc.")
   // and the minversion is "0.0.0" i.e. no <backwards-compatibility> tag has been specified
   // we need to assume that the current version is not backwards-compatible and therefore check against the actual version
-  if (StringUtils2::StartsWith(m_props.id, "xbmc.") &&
-     (strlen(m_props.minversion.c_str()) == 0 || StringUtils2::EqualsNoCase(m_props.minversion.c_str(), "0.0.0")))
+  if (StringUtils2::StartsWithNoCase(m_props.id, "xbmc.") && m_props.minversion.empty())
     return m_props.version == version;
 
   return m_props.minversion <= version && version <= m_props.version;
@@ -635,7 +636,7 @@ CStdString GetXbmcApiVersionDependency(ADDON::AddonPtr addon)
     if (!(it == deps.end()))
     {
       const ADDON::AddonVersion * xbmcApiVersion = &(it->second.first);
-      version = xbmcApiVersion->c_str();
+      version = xbmcApiVersion->asString();
     }
   }
 
