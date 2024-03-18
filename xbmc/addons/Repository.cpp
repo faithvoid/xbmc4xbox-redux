@@ -32,6 +32,7 @@
 #include "dialogs/GUIDialogYesNo.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "URL.h"
+#include "filesystem/PluginDirectory.h"
 
 using namespace XFILE;
 using namespace ADDON;
@@ -257,7 +258,19 @@ VECADDONS CRepositoryUpdateJob::GrabAddons(RepositoryPtr& repo)
       CLog::Log(LOGERROR,"Repository %s returned no add-ons, listing may have failed",repo->Name().c_str());
       reposum = checksum; // don't update the checksum
     }
-    database.AddRepository(repo->ID(),addons,reposum);
+    else
+    {
+      bool add=true;
+      if (!repo->Props().libname.empty())
+      {
+        CFileItemList dummy;
+        CStdString s;
+        s.Format("plugin://%s/?action=update", repo->ID());
+        add = CDirectory::GetDirectory(s, dummy);
+      }
+      if (add)
+        database.AddRepository(repo->ID(),addons,reposum);
+    }
   }
   else
     database.GetRepository(repo->ID(),addons);
