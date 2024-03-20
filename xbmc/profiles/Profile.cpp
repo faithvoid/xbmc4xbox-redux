@@ -29,7 +29,7 @@ CProfile::CLock::CLock(LockType type, const CStdString &password)
   files = false;
   video = false;
   music = false;
-  settings = false;
+  settings = LOCK_LEVEL::NONE;
   addonManager = false;
   mode = type;
   code = password;
@@ -83,7 +83,7 @@ void CProfile::Load(const TiXmlNode *node, int nextIdProfile)
   XMLUtils::GetBoolean(node, "hassources", m_bSources);
   XMLUtils::GetBoolean(node, "canwritesources", m_bCanWriteSources);
   XMLUtils::GetBoolean(node, "useavpacksettings", m_bUseAvpackSettings);
-  XMLUtils::GetBoolean(node, "locksettings", m_locks.settings);
+  XMLUtils::GetInt(node, "locksettings", (int&)m_locks.settings);
   XMLUtils::GetBoolean(node, "lockfiles", m_locks.files);
   XMLUtils::GetBoolean(node, "lockmusic", m_locks.music);
   XMLUtils::GetBoolean(node, "lockvideo", m_locks.video);
@@ -115,7 +115,7 @@ void CProfile::Save(TiXmlNode *root) const
   XMLUtils::SetBoolean(node, "canwritesources", m_bCanWriteSources);
   XMLUtils::SetBoolean(node, "useavpacksettings", m_bUseAvpackSettings);
   XMLUtils::SetBoolean(node, "lockaddonmanager", m_locks.addonManager);
-  XMLUtils::SetBoolean(node, "locksettings", m_locks.settings);
+  XMLUtils::SetInt(node, "locksettings", m_locks.settings);
   XMLUtils::SetBoolean(node, "lockfiles", m_locks.files);
   XMLUtils::SetBoolean(node, "lockmusic", m_locks.music);
   XMLUtils::SetBoolean(node, "lockvideo", m_locks.video);

@@ -207,9 +207,15 @@ void CViewStateSettings::SetSettingLevel(SettingLevel settingLevel)
 
 void CViewStateSettings::CycleSettingLevel()
 {
-  m_settingLevel = (SettingLevel)((int)m_settingLevel + 1);
-  if (m_settingLevel > SettingLevelExpert)
-    m_settingLevel = SettingLevelBasic;
+  m_settingLevel = GetNextSettingLevel();
+}
+
+SettingLevel CViewStateSettings::GetNextSettingLevel() const
+{
+  SettingLevel level = (SettingLevel)((int)m_settingLevel + 1);
+  if (level > SettingLevelExpert)
+    level = SettingLevelBasic;
+  return level;
 }
 
 void CViewStateSettings::AddViewState(const std::string& strTagName, int defaultView /* = DEFAULT_VIEW_LIST */, SortBy defaultSort /* = SortByLabel */)

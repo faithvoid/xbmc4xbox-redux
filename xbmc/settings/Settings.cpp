@@ -170,7 +170,16 @@ bool ProfileHasProgramsLocked(const std::string &condition, const std::string &v
 
 bool ProfileHasSettingsLocked(const std::string &condition, const std::string &value, const std::string &settingId)
 {
-  return CProfilesManager::Get().GetCurrentProfile().settingsLocked();
+  LOCK_LEVEL::SETTINGS_LOCK slValue=LOCK_LEVEL::ALL;
+  if (StringUtils2::EqualsNoCase(value, "none"))
+    slValue = LOCK_LEVEL::NONE;
+  else if (StringUtils2::EqualsNoCase(value, "standard"))
+    slValue = LOCK_LEVEL::STANDARD;
+  else if (StringUtils2::EqualsNoCase(value, "advanced"))
+    slValue = LOCK_LEVEL::ADVANCED;
+  else if (StringUtils2::EqualsNoCase(value, "expert"))
+    slValue = LOCK_LEVEL::EXPERT;
+  return slValue <= CProfilesManager::Get().GetCurrentProfile().settingsLockLevel();
 }
 
 bool ProfileHasVideosLocked(const std::string &condition, const std::string &value, const std::string &settingId)

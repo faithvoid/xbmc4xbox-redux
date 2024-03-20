@@ -303,7 +303,7 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
 
     bool bLock = CProfilesManager::Get().GetMasterProfile().getLockMode() != LOCK_MODE_EVERYONE && !g_passwordManager.bMasterUser;
     dialog->m_locks.addonManager = bLock;
-    dialog->m_locks.settings = bLock;
+    dialog->m_locks.settings = (bLock) ? LOCK_LEVEL::ALL : LOCK_LEVEL::NONE;
     dialog->m_locks.files = bLock;
 
     dialog->m_strDirectory.Empty();
