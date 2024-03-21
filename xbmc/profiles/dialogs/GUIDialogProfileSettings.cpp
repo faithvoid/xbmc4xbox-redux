@@ -260,7 +260,7 @@ bool CGUIDialogProfileSettings::OnProfilePath(CStdString &dir, bool isDefault)
   return false;
 }
 
-bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDetails)
+bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool firstLogin)
 {
   CGUIDialogProfileSettings *dialog = (CGUIDialogProfileSettings *)g_windowManager.GetWindow(WINDOW_DIALOG_PROFILE_SETTINGS);
   if (!dialog) return false;
@@ -268,11 +268,12 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
     dialog->m_bIsDefault = true;
   else
     dialog->m_bIsDefault = false;
-  if (!bDetails && iProfile > CProfilesManager::Get().GetNumberOfProfiles())
+  if (firstLogin && iProfile > CProfilesManager::Get().GetNumberOfProfiles())
     return false;
 
   dialog->m_bNeedSave = false;
-  dialog->m_bShowDetails = bDetails;
+  dialog->m_bShowDetails = !firstLogin;
+  dialog->SetProperty("heading", g_localizeStrings.Get(firstLogin ? 20255 : 20067));
 
   const CProfile *profile = CProfilesManager::Get().GetProfile(iProfile);
 
