@@ -7377,7 +7377,11 @@ msgctxt "#20254"
 msgid "WebDAV server (HTTPS)"
 msgstr ""
 
-#empty strings from id 20255 to 20257
+msgctxt "#20255"
+msgid "First logon, edit your profile"
+msgstr ""
+
+#empty strings from id 20256 to 20257
 
 msgctxt "#20258"
 msgid "MythTV client"
