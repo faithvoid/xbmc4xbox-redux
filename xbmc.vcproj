@@ -655,12 +655,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				<File
 					RelativePath=".\xbmc\music\windows\GUIWindowMusicSongs.cpp">
 				</File>
-				<File
-					RelativePath=".\xbmc\SmartPlaylist.cpp">
-				</File>
-				<File
-					RelativePath=".\xbmc\SmartPlaylist.h">
-				</File>
 			</Filter>
 			<Filter
 				Name="GUI Video"
@@ -731,6 +725,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\playlists\PlayListXML.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\playlists\SmartPlaylist.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\playlists\SmartPlaylist.h">
 				</File>
 				<File
 					RelativePath=".\xbmc\playlists\SmartPlaylistFileItemListModifier.cpp">

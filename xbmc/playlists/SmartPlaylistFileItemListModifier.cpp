@@ -23,7 +23,7 @@
 #include "SmartPlaylistFileItemListModifier.h"
 #include "FileItem.h"
 #include "URL.h"
-#include "SmartPlayList.h"
+#include "playlists/SmartPlayList.h"
 #include "utils/StringUtils2.h"
 
 #define URL_OPTION_XSP              "xsp"

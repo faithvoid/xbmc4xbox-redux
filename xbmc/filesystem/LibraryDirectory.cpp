@@ -21,7 +21,7 @@
 
 #include "LibraryDirectory.h"
 #include "Directory.h"
-#include "SmartPlayList.h"
+#include "playlists/SmartPlayList.h"
 #include "profiles/ProfilesManager.h"
 #include "SmartPlaylistDirectory.h"
 #include "utils/URIUtils.h"

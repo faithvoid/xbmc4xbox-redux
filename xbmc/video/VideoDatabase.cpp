@@ -51,7 +51,7 @@
 #include "utils/log.h"
 #include "XBDateTime.h"
 #include "video/VideoDbUrl.h"
-#include "SmartPlaylist.h"
+#include "playlists/SmartPlayList.h"
 #include "utils/GroupUtils.h"
 #include "dbwrappers/dataset.h"
 

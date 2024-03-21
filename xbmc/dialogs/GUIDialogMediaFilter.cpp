@@ -26,7 +26,7 @@
 #include "guilib/GUIWindowManager.h"
 #include "guilib/LocalizeStrings.h"
 #include "music/MusicDatabase.h"
-#include "SmartPlayList.h"
+#include "playlists/SmartPlayList.h"
 #include "utils/log.h"
 #include "utils/MathUtils.h"
 #include "utils/StringUtils.h"

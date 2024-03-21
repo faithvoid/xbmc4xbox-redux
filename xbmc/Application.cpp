@@ -79,7 +79,7 @@
 #include "utils/SystemInfo.h"
 #include "utils/TimeUtils.h"
 #include "GUILargeTextureManager.h"
-#include "SmartPlaylist.h"
+#include "playlists/SmartPlayList.h"
 #include "filesystem/RarManager.h"
 #include "playlists/PlayList.h"
 #include "profiles/ProfilesManager.h"

@@ -25,7 +25,7 @@
 #include "filesystem/File.h"
 #include "filesystem/FileDirectoryFactory.h"
 #include "music/MusicDatabase.h"
-#include "SmartPlaylist.h"
+#include "playlists/SmartPlayList.h"
 #include "playlists/PlayList.h"
 #include "settings/Settings.h"
 #include "utils/log.h"

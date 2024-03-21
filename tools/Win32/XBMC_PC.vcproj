@@ -1261,12 +1261,6 @@
 				<File
 					RelativePath="..\..\xbmc\music\windows\GUIWindowMusicSongs.cpp">
 				</File>
-				<File
-					RelativePath="..\..\xbmc\SmartPlaylist.cpp">
-				</File>
-				<File
-					RelativePath="..\..\xbmc\SmartPlaylist.h">
-				</File>
 			</Filter>
 			<Filter
 				Name="GUI Video"

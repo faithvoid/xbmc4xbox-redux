@@ -21,7 +21,7 @@
  */
 
 #include "GUIDialog.h"
-#include "SmartPlaylist.h"
+#include "playlists/SmartPlayList.h"
 
 class CFileItemList;
 

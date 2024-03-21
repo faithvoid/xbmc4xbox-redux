@@ -19,7 +19,7 @@
 
 #include "VideoDbUrl.h"
 #include "filesystem/VideoDatabaseDirectory.h"
-#include "SmartPlayList.h"
+#include "playlists/SmartPlayList.h"
 #include "utils/StringUtils2.h"
 #include "utils/Variant.h"
 

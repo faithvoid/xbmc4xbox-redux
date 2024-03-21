@@ -26,7 +26,7 @@
 #include "view/GUIViewControl.h"
 #include "view/GUIViewState.h"
 #include "dialogs/GUIDialogContextMenu.h"
-#include "SmartPlayList.h"
+#include "playlists/SmartPlayList.h"
 
 class CFileItemList;
 

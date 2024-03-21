@@ -18,7 +18,7 @@
  *
  */
 
-#include "SmartPlaylist.h"
+#include "SmartPlayList.h"
 #include "Util.h"
 #include "XBDateTime.h"
 #include "filesystem/File.h"
