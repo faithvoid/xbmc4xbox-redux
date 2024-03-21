@@ -136,33 +136,6 @@ void CGUIDialogProfileSettings::CreateSettings()
 
     m_settings.push_back(setting2);
   }
-  if (m_bIsNewUser)
-  {
-    SetupPage();
-    OnSettingChanged(0); // id=1
-    if (!m_bNeedSave)
-    {
-      OnCancel();
-      Close();
-      return;
-    }
-    if (!m_strName.IsEmpty())
-    {
-      m_strDirectory = URIUtils::AddFileToFolder("profiles", m_strName);
-      CUtil::GetFatXQualifiedPath(m_strDirectory);
-      CStdString strPath;
-      URIUtils::AddFileToFolder("special://masterprofile/",m_strDirectory,strPath);
-      CDirectory::Create(strPath);
-    }
-    CStdString strPath = m_strDirectory;
-    OnSettingChanged(2); // id=3
-    if (strPath != m_strDirectory)
-    {
-      CStdString strPath2;
-      URIUtils::AddFileToFolder("special://masterprofile/",strPath,strPath2);
-      CDirectory::Remove(strPath2);
-    }
-  }
 }
 
 void CGUIDialogProfileSettings::OnSettingChanged(unsigned int num)
@@ -229,21 +202,8 @@ void CGUIDialogProfileSettings::OnSettingChanged(SettingInfo &setting)
   }
   if (setting.id == 3)
   {
-    VECSOURCES shares;
-    CMediaSource share;
-    share.strName = "Profiles";
-    share.strPath = URIUtils::AddFileToFolder("special://masterprofile/","profiles");
-    shares.push_back(share);
-    CStdString strDirectory;
-    if (m_strDirectory == "")
-      strDirectory = share.strPath;
-    else
-      strDirectory = URIUtils::AddFileToFolder("special://masterprofile/",m_strDirectory);
-    if (CGUIDialogFileBrowser::ShowAndGetDirectory(shares,g_localizeStrings.Get(657),strDirectory,true))
+    if (OnProfilePath(m_strDirectory, m_bIsDefault))
     {
-      m_strDirectory = strDirectory;
-      if (!m_bIsDefault)
-        m_strDirectory.erase(0,24);
       m_bNeedSave = true;
       SET_CONTROL_LABEL(1001,m_strDirectory);
     }
@@ -278,6 +238,28 @@ void CGUIDialogProfileSettings::OnCancel()
   m_bNeedSave = false;
 }
 
+bool CGUIDialogProfileSettings::OnProfilePath(CStdString &dir, bool isDefault)
+{
+  VECSOURCES shares;
+  CMediaSource share;
+  share.strName = "Profiles";
+  share.strPath = "special://masterprofile/profiles/";
+  shares.push_back(share);
+  CStdString strDirectory;
+  if (dir.IsEmpty())
+    strDirectory = share.strPath;
+  else
+    strDirectory = URIUtils::AddFileToFolder("special://masterprofile/", dir);
+  if (CGUIDialogFileBrowser::ShowAndGetDirectory(shares,g_localizeStrings.Get(657),strDirectory,true))
+  {
+    dir = strDirectory;
+    if (!isDefault)
+      dir.erase(0,24);
+    return true;
+  }
+  return false;
+}
+
 bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDetails)
 {
   CGUIDialogProfileSettings *dialog = (CGUIDialogProfileSettings *)g_windowManager.GetWindow(WINDOW_DIALOG_PROFILE_SETTINGS);
@@ -289,6 +271,7 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
   if (!bDetails && iProfile > CProfilesManager::Get().GetNumberOfProfiles())
     return false;
 
+  dialog->m_bNeedSave = false;
   dialog->m_bShowDetails = bDetails;
 
   const CProfile *profile = CProfilesManager::Get().GetProfile(iProfile);
@@ -308,8 +291,26 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
 
     dialog->m_strDirectory.Empty();
     dialog->m_strThumb.Empty();
-    dialog->m_strName = "";
-    dialog->m_bIsNewUser = true;
+    // prompt for a name
+    if (!CGUIKeyboardFactory::ShowAndGetInput(dialog->m_strName,g_localizeStrings.Get(20093),false) || dialog->m_strName.IsEmpty())
+      return false;
+    // create a default path
+    CStdString defaultDir = URIUtils::AddFileToFolder("profiles",CUtil::MakeLegalFileName(dialog->m_strName));
+#ifdef _XBOX
+    // Do we need this on Xbox?
+    CUtil::GetFatXQualifiedPath(defaultDir);
+#endif
+    URIUtils::AddSlashAtEnd(defaultDir);
+    CDirectory::Create(URIUtils::AddFileToFolder("special://masterprofile/", defaultDir));
+    // prompt for the user to change it if they want
+    CStdString userDir = defaultDir;
+    if (dialog->OnProfilePath(userDir, false)) // can't be the master user
+    {
+      if (userDir.Left(defaultDir.GetLength()) != defaultDir) // user chose a different folder
+        CDirectory::Remove(URIUtils::AddFileToFolder("special://masterprofile/", defaultDir));
+    }
+    dialog->m_strDirectory = userDir;
+    dialog->m_bNeedSave = true;
   }
   else
   {
@@ -324,8 +325,6 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
       dialog->m_iSourcesMode += 2;
 
     dialog->m_locks = profile->GetLocks();
-
-    dialog->m_bIsNewUser = false;
   }
   dialog->DoModal();
   if (dialog->m_bNeedSave)
@@ -413,11 +412,3 @@ bool CGUIDialogProfileSettings::ShowForProfile(unsigned int iProfile, bool bDeta
 
   return !dialog->m_bNeedSave;
 }
-
-void CGUIDialogProfileSettings::OnInitWindow()
-{
-  m_bNeedSave = false;
-
-  CGUIDialogSettings::OnInitWindow();
-}
-
