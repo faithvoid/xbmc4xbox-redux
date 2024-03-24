@@ -43,7 +43,7 @@ public:
    \brief Settings have been saved.
    This callback can be used to trigger saving other settings.
    */
-  virtual void OnSettingsSaved() const { }
+  virtual void OnSettingsSaved() { }
   /*!
    \brief Setting values have been unloaded.
    This callback can be used to trigger uninitializing any state variables
