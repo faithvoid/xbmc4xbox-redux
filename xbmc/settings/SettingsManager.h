@@ -62,7 +62,16 @@ public:
   void Unload();
   void Clear();
 
+  /*!
+  \brief Loads the setting being represented by the given XML node with the
+  given identifier.
+  \param node XML node representing the setting to load
+  \param settingId Setting identifier
+  \return True if the setting was successfully loaded from the given XML node, false otherwise
+  */
   bool LoadSetting(const TiXmlNode *node, const std::string &settingId);
+
+  bool LoadSetting(const TiXmlNode *node, const std::string &settingId, bool &updated);
 
   void SetInitialized();
   void SetLoaded() { m_loaded = true; }
@@ -147,10 +156,9 @@ private:
   virtual bool Load(const TiXmlNode *settings);
 
   bool Serialize(TiXmlNode *parent) const;
-  bool Deserialize(const TiXmlNode *node, std::map<std::string, CSetting*> *loadedSettings = NULL);
+  bool Deserialize(const TiXmlNode *node, bool &updated, std::map<std::string, CSetting*> *loadedSettings = NULL);
 
-  static bool LoadSetting(const TiXmlNode *node, CSetting *setting);
-  bool UpdateSettings(const TiXmlNode *root);
+  bool LoadSetting(const TiXmlNode *node, CSetting *setting, bool &updated);
   bool UpdateSetting(const TiXmlNode *node, CSetting *setting, const CSettingUpdate& update);
   void UpdateSettingByDependency(const std::string &settingId, const CSettingDependency &dependency);
 
