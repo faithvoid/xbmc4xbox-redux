@@ -144,7 +144,8 @@ void CApplicationMessenger::SendMessage(ThreadMessage& message, bool wait)
   lock.Leave();
 
   if (message.hWaitEvent)
-  {
+  { // ensure the thread doesn't hold the graphics lock
+    CSingleExit exit(g_graphicsContext);
     message.hWaitEvent->Wait();
     delete message.hWaitEvent;
     message.hWaitEvent = NULL;
