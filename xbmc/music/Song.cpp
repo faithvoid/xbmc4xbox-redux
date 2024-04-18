@@ -45,12 +45,12 @@ CSong::CSong(CMusicInfoTag& tag)
   iTrack = tag.GetTrackAndDiskNumber();
   iDuration = tag.GetDuration();
   bCompilation = tag.GetCompilation();
+  embeddedArt = tag.GetCoverArtInfo();
   strThumb = "";
   iStartOffset = 0;
   iEndOffset = 0;
   idSong = -1;
   iTimesPlayed = 0;
-  iArtistId = -1;
   iAlbumId = -1;
 }
 
@@ -83,9 +83,22 @@ void CSong::Clear()
   idSong = -1;
   iTimesPlayed = 0;
   lastPlayed.Reset();
-  iArtistId = -1;
   iAlbumId = -1;
   bCompilation = false;
+  embeddedArt.clear();
+}
+
+bool CSong::HasArt() const
+{
+  if (!strThumb.empty()) return true;
+  if (!embeddedArt.empty()) return true;
+  return false;
+}
+
+bool CSong::ArtMatches(const CSong &right) const
+{
+  return (right.strThumb == strThumb &&
+          embeddedArt.matches(right.embeddedArt));
 }
 
 CSongMap::CSongMap()

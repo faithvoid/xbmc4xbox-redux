@@ -19,7 +19,6 @@
  */
 
 #include "GUILargeTextureManager.h"
-#include "pictures/Picture.h"
 #include "FileItem.h"
 #include "guilib/Texture.h"
 #include "profiles/ProfilesManager.h"
@@ -76,24 +75,20 @@ bool CImageLoader::DoWork()
         directoryPath != CProfilesManager::Get().GetMusicFanartFolder() &&
         URIUtils::GetExtension(loadPath).Equals(".tbn"))
     {
-      width = g_advancedSettings.m_thumbSize;
-      height = g_advancedSettings.m_thumbSize;
+      width = g_advancedSettings.GetThumbSize();
+      height = g_advancedSettings.GetThumbSize();
     }
 #endif
 
     // direct route - load the image
-    m_texture = new CTexture();
     unsigned int start = XbmcThreads::SystemClockMillis();
 #ifdef HAS_XBOX_D3D
-  if (!m_texture->LoadFromFile(loadPath, width, height, CSettings::Get().GetBool("pictures.useexifrotation")))
+    m_texture = CBaseTexture::LoadFromFile(loadPath, width, height, CSettings::Get().GetBool("pictures.useexifrotation"));
 #else
-    if (!m_texture->LoadFromFile(loadPath, g_graphicsContext.GetWidth(), g_graphicsContext.GetHeight(), CSettings::Get().GetBool("pictures.useexifrotation")))
+    m_texture = CBaseTexture::LoadFromFile(loadPath, g_graphicsContext.GetWidth(), g_graphicsContext.GetHeight(), CSettings::Get().GetBool("pictures.useexifrotation"));
 #endif
-    {
-      delete m_texture;
-      m_texture = NULL;
+    if (!m_texture)
       return false;
-    }
     if (XbmcThreads::SystemClockMillis() - start > 100)
       CLog::Log(LOGDEBUG, "%s - took %u ms to load %s", __FUNCTION__, XbmcThreads::SystemClockMillis() - start, loadPath.c_str());
 

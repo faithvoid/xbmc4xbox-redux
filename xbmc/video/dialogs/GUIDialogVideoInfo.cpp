@@ -22,7 +22,6 @@
 #include "video/dialogs/GUIDialogVideoInfo.h"
 #include "Util.h"
 #include "utils/URIUtils.h"
-#include "pictures/Picture.h"
 #include "guiImage.h"
 #include "utils/StringUtils.h"
 #include "video/windows/GUIWindowVideoNav.h"
@@ -49,6 +48,7 @@
 #include "ApplicationMessenger.h"
 #include "ThumbLoader.h"
 #include "TextureCache.h"
+#include "music/MusicDatabase.h"
 
 using namespace std;
 using namespace XFILE;
@@ -257,12 +257,16 @@ void CGUIDialogVideoInfo::SetMovie(const CFileItem *item)
   VIDEODB_CONTENT_TYPE type = (VIDEODB_CONTENT_TYPE)m_movieItem->GetVideoContentType();
   if (type == VIDEODB_CONTENT_MUSICVIDEOS)
   { // music video
+    CMusicDatabase database;
+    database.Open();
     const std::vector<std::string> &artists = m_movieItem->GetVideoInfoTag()->m_artist;
     for (std::vector<std::string>::const_iterator it = artists.begin(); it != artists.end(); ++it)
     {
+      int idArtist = database.GetArtistByName(*it);
+      CStdString thumb = database.GetArtForItem(idArtist, "artist", "thumb");
       CFileItemPtr item(new CFileItem(*it));
-      if (CFile::Exists(item->GetCachedArtistThumb()))
-        item->SetThumbnailImage(item->GetCachedArtistThumb());
+      if (!thumb.empty())
+        item->SetThumbnailImage(thumb);
       item->SetIconImage("DefaultArtist.png");
       m_castList->Add(item);
     }
@@ -649,10 +653,6 @@ void CGUIDialogVideoInfo::OnGetThumb()
     return;   // user chose the one they have
 
   CStdString newThumb;
-  // delete the thumbnail if that's what the user wants, else overwrite with the
-  // new thumbnail
-  CFileItem item(*m_movieItem->GetVideoInfoTag());
-
   if (result.Left(14) == "thumb://Remote")
   {
     int number = atoi(result.Mid(14));

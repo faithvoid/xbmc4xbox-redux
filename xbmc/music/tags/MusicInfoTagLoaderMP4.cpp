@@ -22,13 +22,11 @@
 #include "Util.h"
 #include "LocalizeStrings.h"
 #include "AutoPtrHandle.h"
-#include "pictures/Picture.h"
 #include "music/tags/id3v1genre.h"
 #include "music/tags/MusicInfoTag.h"
 #include "settings/AdvancedSettings.h"
 #include "utils/log.h"
 #include "utils/StringUtils.h"
-#include "ThumbnailCache.h"
 
 using namespace XFILE;
 using namespace AUTOPTR;
@@ -94,7 +92,7 @@ unsigned int CMusicInfoTagLoaderMP4::ReadUnsignedInt( const char* pData )
 // Given a metadata type, and a pointer to the data (and the size), this function attempts to populate
 // XBMC's CMusicInfoTag object. Tags that we don't support are simply ignored..
 
-void CMusicInfoTagLoaderMP4::ParseTag( unsigned int metaKey, const char* pMetaData, int metaSize, CMusicInfoTag& tag)
+void CMusicInfoTagLoaderMP4::ParseTag( unsigned int metaKey, const char* pMetaData, int metaSize, CMusicInfoTag& tag, EmbeddedArt *art)
 {
   switch ( metaKey )
   {
@@ -230,12 +228,18 @@ void CMusicInfoTagLoaderMP4::ParseTag( unsigned int metaKey, const char* pMetaDa
       // This cover-art handling is pretty much what was in the old MP4 tag processing code..
 
       // note that according to http://atomicparsley.sourceforge.net/mpeg-4files.html the type
-      // of image (PNG=14 or JPG=13) is contained in pMetadata[-5] but we currently don't use this.
-      m_thumbSize = metaSize;
-      delete[] m_thumbData;
-      m_thumbData = new BYTE[m_thumbSize];
-      if (m_thumbData)
-        memcpy(m_thumbData, pMetaData, metaSize);
+      // of image (PNG=14 or JPG=13) is contained in pMetadata[-5]
+      std::string mimeType;
+      if (pMetaData[-5] == 13)
+        mimeType = "image/jpeg";
+      else if (pMetaData[-5] == 14)
+        mimeType = "image/png";
+      else
+        CLog::Log(LOGDEBUG, "Unknown art mimetype %d", pMetaData[-5]);
+
+      tag.SetCoverArtInfo(metaSize, mimeType);
+      if (art)
+        art->set((const uint8_t*)pMetaData, metaSize, mimeType);
       break;
     }
   default:
@@ -266,13 +270,12 @@ int CMusicInfoTagLoaderMP4::GetILSTOffset( const char* pBuffer, int bufferSize )
 //
 // I hope to make this particular function more readable/structured when time permits.
 
-int CMusicInfoTagLoaderMP4::ParseAtom( __int64 startOffset, __int64 stopOffset, CMusicInfoTag& tag )
+int CMusicInfoTagLoaderMP4::ParseAtom( int64_t startOffset, int64_t stopOffset, CMusicInfoTag& tag, EmbeddedArt *art )
 {
-  __int64	currentOffset;
-
-  int				atomSize;
-  unsigned int	atomName;
-  char			atomHeader[ 10 ];
+  int64_t       currentOffset;
+  int				    atomSize;
+  unsigned int  atomName;
+  char			    atomHeader[ 10 ];
 
   currentOffset = startOffset;
   while ( currentOffset < stopOffset)
@@ -292,7 +295,7 @@ int CMusicInfoTagLoaderMP4::ParseAtom( __int64 startOffset, __int64 stopOffset, 
     {
       if ( atomName == g_ContainerAtoms[ containerAtom ] )
       {
-        ParseAtom( m_file.GetPosition(), currentOffset + atomSize, tag );
+        ParseAtom( m_file.GetPosition(), currentOffset + atomSize, tag, art );
         break;
       }
     }
@@ -324,7 +327,7 @@ int CMusicInfoTagLoaderMP4::ParseAtom( __int64 startOffset, __int64 stopOffset, 
 
 
         // Ok.. we've got some metadata to process. Go to it.
-        ParseTag( metaKey, metaData, metaSize - 20, tag );
+        ParseTag( metaKey, metaData, metaSize - 20, tag, art );
       }
     }
     else
@@ -359,7 +362,7 @@ CMusicInfoTagLoaderMP4::~CMusicInfoTagLoaderMP4()
 {
 }
 
-bool CMusicInfoTagLoaderMP4::Load(const CStdString& strFileName, CMusicInfoTag& tag)
+bool CMusicInfoTagLoaderMP4::Load(const CStdString& strFileName, CMusicInfoTag& tag, EmbeddedArt *art)
 {
   try
   {
@@ -377,34 +380,8 @@ bool CMusicInfoTagLoaderMP4::Load(const CStdString& strFileName, CMusicInfoTag& 
     tag.SetURL(strFileName);
 
     // Now go parse our atom data
-    m_thumbSize = false;
-    m_thumbData = NULL;
     m_isCompilation = false;
-    ParseAtom( 0, m_file.GetLength(), tag );
-
-    if (m_thumbData)
-    { // cache the thumb
-      // if we don't have an album tag, cache with the full file path so that
-      // other non-tagged files don't get this album image
-      CStdString strCoverArt;
-      if (!tag.GetAlbum().IsEmpty() && (!tag.GetAlbumArtist().empty() || !tag.GetArtist().empty()))
-        strCoverArt = CThumbnailCache::GetAlbumThumb(&tag);
-      else
-        strCoverArt = CThumbnailCache::GetMusicThumb(tag.GetURL());
-      if (!CUtil::ThumbExists(strCoverArt))
-      {
-        if (CPicture::CreateThumbnailFromMemory( m_thumbData, m_thumbSize, "", strCoverArt ) )
-        {
-          CUtil::ThumbCacheAdd( strCoverArt, true );
-        }
-        else
-        {
-          CLog::Log(LOGDEBUG, "%s unable to cache thumb as %s", __FUNCTION__, strCoverArt.c_str());
-          CUtil::ThumbCacheAdd( strCoverArt, false );
-        }
-      }
-      delete[] m_thumbData;
-    }
+    ParseAtom( 0, m_file.GetLength(), tag, art );
 
     if (m_isCompilation)
     { // iTunes compilation flag is set - this could be a various artists file
