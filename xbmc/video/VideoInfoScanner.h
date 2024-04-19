@@ -24,6 +24,8 @@
 #include "NfoFile.h"
 
 class CRegExp;
+class CFileItem;
+class CFileItemList;
 
 namespace VIDEO
 {
@@ -128,10 +130,10 @@ namespace VIDEO
     virtual void Process();
     bool DoScan(const CStdString& strDirectory);
 
-    INFO_RET RetrieveInfoForTvShow(CFileItemPtr pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, bool fetchEpisodes, CGUIDialogProgress* pDlgProgress);
-    INFO_RET RetrieveInfoForMovie(CFileItemPtr pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, CGUIDialogProgress* pDlgProgress);
-    INFO_RET RetrieveInfoForMusicVideo(CFileItemPtr pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, CGUIDialogProgress* pDlgProgress);
-    INFO_RET RetrieveInfoForEpisodes(CFileItemPtr item, long showID, const ADDON::ScraperPtr &scraper, bool useLocal, CGUIDialogProgress *progress = NULL);
+    INFO_RET RetrieveInfoForTvShow(CFileItem *pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, bool fetchEpisodes, CGUIDialogProgress* pDlgProgress);
+    INFO_RET RetrieveInfoForMovie(CFileItem *pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, CGUIDialogProgress* pDlgProgress);
+    INFO_RET RetrieveInfoForMusicVideo(CFileItem *pItem, bool bDirNames, ADDON::ScraperPtr &scraper, bool useLocal, CScraperUrl* pURL, CGUIDialogProgress* pDlgProgress);
+    INFO_RET RetrieveInfoForEpisodes(CFileItem *item, long showID, const ADDON::ScraperPtr &scraper, bool useLocal, CGUIDialogProgress *progress = NULL);
 
     /*! \brief Update the progress bar with the heading and line and check for cancellation
      \param progress CGUIDialogProgress bar
@@ -218,8 +220,8 @@ namespace VIDEO
     INFO_RET OnProcessSeriesFolder(EPISODELIST& files, const ADDON::ScraperPtr &scraper, bool useLocal, int idShow, const CStdString& strShowTitle, CGUIDialogProgress* pDlgProgress = NULL);
 
     void EnumerateSeriesFolder(CFileItem* item, EPISODELIST& episodeList);
-    bool EnumerateEpisodeItem(const CFileItemPtr item, EPISODELIST& episodeList);
-    bool ProcessItemByVideoInfoTag(const CFileItemPtr item, EPISODELIST &episodeList);
+    bool EnumerateEpisodeItem(const CFileItem *item, EPISODELIST& episodeList);
+    bool ProcessItemByVideoInfoTag(const CFileItem *item, EPISODELIST &episodeList);
 
     CStdString GetnfoFile(CFileItem *item, bool bGrabAny=false) const;
 
