@@ -1171,12 +1171,8 @@ namespace VIDEO
     bool isEpisode = (content == CONTENT_TVSHOWS && !pItem->m_bIsFolder);
     if (!isEpisode)
     {
-      CStdString fanart = pItem->GetArt("fanart");
-      if (fanart.empty() && useLocal)
-        fanart = pItem->FindLocalArt("fanart.jpg", true);
-      if (fanart.IsEmpty())
-        fanart = movieDetails.m_fanart.GetImageURL();
-      if (!fanart.IsEmpty())
+      string fanart = GetFanart(pItem, useLocal);
+      if (!fanart.empty())
         art.insert(make_pair("fanart", fanart));
     }
 
@@ -1227,6 +1223,16 @@ namespace VIDEO
       }
     }
     return thumb;
+  }
+
+  std::string CVideoInfoScanner::GetFanart(CFileItem *pItem, bool useLocal)
+  {
+    std::string fanart = pItem->GetArt("fanart");
+    if (fanart.empty() && useLocal)
+      fanart = pItem->FindLocalArt("fanart.jpg", true);
+    if (fanart.empty())
+      fanart = movieDetails.m_fanart.GetImageURL();
+    return fanart;
   }
 
   INFO_RET CVideoInfoScanner::OnProcessSeriesFolder(EPISODELIST& files, const ADDON::ScraperPtr &scraper, bool useLocal, int idShow, const CStdString& strShowTitle, CGUIDialogProgress* pDlgProgress /* = NULL */)
