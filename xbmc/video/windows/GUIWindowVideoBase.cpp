@@ -579,6 +579,11 @@ bool CGUIWindowVideoBase::ShowIMDB(CFileItem *item, const ScraperPtr &info2)
     {
       // 5. Download the movie information
       // show dialog that we're downloading the movie info
+
+      // clear artwork
+      item->SetArt("thumb", "");
+      item->SetArt("fanart", "");
+
       CFileItemList list;
       CStdString strPath=item->GetPath();
       if (item->IsVideoDb())
@@ -620,9 +625,6 @@ bool CGUIWindowVideoBase::ShowIMDB(CFileItem *item, const ScraperPtr &info2)
       pDlgProgress->Progress();
       if (bHasInfo)
       {
-        // clear artwork
-        item->SetThumbnailImage("");
-        item->ClearProperty("fanart_image");
         if (info->Content() == CONTENT_MOVIES)
           m_database.DeleteMovie(item->GetPath());
         if (info->Content() == CONTENT_TVSHOWS && !item->m_bIsFolder)
@@ -667,7 +669,7 @@ bool CGUIWindowVideoBase::ShowIMDB(CFileItem *item, const ScraperPtr &info2)
         *item->GetVideoInfoTag() = movieDetails;
         pDlgInfo->SetMovie(item);
         pDlgInfo->DoModal();
-        item->SetThumbnailImage(pDlgInfo->GetThumbnail());
+        item->SetArt("thumb", pDlgInfo->GetThumbnail());
         needsRefresh = pDlgInfo->NeedRefresh();
         listNeedsUpdating = true;
       }
