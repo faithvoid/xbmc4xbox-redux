@@ -3424,7 +3424,7 @@ bool CMusicDatabase::UpdateOldVersion(int version)
     if (version < 12)
     {
       // update our thumb table as we've changed from storing absolute to relative paths
-      CStdString newPath = CProfilesManager::Get().GetMusicThumbFolder();
+      /*CStdString newPath = CProfilesManager::Get().GetMusicThumbFolder();
       CStdString oldPath = CSpecialProtocol::TranslatePath(newPath);
       if (m_pDS->query("select * from thumb where strThumb != 'NONE'") && m_pDS->num_rows())
       {
@@ -3441,7 +3441,7 @@ bool CMusicDatabase::UpdateOldVersion(int version)
           }
           m_pDS->next();
         }
-      }
+      }*/
     }
     if (version < 13)
     {

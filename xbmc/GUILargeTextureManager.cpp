@@ -63,30 +63,9 @@ bool CImageLoader::DoWork()
   }
   if (!loadPath.IsEmpty())
   {
-#ifdef HAS_XBOX_D3D
-    int width = min(g_graphicsContext.GetWidth(), 1024);
-    int height = min(g_graphicsContext.GetHeight(), 720);
-    // if loading a .tbn that is not a fanart, try and load at requested thumbnail size as actual on disk
-    // tbn might be larger due to libjpeg 1/8 - 8/8 scaling.
-    CStdString directoryPath;
-    URIUtils::GetDirectory(loadPath, directoryPath);
-    URIUtils::RemoveSlashAtEnd(directoryPath);
-    if (directoryPath != CProfilesManager::Get().GetVideoFanartFolder() &&
-        directoryPath != CProfilesManager::Get().GetMusicFanartFolder() &&
-        URIUtils::GetExtension(loadPath).Equals(".tbn"))
-    {
-      width = g_advancedSettings.GetThumbSize();
-      height = g_advancedSettings.GetThumbSize();
-    }
-#endif
-
     // direct route - load the image
     unsigned int start = XbmcThreads::SystemClockMillis();
-#ifdef HAS_XBOX_D3D
-    m_texture = CBaseTexture::LoadFromFile(loadPath, width, height, CSettings::Get().GetBool("pictures.useexifrotation"));
-#else
     m_texture = CBaseTexture::LoadFromFile(loadPath, g_graphicsContext.GetWidth(), g_graphicsContext.GetHeight(), CSettings::Get().GetBool("pictures.useexifrotation"));
-#endif
     if (!m_texture)
       return false;
     if (XbmcThreads::SystemClockMillis() - start > 100)

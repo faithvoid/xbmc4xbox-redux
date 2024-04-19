@@ -153,13 +153,8 @@ public:
   std::string GetSettingsFile() const;
 
   // Xbox specific methods since we currently don't have TextureDatabase
-  std::string GetMusicThumbFolder() const;
-  std::string GetMusicArtistThumbFolder() const;
-  std::string GetPicturesThumbFolder() const;
   std::string GetProgramsThumbFolder() const;
   std::string GetGameSaveThumbFolder() const;
-  std::string GetVideoFanartFolder() const;
-  std::string GetMusicFanartFolder() const;
 
   // uses HasSlashAtEnd to determine if a directory or file was meant
   std::string GetUserDataItem(const std::string& strFile) const;

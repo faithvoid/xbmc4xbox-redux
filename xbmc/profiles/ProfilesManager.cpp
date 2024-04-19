@@ -355,23 +355,10 @@ void CProfilesManager::CreateProfileFolders()
   CDirectory::Create(GetVideoThumbFolder());
   CDirectory::Create(GetBookmarksThumbFolder());
 #ifdef _XBOX
-  CDirectory::Create(GetMusicThumbFolder());
-  CDirectory::Create(GetMusicArtistThumbFolder());
-  CDirectory::Create(GetVideoFanartFolder());
-  CDirectory::Create(GetMusicFanartFolder());
-  CDirectory::Create(GetPicturesThumbFolder());
   CDirectory::Create(GetGameSaveThumbFolder());
 #endif
   for (size_t hex = 0; hex < 16; hex++)
-  {
     CDirectory::Create(URIUtils::AddFileToFolder(GetThumbnailsFolder(), StringUtils2::Format("%x", hex)));
-#ifdef _XBOX
-    string strHex = StringUtils2::Format("%x", hex);
-    CDirectory::Create(URIUtils::AddFileToFolder(GetPicturesThumbFolder(), strHex));
-    CDirectory::Create(URIUtils::AddFileToFolder(GetMusicThumbFolder(), strHex));
-    CDirectory::Create(URIUtils::AddFileToFolder(GetVideoThumbFolder(), strHex));
-#endif
-  }
 
   CDirectory::Create("special://profile/addon_data");
   CDirectory::Create("special://profile/keymaps");
@@ -514,21 +501,6 @@ std::string CProfilesManager::GetSettingsFile() const
   return "special://profile/guisettings.xml";
 }
 
-std::string CProfilesManager::GetMusicThumbFolder() const
-{
-  return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Music");
-}
-
-std::string CProfilesManager::GetMusicArtistThumbFolder() const
-{
-  return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Music/Artists");
-}
-
-std::string CProfilesManager::GetPicturesThumbFolder() const
-{
-  return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Pictures");
-}
-
 std::string CProfilesManager::GetProgramsThumbFolder() const
 {
   return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Programs");
@@ -537,16 +509,6 @@ std::string CProfilesManager::GetProgramsThumbFolder() const
 std::string CProfilesManager::GetGameSaveThumbFolder() const
 {
   return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "GameSaves");
-}
-
-std::string CProfilesManager::GetVideoFanartFolder() const
-{
-  return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Video/Fanart");
-}
-
-std::string CProfilesManager::GetMusicFanartFolder() const
-{
-  return URIUtils::AddFileToFolder(GetThumbnailsFolder(), "Music/Fanart");
 }
 
 std::string CProfilesManager::GetUserDataItem(const std::string& strFile) const
