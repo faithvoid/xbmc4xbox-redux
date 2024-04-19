@@ -157,7 +157,7 @@ bool CMusicDatabase::CreateTables()
     CLog::Log(LOGINFO, "create song index3");
     m_pDS->exec("CREATE INDEX idxSong3 ON song(idAlbum)");
     CLog::Log(LOGINFO, "create song index6");
-    m_pDS->exec("CREATE INDEX idxSong6 ON song(idPath)");
+    m_pDS->exec("CREATE UNIQUE INDEX idxSong6 ON song( idPath, strFileName(255) )");
 
     CLog::Log(LOGINFO, "create song_artist indexes");
     m_pDS->exec("CREATE UNIQUE INDEX idxSongArtist_1 ON song_artist ( idSong, idArtist )\n");
@@ -1303,16 +1303,7 @@ bool CMusicDatabase::GetArtistInfo(int idArtist, CArtist &info, bool needAll)
     if (idArtist == -1)
       return false; // not in the database
 
-    CStdString strSQL=PrepareSQL("SELECT artist.idArtist AS idArtist, strArtist, "
-                                 "  strBorn, strFormed, strGenres,"
-                                 "  strMoods, strStyles, strInstruments, "
-                                 "  strBiography, strDied, strDisbanded, "
-                                 "  strYearsActive, strImage, strFanart "
-                                 "  FROM artist "
-                                 "  JOIN artistinfo "
-                                 "    ON artist.idArtist = artistinfo.idArtist "
-                                 "  WHERE artistinfo.idArtist = %i"
-                                 , idArtist);
+    CStdString strSQL=PrepareSQL("SELECT * FROM artistview WHERE idArtist = %i", idArtist);
 
     if (!m_pDS2->query(strSQL.c_str())) return false;
     int iRowsFound = m_pDS2->num_rows();
@@ -1341,6 +1332,11 @@ bool CMusicDatabase::GetArtistInfo(int idArtist, CArtist &info, bool needAll)
   }
 
   return false;
+}
+
+bool CMusicDatabase::HasArtistInfo(int idArtist)
+{
+  return strtol(GetSingleValue("artistinfo", "count(idArtist)", PrepareSQL("idArtist = %ld", idArtist)), NULL, 10) > 0;
 }
 
 bool CMusicDatabase::DeleteArtistInfo(int idArtist)
@@ -1678,7 +1674,7 @@ bool CMusicDatabase::IncrTop100CounterByFileName(const CStdString& strFileName)
   return false;
 }
 
-bool CMusicDatabase::GetSongsByPath(const CStdString& strPath1, CSongMap& songs, bool bAppendToMap)
+bool CMusicDatabase::GetSongsByPath(const CStdString& strPath1, MAPSONGS& songs, bool bAppendToMap)
 {
   CStdString strPath(strPath1);
   try
@@ -1687,7 +1683,7 @@ bool CMusicDatabase::GetSongsByPath(const CStdString& strPath1, CSongMap& songs,
       URIUtils::AddSlashAtEnd(strPath);
 
     if (!bAppendToMap)
-      songs.Clear();
+      songs.clear();
 
     if (NULL == m_pDB.get()) return false;
     if (NULL == m_pDS.get()) return false;
@@ -1703,7 +1699,7 @@ bool CMusicDatabase::GetSongsByPath(const CStdString& strPath1, CSongMap& songs,
     while (!m_pDS->eof())
     {
       CSong song = GetSongFromDataset();
-      songs.Add(song.strFileName, song);
+      songs.insert(make_pair(song.strFileName, song));
       m_pDS->next();
     }
 
@@ -3922,7 +3918,7 @@ bool CMusicDatabase::GetPathHash(const CStdString &path, CStdString &hash)
   return false;
 }
 
-bool CMusicDatabase::RemoveSongsFromPath(const CStdString &path1, CSongMap &songs, bool exact)
+bool CMusicDatabase::RemoveSongsFromPath(const CStdString &path1, MAPSONGS& songs, bool exact)
 {
   // We need to remove all songs from this path, as their tags are going
   // to be re-read.  We need to remove all songs from the song table + all links to them
@@ -3975,7 +3971,7 @@ bool CMusicDatabase::RemoveSongsFromPath(const CStdString &path1, CSongMap &song
       {
         CSong song = GetSongFromDataset();
         song.strThumb = GetArtForItem(song.idSong, "song", "thumb");
-        songs.Add(song.strFileName, song);
+        songs.insert(make_pair(song.strFileName, song));
         songIds += PrepareSQL("%i,", song.idSong);
         ids.push_back(song.idSong);
         m_pDS->next();
