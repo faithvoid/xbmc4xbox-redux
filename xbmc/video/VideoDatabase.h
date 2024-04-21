@@ -796,7 +796,7 @@ private:
   /*! \brief (Re)Create the generic database views for movies, tvshows,
      episodes and music videos
    */
-  void CreateViews();
+  virtual void CreateViews();
 
   /*! \brief Update routine for base path of videos
    Only required for videodb version < 44
