@@ -132,10 +132,13 @@ public:
   bool GetAlbumFromSong(int idSong, CAlbum &album);
   bool GetAlbumFromSong(const CSong &song, CAlbum &album);
 
-  bool GetAlbumsByArtist(int idArtist, bool includeFeatured, std::vector<long>& albums);
-  bool GetArtistsByAlbum(int idAlbum, bool includeFeatured, std::vector<long>& artists);
-  bool GetSongsByArtist(int idArtist, bool includeFeatured, std::vector<long>& songs);
-  bool GetArtistsBySong(int idSong, bool includeFeatured, std::vector<long>& artists);
+  bool GetAlbumsByArtist(int idArtist, bool includeFeatured, std::vector<int>& albums);
+  bool GetArtistsByAlbum(int idAlbum, bool includeFeatured, std::vector<int>& artists);
+  bool GetSongsByArtist(int idArtist, bool includeFeatured, std::vector<int>& songs);
+  bool GetArtistsBySong(int idSong, bool includeFeatured, std::vector<int>& artists);
+
+  bool GetGenresByAlbum(int idAlbum, std::vector<int>& genres);
+  bool GetGenresBySong(int idSong, std::vector<int>& genres);
 
   bool GetArbitraryQuery(const CStdString& strQuery, const CStdString& strOpenRecordSet, const CStdString& strCloseRecordSet,
                          const CStdString& strOpenRecord, const CStdString& strCloseRecord, const CStdString& strOpenField, const CStdString& strCloseField, CStdString& strResult);
@@ -358,7 +361,8 @@ private:
     song_iKarNumber,
     song_iKarDelay,
     song_strKarEncoding,
-    song_bCompilation
+    song_bCompilation,
+    song_strAlbumArtists
   } SongFields;
 
   // Fields should be ordered as they

@@ -223,7 +223,8 @@ void CMusicDatabase::CreateViews()
               "  strMusicBrainzTRMID, iTimesPlayed, iStartOffset, iEndOffset, lastplayed,"
               "  rating, comment, song.idAlbum AS idAlbum, strAlbum, strPath,"
               "  iKaraNumber, iKaraDelay, strKaraEncoding,"
-              "  album.bCompilation AS bCompilation "
+              "  album.bCompilation AS bCompilation,"
+              "  album.strArtists AS strAlbumArtists "
               "FROM song"
               "  JOIN album ON"
               "    song.idAlbum=album.idAlbum"
@@ -636,7 +637,7 @@ bool CMusicDatabase::AddSongGenre(int idGenre, int idSong, int iOrder)
   return ExecuteQuery(strSQL);
 };
 
-bool CMusicDatabase::GetAlbumsByArtist(int idArtist, bool includeFeatured, std::vector<long> &albums)
+bool CMusicDatabase::GetAlbumsByArtist(int idArtist, bool includeFeatured, std::vector<int> &albums)
 {
   try 
   {
@@ -670,7 +671,7 @@ bool CMusicDatabase::GetAlbumsByArtist(int idArtist, bool includeFeatured, std::
   return false;
 }
 
-bool CMusicDatabase::GetArtistsByAlbum(int idAlbum, bool includeFeatured, std::vector<long> &artists)
+bool CMusicDatabase::GetArtistsByAlbum(int idAlbum, bool includeFeatured, std::vector<int> &artists)
 {
   try 
   {
@@ -704,7 +705,7 @@ bool CMusicDatabase::GetArtistsByAlbum(int idAlbum, bool includeFeatured, std::v
   return false;
 }
 
-bool CMusicDatabase::GetSongsByArtist(int idArtist, bool includeFeatured, std::vector<long> &songs)
+bool CMusicDatabase::GetSongsByArtist(int idArtist, bool includeFeatured, std::vector<int> &songs)
 {
   try 
   {
@@ -738,7 +739,7 @@ bool CMusicDatabase::GetSongsByArtist(int idArtist, bool includeFeatured, std::v
   return false;
 };
 
-bool CMusicDatabase::GetArtistsBySong(int idSong, bool includeFeatured, std::vector<long> &artists)
+bool CMusicDatabase::GetArtistsBySong(int idSong, bool includeFeatured, std::vector<int> &artists)
 {
   try 
   {
@@ -770,7 +771,65 @@ bool CMusicDatabase::GetArtistsBySong(int idSong, bool includeFeatured, std::vec
     CLog::Log(LOGERROR, "%s(%i) failed", __FUNCTION__, idSong);
   }
   return false;
-};
+}
+
+bool CMusicDatabase::GetGenresByAlbum(int idAlbum, std::vector<int>& genres)
+{
+  try
+  {
+    CStdString strSQL = PrepareSQL("select idGenre from album_genre where idAlbum = %i ORDER BY iOrder ASC", idAlbum);
+    if (!m_pDS->query(strSQL.c_str()))
+      return false;
+    if (m_pDS->num_rows() == 0)
+    {
+      m_pDS->close();
+      return true;
+    }
+
+    while (!m_pDS->eof())
+    {
+      genres.push_back(m_pDS->fv("idGenre").get_asInt());
+      m_pDS->next();
+    }
+    m_pDS->close();
+
+    return true;
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s(%i) failed", __FUNCTION__, idAlbum);
+  }
+  return false;
+}
+
+bool CMusicDatabase::GetGenresBySong(int idSong, std::vector<int>& genres)
+{
+  try
+  {
+    CStdString strSQL = PrepareSQL("select idGenre from song_genre where idSong = %i ORDER BY iOrder ASC", idSong);
+    if (!m_pDS->query(strSQL.c_str()))
+      return false;
+    if (m_pDS->num_rows() == 0)
+    {
+      m_pDS->close();
+      return true;
+    }
+
+    while (!m_pDS->eof())
+    {
+      genres.push_back(m_pDS->fv("idGenre").get_asInt());
+      m_pDS->next();
+    }
+    m_pDS->close();
+
+    return true;
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s(%i) failed", __FUNCTION__, idSong);
+  }
+  return false;
+}
 
 int CMusicDatabase::AddPath(const CStdString& strPath1)
 {
@@ -846,6 +905,7 @@ CSong CMusicDatabase::GetSongFromDataset(bool bWithMusicDbPath/*=false*/)
   song.rating = m_pDS->fv(song_rating).get_asChar();
   song.strComment = m_pDS->fv(song_comment).get_asString();
   song.bCompilation = m_pDS->fv(song_bCompilation).get_asInt() == 1;
+  song.albumArtist = StringUtils::Split(m_pDS->fv(song_strAlbumArtists).get_asString(), g_advancedSettings.m_musicItemSeparator);
 
   // Get filename with full path
   if (!bWithMusicDbPath)
@@ -897,7 +957,8 @@ void CMusicDatabase::GetFileItemFromDataset(const dbiplus::sql_record* const rec
   CStdString strRealPath;
   URIUtils::AddFileToFolder(record->at(song_strPath).get_asString(), record->at(song_strFileName).get_asString(), strRealPath);
   item->GetMusicInfoTag()->SetURL(strRealPath);
-  item->GetMusicInfoTag()->SetCompilation(m_pDS->fv(song_bCompilation).get_asInt() == 1);
+  item->GetMusicInfoTag()->SetCompilation(record->at(song_bCompilation).get_asInt() == 1);
+  item->GetMusicInfoTag()->SetAlbumArtist(record->at(song_strAlbumArtists).get_asString());
   item->GetMusicInfoTag()->SetLoaded(true);
   // Get filename with full path
   if (strMusicDBbasePath.IsEmpty())

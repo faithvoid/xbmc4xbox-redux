@@ -496,6 +496,7 @@ void CMusicInfoTag::Serialize(CVariant& value)
   value["url"] = m_strURL;
   value["title"] = m_strTitle;
   value["artist"] = m_artist;
+  value["displayartist"] = StringUtils::Join(m_artist, g_advancedSettings.m_musicItemSeparator);
   value["album"] = m_strAlbum;
   value["albumartist"] = m_albumArtist;
   value["genre"] = m_genre;
