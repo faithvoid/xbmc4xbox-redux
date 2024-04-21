@@ -40,8 +40,21 @@ public:
   static bool GetBoolean(const TiXmlNode* pRootNode, const char* strTag, bool& bBoolValue);
   static bool GetString(const TiXmlNode* pRootNode, const char* strTag, CStdString& strStringValue);
   static bool GetString(const TiXmlNode* pRootNode, const char* strTag, std::string& strStringValue);
-  static bool GetAdditiveString(const TiXmlNode* pRootNode, const char* strTag, const CStdString& strSeparator, CStdString& strStringValue);
-  static bool GetStringArray(const TiXmlNode* rootNode, const char* tag, std::vector<std::string>& arrayValue, bool clear = false);
+  /*! \brief Get multiple tags, concatenating the values together.
+   Transforms
+     <tag>value1</tag>
+     <tag clear="true">value2</tag>
+     ...
+     <tag>valuen</tag>
+   into value2<sep>...<sep>valuen, appending it to the value string. Note that <value1> is overwritten by the clear="true" tag.
+   \param rootNode    the parent containing the <tag>'s.
+   \param tag         the <tag> in question.
+   \param separator   the separator to use when concatenating values.
+   \param value [out] the resulting string. Remains untouched if no <tag> is available, else is appended (or cleared based on the clear parameter).
+   \param clear       if true, clears the string prior to adding tags, if tags are available. Defaults to false.
+   */
+  static bool GetAdditiveString(const TiXmlNode* rootNode, const char* tag, const CStdString& separator, CStdString& value, bool clear = false);
+  static bool GetStringArray(const TiXmlNode* rootNode, const char* tag, std::vector<std::string>& arrayValue, bool clear = false, const std::string separator = "");
   static bool GetEncoding(const CXBMCTinyXML* pDoc, CStdString& strEncoding);
   static bool GetPath(const TiXmlNode* pRootNode, const char* strTag, CStdString& strStringValue);
   static bool GetFloat(const TiXmlNode* pRootNode, const char* strTag, float& value, const float min, const float max);

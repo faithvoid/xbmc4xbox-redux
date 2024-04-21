@@ -32,19 +32,19 @@ bool CAlbum::operator<(const CAlbum &a) const
   return strAlbum +StringUtils::Join(artist, g_advancedSettings.m_musicItemSeparator) < a.strAlbum + StringUtils::Join(a.artist, g_advancedSettings.m_musicItemSeparator);
 }
 
-bool CAlbum::Load(const TiXmlElement *album, bool chained, bool prefix)
+bool CAlbum::Load(const TiXmlElement *album, bool append, bool prioritise)
 {
   if (!album) return false;
-  if (!chained)
+  if (!append)
     Reset();
 
   XMLUtils::GetString(album,"title",strAlbum);
   
-  XMLUtils::GetStringArray(album, "artist", artist);
-  XMLUtils::GetStringArray(album, "genre", genre);
-  XMLUtils::GetStringArray(album, "style", styles);
-  XMLUtils::GetStringArray(album, "mood", moods);
-  XMLUtils::GetStringArray(album, "theme", themes);
+  XMLUtils::GetStringArray(album, "artist", artist, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(album, "genre", genre, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(album, "style", styles, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(album, "mood", moods, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(album, "theme", themes, prioritise, g_advancedSettings.m_musicItemSeparator);
 
   XMLUtils::GetString(album,"review",strReview);
   XMLUtils::GetString(album,"releasedate",m_strDateOfRelease);
@@ -60,7 +60,7 @@ bool CAlbum::Load(const TiXmlElement *album, bool chained, bool prefix)
   while (thumb)
   {
     thumbURL.ParseElement(thumb);
-    if (prefix)
+    if (prioritise)
     {
       CStdString temp;
       temp << *thumb;
@@ -68,8 +68,8 @@ bool CAlbum::Load(const TiXmlElement *album, bool chained, bool prefix)
     }
     thumb = thumb->NextSiblingElement("thumb");
   }
-  // prefix thumbs from nfos
-  if (prefix && iThumbCount && iThumbCount != thumbURL.m_url.size())
+  // prioritise thumbs from nfos
+  if (prioritise && iThumbCount && iThumbCount != thumbURL.m_url.size())
   {
     rotate(thumbURL.m_url.begin(),
            thumbURL.m_url.begin()+iThumbCount, 

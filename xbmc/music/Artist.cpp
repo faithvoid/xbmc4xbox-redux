@@ -24,18 +24,18 @@
 
 using namespace std;
 
-bool CArtist::Load(const TiXmlElement *artist, bool chained, bool prefix)
+bool CArtist::Load(const TiXmlElement *artist, bool append, bool prioritise)
 {
   if (!artist) return false;
-  if (!chained)
+  if (!append)
     Reset();
 
   XMLUtils::GetString(artist,"name",strArtist);
-  XMLUtils::GetStringArray(artist, "genre", genre);
-  XMLUtils::GetStringArray(artist, "style", styles);
-  XMLUtils::GetStringArray(artist, "mood", moods);
-  XMLUtils::GetStringArray(artist, "yearsactive", yearsActive);
-  XMLUtils::GetStringArray(artist, "instruments", instruments);
+  XMLUtils::GetStringArray(artist, "genre", genre, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(artist, "style", styles, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(artist, "mood", moods, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(artist, "yearsactive", yearsActive, prioritise, g_advancedSettings.m_musicItemSeparator);
+  XMLUtils::GetStringArray(artist, "instruments", instruments, prioritise, g_advancedSettings.m_musicItemSeparator);
 
   XMLUtils::GetString(artist, "born", strBorn);
   XMLUtils::GetString(artist, "formed", strFormed);
@@ -50,7 +50,7 @@ bool CArtist::Load(const TiXmlElement *artist, bool chained, bool prefix)
   while (thumb)
   {
     thumbURL.ParseElement(thumb);
-    if (prefix)
+    if (prioritise)
     {
       CStdString temp;
       temp << *thumb;
@@ -59,7 +59,7 @@ bool CArtist::Load(const TiXmlElement *artist, bool chained, bool prefix)
     thumb = thumb->NextSiblingElement("thumb");
   }
   // prefix thumbs from nfos
-  if (prefix && iThumbCount && iThumbCount != thumbURL.m_url.size())
+  if (prioritise && iThumbCount && iThumbCount != thumbURL.m_url.size())
   {
     rotate(thumbURL.m_url.begin(),
            thumbURL.m_url.begin()+iThumbCount, 
@@ -87,7 +87,7 @@ bool CArtist::Load(const TiXmlElement *artist, bool chained, bool prefix)
   if (fanart2)
   {
     // we prefix to handle mixed-mode nfo's with fanart set
-    if (prefix)
+    if (prioritise)
     {
       CStdString temp;
       temp << *fanart2;
