@@ -18,27 +18,27 @@
  *
  */
 
-#include "music/Song.h"
+#include "Song.h"
 #include "music/tags/MusicInfoTag.h"
+#include "utils/Variant.h"
+#include "FileItem.h"
+#include "settings/AdvancedSettings.h"
+#include "utils/StringUtils.h"
 
 using namespace std;
 using namespace MUSIC_INFO;
 
-CSong::CSong(CMusicInfoTag& tag)
+CSong::CSong(CFileItem& item)
 {
+  CMusicInfoTag& tag = *item.GetMusicInfoTag();
   SYSTEMTIME stTime;
   tag.GetReleaseDate(stTime);
   strTitle = tag.GetTitle();
   genre = tag.GetGenre();
-  strFileName = tag.GetURL();
   artist = tag.GetArtist();
   strAlbum = tag.GetAlbum();
   albumArtist = tag.GetAlbumArtist();
   strMusicBrainzTrackID = tag.GetMusicBrainzTrackID();
-  strMusicBrainzArtistID = tag.GetMusicBrainzArtistID();
-  strMusicBrainzAlbumID = tag.GetMusicBrainzAlbumID();
-  strMusicBrainzAlbumArtistID = tag.GetMusicBrainzAlbumArtistID();
-  strMusicBrainzTRMID = tag.GetMusicBrainzTRMID();
   strComment = tag.GetComment();
   rating = tag.GetRating();
   iYear = stTime.wYear;
@@ -46,17 +46,40 @@ CSong::CSong(CMusicInfoTag& tag)
   iDuration = tag.GetDuration();
   bCompilation = tag.GetCompilation();
   embeddedArt = tag.GetCoverArtInfo();
-  strThumb = "";
-  iStartOffset = 0;
-  iEndOffset = 0;
+  strFileName = tag.GetURL().IsEmpty() ? item.GetPath() : tag.GetURL();
+  strThumb = item.GetUserMusicThumb(true);
+  iStartOffset = item.m_lStartOffset;
+  iEndOffset = item.m_lEndOffset;
   idSong = -1;
   iTimesPlayed = 0;
+  iKaraokeNumber = 0;
+  iKaraokeDelay = 0;         //! Karaoke song lyrics-music delay in 1/10 seconds.
   idAlbum = -1;
 }
 
 CSong::CSong()
 {
   Clear();
+}
+
+void CSong::Serialize(CVariant& value)
+{
+  value["filename"] = strFileName;
+  value["title"] = strTitle;
+  value["artist"] = artist;
+  value["album"] = strAlbum;
+  value["albumartist"] = albumArtist;
+  value["genre"] = genre;
+  value["duration"] = iDuration;
+  value["track"] = iTrack;
+  value["year"] = iYear;
+  value["musicbrainztrackid"] = strMusicBrainzTrackID;
+  value["comment"] = strComment;
+  value["rating"] = rating;
+  value["timesplayed"] = iTimesPlayed;
+  value["lastplayed"] = lastPlayed.IsValid() ? lastPlayed.GetAsDBDateTime() : "";
+  value["karaokenumber"] = (int64_t) iKaraokeNumber;
+  value["albumid"] = idAlbum;
 }
 
 void CSong::Clear()
@@ -69,10 +92,6 @@ void CSong::Clear()
   genre.clear();
   strThumb.Empty();
   strMusicBrainzTrackID.Empty();
-  strMusicBrainzArtistID.Empty();
-  strMusicBrainzAlbumID.Empty();
-  strMusicBrainzAlbumArtistID.Empty();
-  strMusicBrainzTRMID.Empty();
   strComment.Empty();
   rating = '0';
   iTrack = 0;
@@ -83,6 +102,9 @@ void CSong::Clear()
   idSong = -1;
   iTimesPlayed = 0;
   lastPlayed.Reset();
+  iKaraokeNumber = 0;
+  strKaraokeLyrEncoding.Empty();
+  iKaraokeDelay = 0;
   idAlbum = -1;
   bCompilation = false;
   embeddedArt.clear();

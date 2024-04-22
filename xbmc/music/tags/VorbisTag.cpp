@@ -18,7 +18,9 @@
  *
  */
 
-#include "music/tags/VorbisTag.h"
+#include "VorbisTag.h"
+#include "settings/AdvancedSettings.h"
+#include "utils/StringUtils.h"
 
 using namespace MUSIC_INFO;
 
@@ -97,7 +99,7 @@ int CVorbisTag::ParseTagEntry(CStdString& strTagEntry)
 
   if ( strTagType == "MUSICBRAINZ_ARTISTID" )
   {
-    tag.SetMusicBrainzArtistID(strTagValue);
+    tag.SetMusicBrainzArtistID(StringUtils::Split(strTagValue, g_advancedSettings.m_musicItemSeparator));
   }
 
   if ( strTagType == "MUSICBRAINZ_ALBUMID" )
@@ -107,7 +109,7 @@ int CVorbisTag::ParseTagEntry(CStdString& strTagEntry)
 
   if ( strTagType == "MUSICBRAINZ_ALBUMARTISTID" )
   {
-    tag.SetMusicBrainzAlbumArtistID(strTagValue);
+    tag.SetMusicBrainzAlbumArtistID(StringUtils::Split(strTagValue, g_advancedSettings.m_musicItemSeparator));
   }
 
   if ( strTagType == "MUSICBRAINZ_TRMID" )

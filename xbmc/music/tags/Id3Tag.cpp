@@ -18,13 +18,13 @@
  *
  */
 
-#include "music/tags/Id3Tag.h"
-#include "Util.h"
+#include "Id3Tag.h"
 #include "settings/AdvancedSettings.h"
-#include "LocalizeStrings.h"
+#include "guilib/LocalizeStrings.h"
 #include "utils/CharsetConverter.h"
 #include "utils/log.h"
 #include "utils/StringUtils.h"
+#include "Util.h"
 
 #include <set>
 
@@ -144,9 +144,9 @@ bool CID3Tag::Parse()
     tag.SetMusicBrainzTrackID(strTrackId);
   }
 
-  tag.SetMusicBrainzArtistID(GetUserText("MusicBrainz Artist Id"));
+  tag.SetMusicBrainzArtistID(StringUtils::Split(GetUserText("MusicBrainz Artist Id"), g_advancedSettings.m_musicItemSeparator));
   tag.SetMusicBrainzAlbumID(GetUserText("MusicBrainz Album Id"));
-  tag.SetMusicBrainzAlbumArtistID(GetUserText("MusicBrainz Album Artist Id"));
+  tag.SetMusicBrainzAlbumArtistID(StringUtils::Split(GetUserText("MusicBrainz Album Artist Id"), g_advancedSettings.m_musicItemSeparator));
   tag.SetMusicBrainzTRMID(GetUserText("MusicBrainz TRM Id"));
 
   // extract Cover Art and save as album thumb

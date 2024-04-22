@@ -18,10 +18,12 @@
  *
  */
 
-#include "music/tags/MusicInfoTagLoaderApe.h"
-#include "DllLibapetag.h"
-#include "music/tags/MusicInfoTag.h"
+#include "MusicInfoTagLoaderApe.h"
+#include "MusicInfoTag.h"
+#include "settings/AdvancedSettings.h"
+#include "utils/StringUtils.h"
 #include "utils/log.h"
+#include "DllLibapetag.h"
 
 using namespace MUSIC_INFO;
 
@@ -50,9 +52,9 @@ bool CMusicInfoTagLoaderApe::Load(const CStdString& strFileName, CMusicInfoTag& 
       tag.SetPartOfSet(myTag.GetDiscNum());
       tag.SetComment(myTag.GetComment());
       tag.SetLyrics(myTag.GetLyrics());
-      tag.SetMusicBrainzAlbumArtistID(myTag.GetMusicBrainzAlbumArtistID());
+      tag.SetMusicBrainzAlbumArtistID(StringUtils::Split(myTag.GetMusicBrainzAlbumArtistID(), g_advancedSettings.m_musicItemSeparator));
       tag.SetMusicBrainzAlbumID(myTag.GetMusicBrainzAlbumID());
-      tag.SetMusicBrainzArtistID(myTag.GetMusicBrainzArtistID());
+      tag.SetMusicBrainzArtistID(StringUtils::Split(myTag.GetMusicBrainzArtistID(), g_advancedSettings.m_musicItemSeparator));
       tag.SetMusicBrainzTrackID(myTag.GetMusicBrainzTrackID());
       tag.SetMusicBrainzTRMID(myTag.GetMusicBrainzTRMID());
       SYSTEMTIME dateTime;

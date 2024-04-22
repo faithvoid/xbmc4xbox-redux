@@ -26,7 +26,7 @@
 #include "utils/StdString.h"
 #include "XBDateTime.h"
 #include "music/tags/MusicInfoTag.h" // for EmbeddedArt
-
+#include "Artist.h"
 #include <map>
 #include <vector>
 
@@ -43,6 +43,8 @@ public:
   CStdString strGenre;
 };
 
+class CFileItem;
+
 /*!
  \ingroup music
  \brief Class to store and read song information from CMusicDatabase
@@ -52,9 +54,10 @@ class CSong
 {
 public:
   CSong() ;
-  CSong(MUSIC_INFO::CMusicInfoTag& tag);
+  CSong(CFileItem& item);
   virtual ~CSong(){};
   void Clear() ;
+  virtual void Serialize(CVariant& value);
 
   bool operator<(const CSong &song) const
   {
@@ -79,16 +82,13 @@ public:
   CStdString strFileName;
   CStdString strTitle;
   std::vector<std::string> artist;
+  VECARTISTCREDITS artistCredits;
   CStdString strAlbum;
   std::vector<std::string> albumArtist;
   std::vector<std::string> genre;
   CStdString strThumb;
   MUSIC_INFO::EmbeddedArtInfo embeddedArt;
   CStdString strMusicBrainzTrackID;
-  CStdString strMusicBrainzArtistID;
-  CStdString strMusicBrainzAlbumID;
-  CStdString strMusicBrainzAlbumArtistID;
-  CStdString strMusicBrainzTRMID;
   CStdString strComment;
   char rating;
   int iTrack;
@@ -99,6 +99,11 @@ public:
   int iStartOffset;
   int iEndOffset;
   bool bCompilation;
+
+  // Karaoke-specific information
+  long       iKaraokeNumber;        //! Karaoke song number to "select by number". 0 for non-karaoke
+  CStdString strKaraokeLyrEncoding; //! Karaoke song lyrics encoding if known. Empty if unknown.
+  int        iKaraokeDelay;         //! Karaoke song lyrics-music delay in 1/10 seconds.
 };
 
 /*!
