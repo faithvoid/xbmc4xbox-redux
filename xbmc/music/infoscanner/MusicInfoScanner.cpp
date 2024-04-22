@@ -179,7 +179,7 @@ void CMusicInfoScanner::Process()
         m_musicDatabase.GetAlbumInfo(params.GetAlbumId(), album, &album.songs);
         if (m_handle)
         {
-          float percentage = (float) std::distance(it, m_pathsToScan.end()) / m_pathsToScan.size();
+          float percentage = (float) std::distance<std::set<std::string>::const_iterator>(it, m_pathsToScan.end()) / m_pathsToScan.size();
           m_handle->SetText(StringUtils::Join(album.artist, g_advancedSettings.m_musicItemSeparator) + " - " + album.strAlbum);
           m_handle->SetPercentage(percentage);
         }
@@ -209,7 +209,7 @@ void CMusicInfoScanner::Process()
 
         if (m_handle)
         {
-          float percentage = (float) (std::distance(m_pathsToScan.begin(), it) / m_pathsToScan.size()) * 100;
+          float percentage = (float) (std::distance<std::set<std::string>::const_iterator>(m_pathsToScan.begin(), it) / m_pathsToScan.size()) * 100;
           m_handle->SetText(artist.strArtist);
           m_handle->SetPercentage(percentage);
         }
