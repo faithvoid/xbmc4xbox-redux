@@ -22,10 +22,12 @@
 #include "system.h"
 #include "utils/StdString.h"
 #include "NptTypes.h"
+#include "NptReferences.h"
 #include "PltDidl.h"
 
 class CUPnPServer;
 class CFileItem;
+class CThumbLoader;
 class PLT_HttpRequestContext;
 class PLT_MediaItemResource;
 class PLT_MediaObject;
@@ -80,9 +82,10 @@ namespace UPNP
                                           PLT_MediaItemResource* resource,
                                           EClientQuirks          quirks);
 
-  PLT_MediaObject* BuildObject(const CFileItem&              item,
+  PLT_MediaObject* BuildObject(CFileItem&              item,
                                       NPT_String&                   file_path,
                                       bool                          with_count,
+                                      NPT_Reference<CThumbLoader>&  thumb_loader,
                                       const PLT_HttpRequestContext* context = NULL,
                                       CUPnPServer*                  upnp_server = NULL);
 
