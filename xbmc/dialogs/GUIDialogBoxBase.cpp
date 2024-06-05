@@ -29,7 +29,6 @@ using namespace std;
 #define CONTROL_HEADING 1
 #define CONTROL_LINES_START 2
 #define CONTROL_TEXTBOX     9
-#define CONTROL_CHOICES_START 10
 
 CGUIDialogBoxBase::CGUIDialogBoxBase(int id, const CStdString &xmlFile)
     : CGUIDialog(id, xmlFile)
@@ -149,6 +148,11 @@ void CGUIDialogBoxBase::Render()
 
 void CGUIDialogBoxBase::OnInitWindow()
 {
+  // hide all controls
+  for (int i = 0; i < DIALOG_MAX_CHOICES; ++i)
+    SET_CONTROL_HIDDEN(CONTROL_CHOICES_START + i);
+  SET_CONTROL_HIDDEN(CONTROL_PROGRESS_BAR);
+
   // set focus to default
   m_lastControlID = m_defaultControl;
 

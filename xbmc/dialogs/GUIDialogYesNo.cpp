@@ -21,11 +21,8 @@
 #include "dialogs/GUIDialogYesNo.h"
 #include "GUIWindowManager.h"
 
-#define CONTROL_NO_BUTTON 10
-#define CONTROL_YES_BUTTON 11
-
-CGUIDialogYesNo::CGUIDialogYesNo(void)
-    : CGUIDialogBoxBase(WINDOW_DIALOG_YES_NO, "DialogYesNo.xml")
+CGUIDialogYesNo::CGUIDialogYesNo(int overrideId /* = -1 */)
+    : CGUIDialogBoxBase(overrideId == -1 ? WINDOW_DIALOG_YES_NO : overrideId, "DialogConfirm.xml")
 {
   m_bConfirmed = false;
 }
@@ -68,6 +65,15 @@ bool CGUIDialogYesNo::OnBack(int actionID)
   m_bCanceled = true;
   m_bConfirmed = false;
   return CGUIDialogBoxBase::OnBack(actionID);
+}
+
+void CGUIDialogYesNo::OnInitWindow()
+{
+  CGUIDialogBoxBase::OnInitWindow();
+
+  SET_CONTROL_VISIBLE(CONTROL_YES_BUTTON);
+  SET_CONTROL_VISIBLE(CONTROL_NO_BUTTON);
+  SET_CONTROL_FOCUS(CONTROL_NO_BUTTON, 0);
 }
 
 // \brief Show CGUIDialogYesNo dialog, then wait for user to dismiss it.

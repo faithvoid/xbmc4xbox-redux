@@ -26,8 +26,14 @@
 #include "utils/Variant.h"
 #include "threads/CriticalSection.h"
 
+#define CONTROL_CHOICES_START  10
+#define CONTROL_NO_BUTTON      CONTROL_CHOICES_START
+#define CONTROL_YES_BUTTON     CONTROL_CHOICES_START + 1
+#define CONTROL_CUSTOM_BUTTON  CONTROL_CHOICES_START + 2
+#define CONTROL_PROGRESS_BAR   20
+
 #define DIALOG_MAX_LINES 3
-#define DIALOG_MAX_CHOICES 2
+#define DIALOG_MAX_CHOICES 3
 
 class CGUIDialogBoxBase :
       public CGUIDialog

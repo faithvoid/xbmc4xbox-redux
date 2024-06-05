@@ -28,7 +28,7 @@
 #include "LocalizeStrings.h"
 
 CGUIDialogGamepad::CGUIDialogGamepad(void)
-    : CGUIDialogBoxBase(WINDOW_DIALOG_GAMEPAD, "DialogOK.xml")
+    : CGUIDialogBoxBase(WINDOW_DIALOG_GAMEPAD, "DialogConfirm.xml")
 {
   m_bCanceled = false;
   m_strUserInput = "";
@@ -42,9 +42,6 @@ CGUIDialogGamepad::~CGUIDialogGamepad(void)
 
 void CGUIDialogGamepad::OnInitWindow()
 {
-  // hide ok button from DialogOK
-  SET_CONTROL_HIDDEN(10);
-
   CGUIDialogBoxBase::OnInitWindow();
 }
 

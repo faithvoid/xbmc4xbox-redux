@@ -27,7 +27,7 @@ class CGUIDialogYesNo :
       public CGUIDialogBoxBase
 {
 public:
-  CGUIDialogYesNo(void);
+  CGUIDialogYesNo(int overrideId = -1);
   virtual ~CGUIDialogYesNo(void);
   virtual bool OnMessage(CGUIMessage& message);
   virtual bool OnBack(int actionID);
@@ -39,6 +39,7 @@ public:
   static bool ShowAndGetInput(const std::string& heading, const std::string& text, bool& bCanceled, const std::string& noLabel, const std::string& yesLabel);
   static bool ShowAndGetInput(const CStdString& heading, const CStdString& line0, const CStdString& line1, const CStdString& line2, bool &bCanceled, const CStdString& noLabel="", const CStdString& yesLabel="");
 protected:
+  virtual void OnInitWindow();
   virtual int GetDefaultLabelID(int controlId) const;
 
   bool m_bCanceled;
