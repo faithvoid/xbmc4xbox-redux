@@ -622,6 +622,7 @@ string CGUIDialogVideoInfo::ChooseArtType(const CFileItem &videoItem, map<string
   dialog->SetHeading(13511);
   dialog->Reset();
   dialog->SetUseDetails(true);
+  dialog->EnableButton(true, 13516);
 
   CVideoDatabase db;
   db.Open();
@@ -648,6 +649,16 @@ string CGUIDialogVideoInfo::ChooseArtType(const CFileItem &videoItem, map<string
 
   dialog->SetItems(&items);
   dialog->Open();
+
+  if (dialog->IsButtonPressed())
+  {
+    // Get the new artwork name
+    CStdString strArtworkName;
+    if (!CGUIKeyboardFactory::ShowAndGetInput(strArtworkName, g_localizeStrings.Get(13516), false))
+      return "";
+
+    return strArtworkName;
+  }
 
   return dialog->GetSelectedItem()->GetLabel();
 }

@@ -5647,7 +5647,12 @@ msgctxt "#13515"
 msgid "No art"
 msgstr ""
 
-#empty strings from id 13516 to 13555
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#13516"
+msgid "Add art"
+msgstr ""
+
+#empty strings from id 13517 to 13555
 
 #. Label of a setting that allows to select the skip step sizes to use for skipping
 #: system/settings/settings.xml
