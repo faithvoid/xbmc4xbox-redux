@@ -701,20 +701,18 @@ public:
   CStdString GetCurrentSeekTime(TIME_FORMAT format = TIME_FORMAT_GUESS) const;
   int GetPlayTimeRemaining() const;
   int GetTotalPlayTime() const;
+  float GetSeekPercent() const;
   CStdString GetCurrentPlayTimeRemaining(TIME_FORMAT format) const;
   CStdString GetVersion();
   CStdString GetBuild();
 
   bool GetDisplayAfterSeek();
   void SetDisplayAfterSeek(unsigned int timeOut = 2500, int seekOffset = 0);
-  void SetSeekStepSize(int seekStepSize) { m_seekStepSize = seekStepSize; };
-  void SetSeeking(bool seeking) { m_playerSeeking = seeking; };
   void SetShowTime(bool showtime) { m_playerShowTime = showtime; };
   void SetShowCodec(bool showcodec) { m_playerShowCodec = showcodec; };
   void SetShowInfo(bool showinfo) { m_playerShowInfo = showinfo; };
   void ToggleShowCodec() { m_playerShowCodec = !m_playerShowCodec; };
   bool ToggleShowInfo() { m_playerShowInfo = !m_playerShowInfo; return m_playerShowInfo; };
-  bool m_performingSeek;
 
   std::string GetSystemHeatInfo(int info);
 
@@ -836,8 +834,6 @@ protected:
   //Fullscreen OSD Stuff
   DWORD m_AfterSeekTimeout;
   int m_seekOffset;
-  int m_seekStepSize;
-  bool m_playerSeeking;
   bool m_playerShowTime;
   bool m_playerShowCodec;
   bool m_playerShowInfo;

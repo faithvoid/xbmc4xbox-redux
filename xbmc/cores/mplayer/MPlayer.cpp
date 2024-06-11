@@ -1921,7 +1921,6 @@ void CMPlayer::SeekTime(__int64 iTime)
       CApplicationMessenger::Get().MediaStop();
     }
   }
-  g_infoManager.m_performingSeek = false;
   WaitOnCommand();
   m_callback.OnPlayBackSeek((int)iTime, seekOffset);
 }
