@@ -1335,6 +1335,9 @@ HRESULT CApplication::Initialize()
 #endif
   CAddonMgr::Get().StartServices(false);
 
+  // configure seek handler
+  CSeekHandler::Get().Configure();
+
   // register action listeners
   RegisterActionListener(&CSeekHandler::Get());
 
@@ -4593,9 +4596,6 @@ bool CApplication::OnMessage(CGUIMessage& message)
 
   case GUI_MSG_PLAYBACK_STARTED:
     {
-      // reset the seek handler
-      CSeekHandler::Get().Reset();
-
       // Update our infoManager with the new details etc.
       if (m_nextPlaylistItem >= 0)
       { // we've started a previously queued item
