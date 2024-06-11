@@ -92,45 +92,42 @@ void CSeekHandler::Reset()
   }
 }
 
-int CSeekHandler::GetSeekSeconds(bool forward, SeekType type)
+int CSeekHandler::GetSeekStepSize(SeekType type, int step)
 {
-  m_seekStep = m_seekStep + (forward ? 1 : -1);
-
-  if (m_seekStep == 0)
-    return 0;
-
-  std::vector<int> seekSteps(m_seekStep > 0 ? m_forwardSeekSteps.find(type)->second : m_backwardSeekSteps.find(type)->second);
+  std::vector<int> seekSteps(step > 0 ? m_forwardSeekSteps.find(type)->second : m_backwardSeekSteps.find(type)->second);
 
   if (seekSteps.empty())
   {
     CLog::Log(LOGERROR, "SeekHandler - %s - No %s %s seek steps configured.", __FUNCTION__,
-              (type == SEEK_TYPE_VIDEO ? "video" : "music"), (m_seekStep > 0 ? "forward" : "backward"));
+              (type == SEEK_TYPE_VIDEO ? "video" : "music"), (step > 0 ? "forward" : "backward"));
     return 0;
   }
 
   int seconds = 0;
 
   // when exceeding the selected amount of steps repeat/sum up the last step size
-  if (static_cast<size_t>(abs(m_seekStep)) <= seekSteps.size())
-    seconds = seekSteps.at(abs(m_seekStep) - 1);
+  if (static_cast<size_t>(abs(step)) <= seekSteps.size())
+    seconds = seekSteps.at(abs(step) - 1);
   else
-    seconds = seekSteps.back() * (abs(m_seekStep) - seekSteps.size() + 1);
+    seconds = seekSteps.back() * (abs(step) - seekSteps.size() + 1);
 
   return seconds;
 }
 
 void CSeekHandler::Seek(bool forward, float amount, float duration /* = 0 */, bool analogSeek /* = false */, SeekType type /* = SEEK_TYPE_VIDEO */)
 {
-  // abort if we do not have a play time or already perform a seek
-  if (m_performingSeek)
-    return;
-
   CSingleLock lock(m_critSection);
 
   // not yet seeking
   if (!m_requireSeek)
   {
-    // tell info manager that we have started a seek operation
+    // use only the first step forward/backward for a seek without a delay
+    if (!analogSeek && m_seekDelays.find(type)->second == 0)
+    {
+      SeekSeconds(GetSeekStepSize(type, forward ? 1 : -1));
+      return;
+    }
+
     m_requireSeek = true;
     m_seekStep = 0;
     m_seekSize = 0;
@@ -160,7 +157,8 @@ void CSeekHandler::Seek(bool forward, float amount, float duration /* = 0 */, bo
   }
   else
   {
-    int seekSeconds = GetSeekSeconds(forward, type);
+    m_seekStep += forward ? 1 : -1;
+    int seekSeconds = GetSeekStepSize(type, m_seekStep);
     if (seekSeconds != 0)
     {
       m_seekSize = seekSeconds;
@@ -178,16 +176,14 @@ void CSeekHandler::Seek(bool forward, float amount, float duration /* = 0 */, bo
 void CSeekHandler::SeekSeconds(int seconds)
 {
   // abort if we do not have a play time or already perform a seek
-  if (seconds == 0 || m_performingSeek)
+  if (seconds == 0)
     return;
 
   CSingleLock lock(m_critSection);
-
-  m_requireSeek = true;
-  m_seekDelay = 0;
   m_seekSize = seconds;
 
-  m_timer.StartZero();
+  // perform relative seek
+  g_application.m_pPlayer->SeekTimeRelative(static_cast<int64_t>(seconds * 1000));
 }
 
 int CSeekHandler::GetSeekSize() const
@@ -205,13 +201,11 @@ void CSeekHandler::Process()
   if (m_timer.GetElapsedMilliseconds() >= m_seekDelay && m_requireSeek)
   {
     CSingleLock lock(m_critSection);
-    m_performingSeek = true;
 
     // perform relative seek
     g_application.m_pPlayer->SeekTimeRelative(static_cast<int64_t>(m_seekSize * 1000));
 
     m_requireSeek = false;
-    m_performingSeek = false;
   }
 }
 
