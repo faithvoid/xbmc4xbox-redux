@@ -848,7 +848,7 @@ void PLAYLIST::CPlayListPlayer::OnApplicationMessage(KODI::MESSAGING::ThreadMess
     g_application.ResetScreenSaverWindow();
 
     // stop playing file
-    if (g_application.m_pPlayer->IsPlaying()) g_application.StopPlaying();
+    if (g_application.IsPlaying()) g_application.StopPlaying();
   }
   break;
 

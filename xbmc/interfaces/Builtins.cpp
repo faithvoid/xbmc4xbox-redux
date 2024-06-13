@@ -610,7 +610,7 @@ int CBuiltins::Execute(const CStdString& execString)
       CLog::Log(LOGERROR, "Seek called with empty parameter");
       return -3;
     }
-    if (g_application.m_pPlayer->IsPlaying())
+    if (g_application.IsPlaying())
       CSeekHandler::Get().SeekSeconds(atoi(params[0].c_str()));
   }
   else if (execute.Equals("showPicture"))

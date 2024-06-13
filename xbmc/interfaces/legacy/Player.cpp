@@ -308,7 +308,7 @@ namespace XBMCAddon
     bool Player::isPlaying()
     {
       XBMC_TRACE;
-      return g_application.m_pPlayer->IsPlaying();
+      return g_application.IsPlaying();
     }
 
     bool Player::isPlayingAudio()

@@ -244,7 +244,7 @@ void CSeekHandler::OnSettingChanged(const CSetting *setting)
 
 bool CSeekHandler::OnAction(const CAction &action)
 {
-  if (!g_application.m_pPlayer->IsPlaying() || !g_application.m_pPlayer->CanSeek())
+  if (g_application.m_pPlayer && (!g_application.m_pPlayer->IsPlaying() || !g_application.m_pPlayer->CanSeek()))
     return false;
 
   SeekType type = g_application.CurrentFileItem().IsAudio() ? SEEK_TYPE_MUSIC : SEEK_TYPE_VIDEO;
