@@ -296,6 +296,9 @@ protected:
 
 private:
   void UpdateCameraPosition(const CPoint &camera);
+  // this method is indirectly called by the public SetVideoResolution
+  // it only works when called from mainthread (thats what SetVideoResolution ensures)
+  void SetVideoResolutionInternal(RESOLUTION res, BOOL NeedZ, bool forceClear);
   void UpdateFinalTransform(const TransformMatrix &matrix);
   RESOLUTION_INFO m_windowResolution;
   float m_guiScaleX;

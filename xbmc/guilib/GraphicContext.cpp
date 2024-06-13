@@ -21,6 +21,8 @@
 #include "include.h"
 #include "GraphicContext.h"
 #include "XBVideoConfig.h"
+#include "Application.h"
+#include "messaging/ApplicationMessenger.h"
 #include "GUIAudioManager.h"
 #include "settings/DisplaySettings.h"
 #include "settings/lib/Setting.h"
@@ -37,6 +39,7 @@
 #include "GUIWindowManager.h"
 
 using namespace std;
+using namespace KODI::MESSAGING;
 
 /* quick access to a skin setting, fine unless we starts clearing video settings */
 static CSettingInt* g_guiSkinzoom = NULL;
@@ -400,7 +403,20 @@ void CGraphicContext::GetAllowedResolutions(vector<RESOLUTION> &res, bool bAllow
   }
 }
 
+// call SetVideoResolutionInternal and ensure its done from mainthread
 void CGraphicContext::SetVideoResolution(RESOLUTION res, BOOL NeedZ, bool forceClear /* = false */)
+{
+  if (g_application.IsCurrentThread())
+  {
+    SetVideoResolutionInternal(res, NeedZ, forceClear);
+  }
+  else
+  {
+    CApplicationMessenger::Get().SendMsg(TMSG_SETVIDEORESOLUTION, res, forceClear ? 1 : 0, NULL, NeedZ ? "true" : "false");
+  }
+}
+
+void CGraphicContext::SetVideoResolutionInternal(RESOLUTION res, BOOL NeedZ, bool forceClear)
 {
   if (res == RES_AUTORES)
   {
