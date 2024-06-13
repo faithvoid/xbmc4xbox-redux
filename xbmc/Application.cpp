@@ -1745,6 +1745,7 @@ bool CApplication::LoadSkin(const SkinPtr& skin)
   g_windowManager.AddMsgTarget(this);
   g_windowManager.AddMsgTarget(&g_playlistPlayer);
   g_windowManager.AddMsgTarget(&g_infoManager);
+  g_windowManager.AddMsgTarget(&g_fontManager);
   g_windowManager.SetCallback(*this);
   g_windowManager.Initialize();
   CTextureCache::Get().Initialize();
