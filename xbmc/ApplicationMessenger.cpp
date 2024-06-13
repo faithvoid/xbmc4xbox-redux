@@ -416,7 +416,7 @@ case TMSG_POWERDOWN:
           else
             URIUtils::CreateArchivePath(strPath, "rar", pMsg->strParam.c_str(), "");
 
-          CUtil::GetRecursiveListing(strPath, items, g_advancedSettings.m_pictureExtensions);
+          CUtil::GetRecursiveListing(strPath, items, g_advancedSettings.m_pictureExtensions, XFILE::DIR_FLAG_NO_FILE_DIRS);
           if (items.Size() > 0)
           {
             pSlideShow->Reset();

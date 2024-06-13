@@ -175,8 +175,8 @@ public:
   static bool AutoDetection();
   static void AutoDetectionGetSource(VECSOURCES &share);
   static void GetSkinThemes(std::vector<CStdString>& vecTheme);
-  static void GetRecursiveListing(const CStdString& strPath, CFileItemList& items, const CStdString& strMask, bool bUseFileDirectories=false);
-  static void GetRecursiveDirsListing(const CStdString& strPath, CFileItemList& items);
+  static void GetRecursiveListing(const CStdString& strPath, CFileItemList& items, const CStdString& strMask, unsigned int flags = 0 /* DIR_FLAG_DEFAULTS */);
+  static void GetRecursiveDirsListing(const CStdString& strPath, CFileItemList& items, unsigned int flags = 0 /* DIR_FLAG_DEFAULTS */);
   static void WipeDir(const CStdString& strPath);
   static void ForceForwardSlashes(CStdString& strPath);
   static bool PWMControl(const CStdString &strRGBa, const CStdString &strRGBb, const CStdString &strWhiteA, const CStdString &strWhiteB, const CStdString &strTransition, int iTrTime);

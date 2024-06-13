@@ -810,7 +810,7 @@ HRESULT CApplication::Create(HWND hWnd)
     if (!CFile::Exists("special://masterprofile/guisettings.xml")) // first run - cache userdata folder
     {
       CFileItemList items;
-      CUtil::GetRecursiveListing("special://xbmc/userdata",items,"");
+      CUtil::GetRecursiveListing("special://xbmc/userdata",items,"", DIR_FLAG_NO_FILE_DIRS);
       for (int i=0;i<items.Size();++i)
           CFile::Copy(items[i]->GetPath(),"special://masterprofile/"+URIUtils::GetFileName(items[i]->GetPath()));
     }
