@@ -753,6 +753,12 @@ HRESULT CApplication::Create(HWND hWnd)
   g_advancedSettings.m_guiKeepInMemory = m_128MBHack;
 #endif
 
+  // here we register all global classes for the CApplicationMessenger, 
+  // after that we can send messages to the corresponding modules
+  CApplicationMessenger::Get().RegisterReceiver(this);
+  CApplicationMessenger::Get().RegisterReceiver(&g_playlistPlayer);
+  CApplicationMessenger::Get().RegisterReceiver(&g_infoManager);
+
   for (int i = RES_HDTV_1080i; i <= RES_PAL60_16x9; i++)
   {
     g_graphicsContext.ResetScreenParameters((RESOLUTION)i);
@@ -1280,10 +1286,6 @@ HRESULT CApplication::Initialize()
   /* network will start it's init procedure */
   if(m_network->SetupNetwork())
     m_network->WaitForSetup();
-
-  CApplicationMessenger::Get().RegisterReceveiver(this);
-  CApplicationMessenger::Get().RegisterReceveiver(&g_playlistPlayer);
-  CApplicationMessenger::Get().RegisterReceveiver(&g_infoManager);
 
   // initialize (and update as needed) our databases
   CDatabaseManager::Get().Initialize();

@@ -179,7 +179,7 @@ public:
    */
   void SendGUIMessage(const CGUIMessage &msg, int windowID = WINDOW_INVALID, bool waitResult=false);
 
-  void RegisterReceveiver(IMessageTarget* target);
+  void RegisterReceiver(IMessageTarget* target);
 
 #ifdef _XBOX
   std::string GetResponse();

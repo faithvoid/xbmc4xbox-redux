@@ -213,7 +213,13 @@ void CApplicationMessenger::ProcessMessage(ThreadMessage *pMsg)
   CSingleLock lock(m_critSection);
   int mask = pMsg->dwMessage & TMSG_MASK_MESSAGE;
 
-  IMessageTarget* target = m_mapTargets.find(mask)->second;
+#ifdef _XBOX
+  // stupid C++98
+  std::map<int, IMessageTarget*>::iterator it = m_mapTargets.find(mask);
+  IMessageTarget* target = it != m_mapTargets.end() ? it->second : NULL;
+#else
+  IMessageTarget* target = m_mapTargets.at(mask);
+#endif
   if (target != NULL)
   {
     CSingleExit exit(m_critSection);
@@ -253,7 +259,7 @@ void CApplicationMessenger::SendGUIMessage(const CGUIMessage &message, int windo
   SendMsg(boost::move(tMsg), waitResult);
 }
 
-void CApplicationMessenger::RegisterReceveiver(IMessageTarget* target)
+void CApplicationMessenger::RegisterReceiver(IMessageTarget* target)
 {
   CSingleLock lock(m_critSection);
   m_mapTargets.insert(std::make_pair(target->GetMessageMask(), target));

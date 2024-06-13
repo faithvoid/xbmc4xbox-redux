@@ -137,7 +137,7 @@ void CGUIWindowManager::Initialize()
   m_initialized = true;
 
   LoadNotOnDemandWindows();
-  CApplicationMessenger::Get().RegisterReceveiver(this);
+  CApplicationMessenger::Get().RegisterReceiver(this);
 }
 
 void CGUIWindowManager::CreateWindows()
