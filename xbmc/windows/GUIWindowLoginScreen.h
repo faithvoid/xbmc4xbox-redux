@@ -20,9 +20,9 @@
  *
  */
 
-#include "GUIDialog.h"
-#include "view/GUIViewControl.h"
+#include "guilib/GUIDialog.h"
 #include "utils/Stopwatch.h"
+#include "view/GUIViewControl.h"
 
 class CFileItemList;
 
@@ -43,13 +43,14 @@ public:
 protected:
   virtual void OnInitWindow();
   virtual void OnWindowLoaded();
+  virtual void OnWindowUnload();
   void Update();
-  void SetLabel(int iControl, const CStdString& strLabel);
+  void SetLabel(int iControl, const std::string& strLabel);
 
   bool OnPopupMenu(int iItem);
   CGUIViewControl m_viewControl;
   CFileItemList* m_vecItems;
 
   int m_iSelectedItem;
-  CStopWatch watch;  
+  CStopWatch watch;
 };

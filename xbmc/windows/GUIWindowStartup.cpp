@@ -18,8 +18,9 @@
  *
  */
 
-#include "windows/GUIWindowStartup.h"
+#include "GUIWindowStartup.h"
 #include "guilib/Key.h"
+#include "guilib/GUIWindowManager.h"
 
 CGUIWindowStartup::CGUIWindowStartup(void)
     : CGUIWindow(WINDOW_STARTUP_ANIM, "Startup.xml")
@@ -35,4 +36,13 @@ bool CGUIWindowStartup::OnAction(const CAction &action)
   if (!action.IsMouse())
     return true;
   return CGUIWindow::OnAction(action);
+}
+
+void CGUIWindowStartup::OnDeinitWindow(int nextWindowID)
+{
+  CGUIWindow::OnDeinitWindow(nextWindowID);
+
+  // let everyone know that the user interface is now ready for usage
+  CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UI_READY);
+  g_windowManager.SendThreadMessage(msg);
 }
