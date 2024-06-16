@@ -54,6 +54,10 @@ bool CDVDInputStreamFile::Open(const char* strFile, const std::string& content)
 
   unsigned int flags = READ_TRUNCATED | READ_BITRATE | READ_CHUNKED;
 
+  // If this file is audio and/or video (= not a subtitle) flag to caller
+  if (!CFileItem(strFile).IsSubtitle())
+    flags |= READ_AUDIO_VIDEO;
+
   /*
    * There are 4 buffer modes available (configurable in as.xml)
    * 0) Buffer all internet filesystems (like 2 but additionally also ftp, webdav, etc.) (default)

@@ -31,11 +31,11 @@ namespace XFILE
   class CFileCache : public IFile, public CThread
   {
   public:
-    CFileCache(bool useDoubleCache=false);
-    CFileCache(CCacheStrategy *pCache, bool bDeleteCache=true);
+    CFileCache(const unsigned int flags);
+    CFileCache(CCacheStrategy *pCache, bool bDeleteCache = true);
     virtual ~CFileCache();
 
-    void SetCacheStrategy(CCacheStrategy *pCache, bool bDeleteCache=true);
+    void SetCacheStrategy(CCacheStrategy *pCache, bool bDeleteCache = true);
 
     // CThread methods
     virtual void Process();
@@ -77,6 +77,7 @@ namespace XFILE
     unsigned     m_writeRateActual;
     bool         m_cacheFull;
     int64_t m_fileSize; // int operations should be atomic on x86? Is it true?
+    unsigned int m_flags;
     CCriticalSection m_sync;
   };
 
