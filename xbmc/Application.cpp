@@ -4207,6 +4207,9 @@ void CApplication::OnPlayBackEnded()
   if(m_bPlaybackStarting)
     return;
 
+  if (CJobManager::GetInstance().IsPaused(kJobTypeMediaFlags))
+    CJobManager::GetInstance().UnPause(kJobTypeMediaFlags);
+
   // informs python script currently running playback has ended
   // (does nothing if python is not loaded)
   g_pythonParser.OnPlayBackEnded();
@@ -4227,6 +4230,9 @@ void CApplication::OnPlayBackStarted()
   m_ePlayState = PLAY_STATE_PLAYING;
   if(m_bPlaybackStarting)
     return;
+
+  if (!CJobManager::GetInstance().IsPaused(kJobTypeMediaFlags))
+    CJobManager::GetInstance().Pause(kJobTypeMediaFlags);
 
   // informs python script currently running playback has started
   // (does nothing if python is not loaded)
@@ -4269,6 +4275,9 @@ void CApplication::OnPlayBackStopped()
   m_ePlayState = PLAY_STATE_STOPPED;
   if(m_bPlaybackStarting)
     return;
+
+  if (CJobManager::GetInstance().IsPaused(kJobTypeMediaFlags))
+    CJobManager::GetInstance().UnPause(kJobTypeMediaFlags);
 
   // informs python script currently running playback has ended
   // (does nothing if python is not loaded)
