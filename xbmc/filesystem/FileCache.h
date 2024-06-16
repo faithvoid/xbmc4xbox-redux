@@ -76,6 +76,7 @@ namespace XFILE
     unsigned     m_writeRate;
     unsigned     m_writeRateActual;
     bool         m_cacheFull;
+    int64_t m_fileSize; // int operations should be atomic on x86? Is it true?
     CCriticalSection m_sync;
   };
 
