@@ -71,6 +71,7 @@ public:
   virtual int av_get_bytes_per_sample(enum AVSampleFormat p1) = 0;
   virtual AVDictionaryEntry *av_dict_get(AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags) = 0;
   virtual int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags)=0;
+  virtual void av_dict_free(AVDictionary **pm) = 0;
   virtual int av_samples_get_buffer_size (int *linesize, int nb_channels, int nb_samples, enum AVSampleFormat sample_fmt, int align) = 0;
   virtual int64_t av_get_default_channel_layout(int nb_channels)=0;
   virtual void av_force_cpu_flags(int mask)=0;
@@ -98,6 +99,7 @@ public:
     { return ::av_get_bytes_per_sample(p1); }
   virtual AVDictionaryEntry *av_dict_get(AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags){ return ::av_dict_get(m, key, prev, flags); }
   virtual int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags) { return ::av_dict_set(pm, key, value, flags); }
+  virtual void av_dict_free(AVDictionary **pm) { ::av_dict_free(pm); }
   virtual int av_samples_get_buffer_size (int *linesize, int nb_channels, int nb_samples, enum AVSampleFormat sample_fmt, int align)
     { return ::av_samples_get_buffer_size(linesize, nb_channels, nb_samples, sample_fmt, align); }
   virtual int64_t av_get_default_channel_layout(int nb_channels) { return ::av_get_default_channel_layout(nb_channels); }
@@ -134,6 +136,7 @@ public:
   DEFINE_METHOD1(int, av_get_bytes_per_sample, (enum AVSampleFormat p1))
   DEFINE_METHOD4(AVDictionaryEntry *, av_dict_get, (AVDictionary *p1, const char *p2, const AVDictionaryEntry *p3, int p4))
   DEFINE_METHOD4(int, av_dict_set, (AVDictionary **p1, const char *p2, const char *p3, int p4));
+  DEFINE_METHOD1(void, av_dict_free, (AVDictionary **p1));
   DEFINE_METHOD5(int, av_samples_get_buffer_size, (int *p1, int p2, int p3, enum AVSampleFormat p4, int p5))
   DEFINE_METHOD1(int64_t, av_get_default_channel_layout, (int p1))
   DEFINE_METHOD1(void, av_force_cpu_flags, (int p1)) 
@@ -154,6 +157,7 @@ public:
     RESOLVE_METHOD(av_get_bytes_per_sample)
     RESOLVE_METHOD(av_dict_get)
     RESOLVE_METHOD(av_dict_set)
+    RESOLVE_METHOD(av_dict_free)
     RESOLVE_METHOD(av_samples_get_buffer_size)
     RESOLVE_METHOD(av_get_default_channel_layout)
     RESOLVE_METHOD(av_force_cpu_flags)
