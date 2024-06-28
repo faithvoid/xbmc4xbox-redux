@@ -2743,7 +2743,7 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
     break;
 
   case TMSG_EXECUTE_SCRIPT:
-    CScriptInvocationManager::Get().Execute(pMsg->strParam);
+    CScriptInvocationManager::Get().ExecuteAsync(pMsg->strParam);
     break;
 
   case TMSG_EXECUTE_BUILT_IN:
@@ -5195,7 +5195,7 @@ bool CApplication::ExecuteXBMCAction(std::string actionStr, const CGUIListItemPt
     CFileItem item(actionStr, false);
     if (item.IsPythonScript())
     { // a python script
-      CScriptInvocationManager::Get().Execute(item.GetPath());
+      CScriptInvocationManager::Get().ExecuteAsync(item.GetPath());
     }
     else if (item.IsXBE())
     { // an XBE
@@ -5239,7 +5239,7 @@ void CApplication::Process()
     CStdString strAutoExecPy = CSpecialProtocol::TranslatePath("special://profile/autoexec.py");
 
     if (XFILE::CFile::Exists(strAutoExecPy))
-      CScriptInvocationManager::Get().Execute(strAutoExecPy);
+      CScriptInvocationManager::Get().ExecuteAsync(strAutoExecPy);
     else
       CLog::Log(LOGDEBUG, "no profile autoexec.py (%s) found, skipping", strAutoExecPy.c_str());
   }

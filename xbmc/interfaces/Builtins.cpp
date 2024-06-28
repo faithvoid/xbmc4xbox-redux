@@ -412,7 +412,7 @@ int CBuiltins::Execute(const CStdString& execString)
       if (!filename.empty())
         argv[0] = filename;
 
-      CScriptInvocationManager::Get().Execute(scriptpath, addon, argv);
+      CScriptInvocationManager::Get().ExecuteAsync(scriptpath, addon, argv);
     }
   }
   else if (execute.Equals("stopscript"))

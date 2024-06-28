@@ -609,7 +609,7 @@ void CGUIWindowFileManager::OnStart(CFileItem *pItem)
   }
   if (pItem->IsPythonScript())
   {
-    CScriptInvocationManager::Get().Execute(pItem->GetPath());
+    CScriptInvocationManager::Get().ExecuteAsync(pItem->GetPath());
     return ;
   }
   if (pItem->IsXBE())

@@ -336,7 +336,7 @@ void CGUIWindowWeather::CallScript()
     argv.push_back(CWeather::GetAreaCode(CSettings::Get().GetString(strSetting)));
 
     // call our script, passing the areacode
-    iScriptId = CScriptInvocationManager::Get().Execute(argv[0], addon, argv);
+    iScriptId = CScriptInvocationManager::Get().ExecuteAsync(argv[0], addon, argv);
 
     CLog::Log(LOGDEBUG, "%s - Weather script called: %s (%s)", __FUNCTION__, argv[0].c_str(), argv[1].c_str());
   }

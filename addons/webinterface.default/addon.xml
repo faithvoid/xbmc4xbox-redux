@@ -8,10 +8,10 @@
     <import addon="xbmc.gui" version="2.13"/>
   </requires>
   <extension
-    point="xbmc.gui.webinterface"/>
+    point="xbmc.webinterface"/>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en">Default web interface (XBMC's default web interface)</summary>
-    <description lang="en">Control XBMC from your web browser using built-in HTTP web server.</description>
+    <summary lang="en_GB">Team-Xbmc Web Interface. (XBMC's default web interface)</summary>
+    <description lang="en_GB">Default web interface for XBMC; Designed for devices of all resolutions</description>
     <platform>all</platform>
   </extension>
 </addon>

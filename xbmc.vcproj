@@ -3556,6 +3556,9 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 						RelativePath=".\xbmc\interfaces\generic\ILanguageInvocationHandler.h">
 					</File>
 					<File
+						RelativePath=".\xbmc\interfaces\generic\ILanguageInvoker.cpp">
+					</File>
+					<File
 						RelativePath=".\xbmc\interfaces\generic\ILanguageInvoker.h">
 					</File>
 					<File
@@ -3725,6 +3728,12 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 				</File>
 				<File
 					RelativePath=".\xbmc\addons\Visualisation.h">
+				</File>
+				<File
+					RelativePath=".\xbmc\addons\Webinterface.cpp">
+				</File>
+				<File
+					RelativePath=".\xbmc\addons\Webinterface.h">
 				</File>
 			</Filter>
 			<Filter

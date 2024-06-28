@@ -18,8 +18,6 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-%>
-<%
     List types = swigTypeParser.SwigType_templateparmlist(type)
     boolean ispointer = swigTypeParser.SwigType_ispointer(type)
     int seq = sequence.increment()

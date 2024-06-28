@@ -55,6 +55,7 @@
 #include "Repository.h"
 #include "Skin.h"
 #include "Service.h"
+#include "addons/Webinterface.h"
 
 using namespace std;
 
@@ -92,8 +93,9 @@ AddonPtr CAddonMgr::Factory(const cp_extension_t *props)
     case ADDON_SCRIPT_LYRICS:
     case ADDON_SCRIPT_MODULE:
     case ADDON_SUBTITLE_MODULE:
-    case ADDON_WEB_INTERFACE:
       return AddonPtr(new CAddon(props));
+    case ADDON_WEB_INTERFACE:
+      return AddonPtr(new CWebinterface(props));
     case ADDON_SCRIPT_WEATHER:
       {
         // Eden (API v2.0) broke old weather add-ons
@@ -589,8 +591,9 @@ AddonPtr CAddonMgr::AddonFromProps(AddonProps& addonProps)
     case ADDON_SCRIPT_WEATHER:
     case ADDON_SCRIPT_MODULE:
     case ADDON_SUBTITLE_MODULE:
-    case ADDON_WEB_INTERFACE:
       return AddonPtr(new CAddon(addonProps));
+    case ADDON_WEB_INTERFACE:
+      return AddonPtr(new CWebinterface(addonProps));
     case ADDON_SERVICE:
       return AddonPtr(new CService(addonProps));
     case ADDON_SCRAPER_ALBUMS:

@@ -159,7 +159,7 @@ bool CPluginDirectory::StartScript(const CStdString& strPath, bool retrievingDir
   CLog::Log(LOGDEBUG, "%s - calling plugin %s('%s','%s','%s')", __FUNCTION__, m_addon->Name().c_str(), argv[0].c_str(), argv[1].c_str(), argv[2].c_str());
   bool success = false;
   CStdString file = m_addon->LibPath();
-  int id = CScriptInvocationManager::Get().Execute(file, m_addon, argv);
+  int id = CScriptInvocationManager::Get().ExecuteAsync(file, m_addon, argv);
   if (id >= 0)
   { // wait for our script to finish
     CStdString scriptName = m_addon->Name();
@@ -470,7 +470,7 @@ bool CPluginDirectory::RunScriptWithParams(const CStdString& strPath)
 
   // run the script
   CLog::Log(LOGDEBUG, "%s - calling plugin %s('%s','%s','%s')", __FUNCTION__, addon->Name().c_str(), argv[0].c_str(), argv[1].c_str(), argv[2].c_str());
-  if (CScriptInvocationManager::Get().Execute(addon->LibPath(), addon, argv) >= 0)
+  if (CScriptInvocationManager::Get().ExecuteAsync(addon->LibPath(), addon, argv) >= 0)
     return true;
   else
     CLog::Log(LOGERROR, "Unable to run plugin %s", addon->Name().c_str());
