@@ -85,19 +85,18 @@ public:
   void OnScreensaverDeactivated();
   void OnDatabaseUpdated(const std::string &database);
   void OnDatabaseScanStarted(const std::string &database);
-  void OnAbortRequested(const CStdString &ID="");
   void OnNotification(const std::string &sender, const std::string &method, const std::string &data);
 
   virtual void Process();
+  virtual void PulseGlobalEvent();
   virtual void Uninitialize();
+  virtual bool OnScriptInitialized(ILanguageInvoker *invoker);
   virtual void OnScriptStarted(ILanguageInvoker *invoker);
+  virtual void OnScriptAbortRequested(ILanguageInvoker *invoker);
   virtual void OnScriptEnded(ILanguageInvoker *invoker);
+  virtual void OnScriptFinalized(ILanguageInvoker *invoker);
   virtual ILanguageInvoker* CreateInvoker();
 
-  bool InitializeEngine();
-  void FinalizeScript();
-
-  void PulseGlobalEvent();
   bool WaitForEvent(CEvent& hEvent, unsigned int milliseconds);
 
   void RegisterExtensionLib(LibraryLoader *pLib);
