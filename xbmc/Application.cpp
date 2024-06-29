@@ -5524,7 +5524,7 @@ void CApplication::SetVolume(long iValue, bool isPercentage /* = true */)
   /* TODO: add once DRC is available
   data["drc"] = (int)(((float)(m_dynamicRangeCompressionLevel - VOLUME_DRC_MINIMUM)) / (VOLUME_DRC_MAXIMUM - VOLUME_DRC_MINIMUM) * 100.0f + 0.5f);*/
   data["muted"] = m_muted;
-  CAnnouncementManager::Announce(Application, "xbmc", "OnVolumeChanged", data);
+  CAnnouncementManager::GetInstance().Announce(Application, "xbmc", "OnVolumeChanged", data);
 }
 
 void CApplication::SetHardwareVolume(long hardwareVolume)

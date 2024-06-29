@@ -76,13 +76,13 @@ XBPython::XBPython()
   m_vecPlayerCallbackList.clear();
   m_vecMonitorCallbackList.clear();
 
-  CAnnouncementManager::AddAnnouncer(this);
+  CAnnouncementManager::GetInstance().AddAnnouncer(this);
 }
 
 XBPython::~XBPython()
 {
   XBMC_TRACE;
-  CAnnouncementManager::RemoveAnnouncer(this);
+  CAnnouncementManager::GetInstance().RemoveAnnouncer(this);
 }
 
 #define LOCK_AND_COPY(type, dest, src) \
@@ -447,7 +447,7 @@ void XBPython::Uninitialize()
   // don't handle any more announcements as most scripts are probably already
   // stopped and executing a callback on one of their already destroyed classes
   // would lead to a crash
-  CAnnouncementManager::RemoveAnnouncer(this);
+  CAnnouncementManager::GetInstance().RemoveAnnouncer(this);
 
   LOCK_AND_COPY(std::vector<PyElem>,tmpvec,m_vecPyList);
   m_vecPyList.clear();

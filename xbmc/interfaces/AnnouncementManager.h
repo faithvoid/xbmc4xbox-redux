@@ -18,34 +18,37 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#include <vector>
 
 #include "IAnnouncer.h"
 #include "FileItem.h"
 #include "threads/CriticalSection.h"
 #include "utils/GlobalsHandling.h"
-#include <vector>
 
 namespace ANNOUNCEMENT
 {
   class CAnnouncementManager
   {
   public:
+    virtual ~CAnnouncementManager();
 
-     class Globals
-     {
-     public:
-       CCriticalSection m_critSection;
-       std::vector<IAnnouncer *> m_announcers;
-     };
+    static CAnnouncementManager& GetInstance();
 
-    static void AddAnnouncer(IAnnouncer *listener);
-    static void RemoveAnnouncer(IAnnouncer *listener);
-    static void Announce(AnnouncementFlag flag, const char *sender, const char *message);
-    static void Announce(AnnouncementFlag flag, const char *sender, const char *message, CVariant &data);
-    static void Announce(AnnouncementFlag flag, const char *sender, const char *message, CFileItemPtr item);
-    static void Announce(AnnouncementFlag flag, const char *sender, const char *message, CFileItemPtr item, CVariant &data);
+    void Deinitialize();
+
+    void AddAnnouncer(IAnnouncer *listener);
+    void RemoveAnnouncer(IAnnouncer *listener);
+
+    void Announce(AnnouncementFlag flag, const char *sender, const char *message);
+    void Announce(AnnouncementFlag flag, const char *sender, const char *message, CVariant &data);
+    void Announce(AnnouncementFlag flag, const char *sender, const char *message, CFileItemPtr item);
+    void Announce(AnnouncementFlag flag, const char *sender, const char *message, CFileItemPtr item, CVariant &data);
   private:
+    CAnnouncementManager();
+    CAnnouncementManager(const CAnnouncementManager&);
+    CAnnouncementManager const& operator=(CAnnouncementManager const&);
+
+    CCriticalSection m_critSection;
+    std::vector<IAnnouncer *> m_announcers;
   };
 }
-
-XBMC_GLOBAL_REF(ANNOUNCEMENT::CAnnouncementManager::Globals,g_announcementManager_globals);
