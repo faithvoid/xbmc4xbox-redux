@@ -393,6 +393,7 @@ protected:
   void SaveCurrentFileSettings();
 
   void InitDirectoriesXbox();
+  void CreateUserDirs() const;
 
   CNetwork    *m_network;
   

@@ -984,12 +984,21 @@ HRESULT CApplication::Create(HWND hWnd)
   if (!CSettings::Get().Initialize())
     return false;
 
-  CLog::Log(LOGERROR, "Unable to load settings");
-  
   // load the actual values
   if (!CSettings::Get().Load())
+  {
+    CLog::Log(LOGERROR, "Unable to load settings");
     FatalErrorHandler(true, true, true);
+  }
   CSettings::Get().SetLoaded();
+
+  CLog::Log(LOGINFO, "creating subdirectories");
+  CLog::Log(LOGINFO, "userdata folder: %s", CURL::GetRedacted(CProfilesManager::Get().GetProfileUserDataFolder()).c_str());
+  CLog::Log(LOGINFO, "recording folder: %s", CURL::GetRedacted(CSettings::Get().GetString("audiocds.recordingpath")).c_str());
+  CLog::Log(LOGINFO, "screenshots folder: %s", CURL::GetRedacted(CSettings::Get().GetString("debug.screenshotpath")).c_str());
+  CDirectory::Create(CProfilesManager::Get().GetUserDataFolder());
+  CDirectory::Create(CProfilesManager::Get().GetProfileUserDataFolder());
+  CProfilesManager::Get().CreateProfileFolders();
 
   update_emu_environ();//apply the GUI settings
 
@@ -1208,30 +1217,6 @@ HRESULT CApplication::Create(HWND hWnd)
 
 HRESULT CApplication::Initialize()
 {
-  CLog::Log(LOGINFO, "creating subdirectories");
-
-  CLog::Log(LOGINFO, "userdata folder: %s", CProfilesManager::Get().GetProfileUserDataFolder().c_str());
-  CLog::Log(LOGINFO, "recording folder: %s", CSettings::Get().GetString("audiocds.recordingpath").c_str());
-  CLog::Log(LOGINFO, "screenshots folder: %s", CSettings::Get().GetString("debug.screenshotpath").c_str());
-
-  // UserData folder layout:
-  // UserData/
-  //   Database/
-  //     CDDb/
-  //   Thumbnails/
-  //     Music/
-  //       temp/
-  //     0 .. F/
-
-  CDirectory::Create(CProfilesManager::Get().GetUserDataFolder());
-  CDirectory::Create(CProfilesManager::Get().GetProfileUserDataFolder());
-  CProfilesManager::Get().CreateProfileFolders();
-
-  CDirectory::Create("special://home/addons");
-  CDirectory::Create("special://home/addons/packages");
-  CUtil::WipeDir("special://temp/");
-  CDirectory::Create("special://temp/temp"); // temp directory for python and dllGetTempPathA
-
   // load the language and its translated strings
   if (!LoadLanguage(false))
     return false;
@@ -5983,6 +5968,23 @@ void CApplication::InitDirectoriesXbox()
   CSpecialProtocol::SetMasterProfilePath("Q:\\home\\userdata");
 
   g_advancedSettings.m_logFolder = "special://home/";
+
+  CreateUserDirs();
+}
+
+void CApplication::CreateUserDirs() const
+{
+  CDirectory::Create("special://home/");
+  CDirectory::Create("special://home/addons");
+  CDirectory::Create("special://home/addons/packages");
+  CDirectory::Create("special://home/addons/temp");
+  CDirectory::Create("special://masterprofile/");
+#ifdef _XBOX
+  CUtil::WipeDir("special://temp/");
+#else
+  CDirectory::Create("special://temp/");
+#endif
+  CDirectory::Create("special://temp/temp"); // temp directory for python and dllGetTempPathA
 }
 
 bool CApplication::SetLanguage(const std::string &strLanguage)
