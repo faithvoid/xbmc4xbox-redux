@@ -990,6 +990,12 @@ int CDVDDemuxFFmpeg::GetNrOfStreams()
 
 void CDVDDemuxFFmpeg::AddStream(int iId)
 {
+  if(iId >= MAX_STREAMS)
+  {
+    CLog::Log(LOGWARNING, "%s - streams id %d exeeds maximum supported", __FUNCTION__, iId);
+    return;
+  }
+
   AVStream* pStream = m_pFormatContext->streams[iId];
   if (pStream)
   {
