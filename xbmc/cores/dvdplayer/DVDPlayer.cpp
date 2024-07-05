@@ -2319,37 +2319,39 @@ void CDVDPlayer::GetGeneralInfo(CStdString& strGeneralInfo)
 {
   if (!m_bStop)
   {
-    double dDelay = (double)m_dvdPlayerVideo.GetDelay() / DVD_TIME_BASE;
-
-    double apts = m_dvdPlayerAudio.GetCurrentPts();
-    double vpts = m_dvdPlayerVideo.GetCurrentPts();
-    double dDiff = 0;
-
-    if( apts != DVD_NOPTS_VALUE && vpts != DVD_NOPTS_VALUE )
-      dDiff = (apts - vpts) / DVD_TIME_BASE;
-
-    CStdString strEDL;
-    strEDL.AppendFormat(", edl:%s", m_Edl.GetInfo().c_str());
-
-    CStdString strBuf;
-    CSingleLock lock(m_StateSection);
-    if(m_StateInput.cache_bytes >= 0)
     {
-      strBuf.AppendFormat(" cache:%s %2.0f%%"
-                         , StringUtils::SizeToString(m_State.cache_bytes).c_str()
-                         , m_State.cache_level * 100);
-      if(m_playSpeed == 0 || m_caching == CACHESTATE_FULL)
-        strBuf.AppendFormat(" %d sec", DVD_TIME_TO_SEC(m_State.cache_delay));
-    }
+      double dDelay = (double)m_dvdPlayerVideo.GetDelay() / DVD_TIME_BASE;
 
-    strGeneralInfo.Format("C( ad:% 6.3f, a/v:% 6.3f%s, dcpu:%2i%% acpu:%2i%% vcpu:%2i%%%s )"
-                         , dDelay
-                         , dDiff
-                         , strEDL.c_str()
-                         , (int)(CThread::GetRelativeUsage()*100)
-                         , (int)(m_dvdPlayerAudio.GetRelativeUsage()*100)
-                         , (int)(m_dvdPlayerVideo.GetRelativeUsage()*100)
-                         , strBuf.c_str());
+      double apts = m_dvdPlayerAudio.GetCurrentPts();
+      double vpts = m_dvdPlayerVideo.GetCurrentPts();
+      double dDiff = 0;
+
+      if( apts != DVD_NOPTS_VALUE && vpts != DVD_NOPTS_VALUE )
+        dDiff = (apts - vpts) / DVD_TIME_BASE;
+
+      CStdString strEDL;
+        strEDL += StringUtils::Format(", edl:%s", m_Edl.GetInfo().c_str());
+
+      CStdString strBuf;
+      CSingleLock lock(m_StateSection);
+      if(m_StateInput.cache_bytes >= 0)
+      {
+        strBuf += StringUtils::Format(" cache:%s %2.0f%%"
+                                      , StringUtils::SizeToString(m_StateInput.cache_bytes).c_str()
+                                      , m_StateInput.cache_level * 100);
+        if(m_playSpeed == 0 || m_caching == CACHESTATE_FULL)
+          strBuf += StringUtils::Format(" %d sec", DVD_TIME_TO_SEC(m_StateInput.cache_delay));
+      }
+
+      strGeneralInfo.Format("C( ad:% 6.3f, a/v:% 6.3f%s, dcpu:%2i%% acpu:%2i%% vcpu:%2i%%%s )"
+                          , dDelay
+                          , dDiff
+                          , strEDL.c_str()
+                          , (int)(CThread::GetRelativeUsage()*100)
+                          , (int)(m_dvdPlayerAudio.GetRelativeUsage()*100)
+                          , (int)(m_dvdPlayerVideo.GetRelativeUsage()*100)
+                          , strBuf.c_str());
+    }
 
   }
 }
