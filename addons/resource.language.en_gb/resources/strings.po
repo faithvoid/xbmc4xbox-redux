@@ -8846,7 +8846,24 @@ msgctxt "#21470"
 msgid "%s [%d]"
 msgstr ""
 
-#empty strings from id 21471 to 21799
+#empty strings from id 21471 to 21477
+
+#: xbmc/addons/GUIDialogAddonInfo.cpp
+msgctxt "#21478"
+msgid "Open"
+msgstr ""
+
+#: xbmc/addons/GUIDialogAddonInfo.cpp
+msgctxt "#21479"
+msgid "Run"
+msgstr ""
+
+#: xbmc/addons/GUIDialogAddonInfo.cpp
+msgctxt "#21480"
+msgid "Use"
+msgstr ""
+
+#empty strings from id 21481 to 21799
 
 msgctxt "#21800"
 msgid "File name"
