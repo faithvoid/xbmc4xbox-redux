@@ -4087,7 +4087,14 @@ msgctxt "#10101"
 msgid "Progress dialogue"
 msgstr ""
 
-#empty strings from id 10102 to 10209
+#empty strings from id 10102 to 10133
+
+#: xbmc/guilib/WindowIDs.h
+msgctxt "#10134"
+msgid "Favourites"
+msgstr ""
+
+#empty strings from id 10135 to 10209
 
 msgctxt "#10210"
 msgid "Looking for subtitles..."
@@ -4712,7 +4719,12 @@ msgctxt "#13015"
 msgid "Power button action"
 msgstr ""
 
-#empty strings from id 13016 to 13019
+#: addons/skin.estuary/1080i/DialogButtonMenu.xml
+msgctxt "#13016"
+msgid "Power off system"
+msgstr ""
+
+#empty strings from id 13017 to 13019
 
 #: unknown
 msgctxt "#13020"
@@ -6703,7 +6715,24 @@ msgctxt "#17999"
 msgid "%i days"
 msgstr ""
 
-#empty strings from id 18000 to 19032
+#empty strings from id 18000 to 19019
+
+#: xbmc/pvr/channels/PVRChannelGroupsContainer.cpp
+#: xbmc/pvr/PVRManager.cpp
+#: addons/skin.estuary/1080i/Includes.xml
+#: addons/skin.estuary/1080i/Home.xml
+msgctxt "#19020"
+msgid "TV"
+msgstr ""
+
+#: xbmc/pvr/channels/PVRChannelGroupsContainer.cpp
+#: xbmc/pvr/PVRManager.cpp
+#: addons/skin.estuary/1080i/Home.xml
+msgctxt "#19021"
+msgid "Radio"
+msgstr ""
+
+#empty strings from id 19022 to 19032
 
 #: xbmc/event/windows/GUIWindowEventLog.cpp
 #: xbmc/pvr/addons/PVRClients.cpp
@@ -8249,11 +8278,11 @@ msgid "Fanart"
 msgstr ""
 
 msgctxt "#20446"
-msgid "Locally stored information found."
+msgid "Locally stored information found. Ignore and refresh from Internet?"
 msgstr ""
 
 msgctxt "#20447"
-msgid "Ignore and refresh from internet?"
+msgid "Do you want to add the media from this source to your library?"
 msgstr ""
 
 msgctxt "#20448"
@@ -8265,7 +8294,7 @@ msgid "Unable to connect to remote server"
 msgstr ""
 
 msgctxt "#20450"
-msgid "Would you like to continue scanning?"
+msgid "Unable to connect to remote server. Would you like to continue scanning?"
 msgstr ""
 
 #: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeMoviesOverview.cpp
@@ -9459,7 +9488,11 @@ msgctxt "#24003"
 msgid "Add-on Information"
 msgstr ""
 
-#empty string with id 24004
+#. Name of menu in the add-on browser
+#: xbmc/filesystem/AddonsDirectory.cpp
+msgctxt "#24004"
+msgid "Recently updated"
+msgstr ""
 
 #: xbmc/addons/addon.cpp
 msgctxt "#24005"
@@ -10132,7 +10165,16 @@ msgctxt "#29802"
 msgid "Passthrough Audio in use"
 msgstr ""
 
-#empty strings from id 29803 to 29986
+#empty strings from id 29803 to 29908
+
+#. Studio name (if present)
+#: addons/skin.estuary/1080i/DialogPVRRadioRDSInfo.xml
+#: addons/skin.estuary/1080i/DialogVideoInfo.xml
+msgctxt "#29909"
+msgid "Studio"
+msgstr ""
+
+#empty strings from id 29910 to 29986
 
 #. Node title for music artist role, plural of #38036
 #: system/library/music/musicroles/Remixers.xml
