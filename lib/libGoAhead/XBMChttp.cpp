@@ -2343,7 +2343,7 @@ int CXbmcHttp::xbmcLookupAlbum(int numParas, CStdString paras[])
           for (int i=0; i < iAlbumCount; ++i)
           {
             CMusicAlbumInfo& info = scraper.GetAlbum(i);
-            albums += closeTag+openTag + info.GetTitle2().c_str() + "<@@>" + info.GetAlbumURL().m_url[0].m_url;
+            albums += closeTag+openTag + info.GetTitle2().c_str() + "<@@>" + info.GetAlbumURL().m_url[0].m_url.c_str();
             if (rel)
             {
               relevance = CUtil::AlbumRelevance(info.GetAlbum().strAlbum, album, StringUtils::Join(info.GetAlbum().GetAlbumArtist(), g_advancedSettings.m_musicItemSeparator), artist);
@@ -2381,7 +2381,7 @@ int CXbmcHttp::xbmcChooseAlbum(int numParas, CStdString paras[])
       if (musicInfo.Load(http,info))
       {
         if (musicInfo.GetAlbum().thumbURL.m_url.size() > 0)
-         output=openTag+"image:" + musicInfo.GetAlbum().thumbURL.m_url[0].m_url;
+         output=openTag+"image:" + musicInfo.GetAlbum().thumbURL.m_url[0].m_url.c_str();
 
         output+=closeTag+openTag+"review:" + musicInfo.GetAlbum().strReview.c_str();
         return SetResponse(output) ;

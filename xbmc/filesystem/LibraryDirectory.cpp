@@ -1,6 +1,6 @@
 /*
- *      Copyright (C) 2011-2012 Team XBMC
- *      http://www.xbmc.org
+ *      Copyright (C) 2011-2013 Team XBMC
+ *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,9 +13,8 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with XBMC; see the file COPYING.  If not, write to
- *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
- *  http://www.gnu.org/copyleft/gpl.html
+ *  along with XBMC; see the file COPYING.  If not, see
+ *  <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -35,7 +34,6 @@
 #include "GUIInfoManager.h"
 #include "utils/log.h"
 
-using namespace std;
 using namespace XFILE;
 
 CLibraryDirectory::CLibraryDirectory(void)
@@ -57,13 +55,13 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
     TiXmlElement *node = LoadXML(libNode);
     if (node)
     {
-      CStdString type = XMLUtils::GetAttribute(node, "type");
+      std::string type = XMLUtils::GetAttribute(node, "type");
       if (type == "filter")
       {
         CSmartPlaylist playlist;
-        CStdString type, label;
+        std::string type, label;
         XMLUtils::GetString(node, "content", type);
-        if (type.IsEmpty())
+        if (type.empty())
         {
           CLog::Log(LOGERROR, "<content> tag must not be empty for type=\"filter\" node '%s'", libNode.c_str());
           return false;
@@ -82,9 +80,9 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
       }
       else if (type == "folder")
       {
-        CStdString path;
+        std::string path;
         XMLUtils::GetPath(node, "path", path);
-        if (!path.IsEmpty())
+        if (!path.empty())
         {
           URIUtils::AddSlashAtEnd(path);
           return CDirectory::GetDirectory(path, items, m_strFileMask, m_flags);
@@ -104,15 +102,15 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
   for (int i = 0; i < nodes.Size(); i++)
   {
     const TiXmlElement *node = NULL;
-    CStdString xml = nodes[i]->GetPath();
+    std::string xml = nodes[i]->GetPath();
     if (nodes[i]->m_bIsFolder)
       node = LoadXML(URIUtils::AddFileToFolder(xml, "index.xml"));
     else
     {
       node = LoadXML(xml);
-      if (node && URIUtils::GetFileName(xml).Equals("index.xml"))
+      if (node && URIUtils::GetFileName(xml) == "index.xml")
       { // set the label on our items
-        CStdString label;
+        std::string label;
         if (XMLUtils::GetString(node, "label", label))
           label = CGUIControlFactory::FilterLabel(label);
         items.SetLabel(label);
@@ -121,7 +119,7 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
     }
     if (node)
     {
-      CStdString label, icon;
+      std::string label, icon;
       if (XMLUtils::GetString(node, "label", label))
         label = CGUIControlFactory::FilterLabel(label);
       XMLUtils::GetString(node, "icon", icon);
@@ -130,11 +128,11 @@ bool CLibraryDirectory::GetDirectory(const CURL& url, CFileItemList &items)
 
       // create item
       URIUtils::RemoveSlashAtEnd(xml);
-      CStdString folder = URIUtils::GetFileName(xml);
+      std::string folder = URIUtils::GetFileName(xml);
       CFileItemPtr item(new CFileItem(URIUtils::AddFileToFolder(basePath, folder), true));
 
       item->SetLabel(label);
-      if (!icon.IsEmpty() && g_TextureManager.HasTexture(icon))
+      if (!icon.empty() && g_TextureManager.HasTexture(icon))
         item->SetIconImage(icon);
       item->m_iprogramCount = order;
       items.Add(item);
@@ -171,7 +169,7 @@ bool CLibraryDirectory::Exists(const CURL& url)
 
 std::string CLibraryDirectory::GetNode(const CURL& url)
 {
-  CStdString libDir = URIUtils::AddFileToFolder(CProfilesManager::Get().GetLibraryFolder(), url.GetHostName() + "/");
+  std::string libDir = URIUtils::AddFileToFolder(CProfilesManager::Get().GetLibraryFolder(), url.GetHostName() + "/");
   if (!CDirectory::Exists(libDir))
     libDir = URIUtils::AddFileToFolder("special://xbmc/system/library/", url.GetHostName() + "/");
 
@@ -182,7 +180,7 @@ std::string CLibraryDirectory::GetNode(const CURL& url)
     return libDir;
 
   // maybe it's an XML node?
-  CStdString xmlNode = libDir;
+  std::string xmlNode = libDir;
   URIUtils::RemoveSlashAtEnd(xmlNode);
 
   if (CFile::Exists(xmlNode))

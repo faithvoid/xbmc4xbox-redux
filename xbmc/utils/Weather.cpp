@@ -437,7 +437,6 @@ void CWeatherJob::LoadLocalizedToken()
   }
 
   CStdString strEncoding;
-  XMLUtils::GetEncoding(&xmlDoc, strEncoding);
 
   TiXmlElement* pRootElement = xmlDoc.RootElement();
   if (pRootElement->Value() != CStdString("strings"))

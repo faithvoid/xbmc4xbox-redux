@@ -217,6 +217,11 @@ public:
     std::string newPath = AddFileToFolder(strFolder, strFile);
     return AddFileToFolder(newPath, a1);
   }
+  static std::string AddFileToFolder(const std::string& strFolder, const std::string& strFile, std::string a1, std::string a2)
+  {
+    std::string newPath = AddFileToFolder(strFolder, strFile, a1);
+    return AddFileToFolder(newPath, a2);
+  }
 
   static bool HasParentInHostname(const CURL& url);
   static bool HasEncodedHostname(const CURL& url);
