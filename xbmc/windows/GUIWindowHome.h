@@ -20,9 +20,11 @@
  *
  */
 
-#include "GUIWindow.h"
+#include "guilib/GUIWindow.h"
 #include "interfaces/IAnnouncer.h"
 #include "utils/Job.h"
+
+class CVariant;
 
 class CGUIWindowHome :
       public CGUIWindow,
@@ -36,6 +38,7 @@ public:
   virtual void Announce(ANNOUNCEMENT::AnnouncementFlag flag, const char *sender, const char *message, const CVariant &data);
 
   virtual bool OnMessage(CGUIMessage& message);
+  virtual bool OnAction(const CAction &action);
 
   virtual void OnJobComplete(unsigned int jobID, bool success, CJob *job);
 private:
