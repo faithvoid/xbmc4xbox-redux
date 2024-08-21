@@ -20,20 +20,25 @@
 
 #include "FavouritesDirectory.h"
 #include "File.h"
+#include "Directory.h"
 #include "Util.h"
+#include "interfaces/AnnouncementManager.h"
 #include "profiles/ProfilesManager.h"
 #include "FileItem.h"
 #include "utils/XBMCTinyXML.h"
 #include "utils/log.h"
+#include "utils/StringUtils.h"
 #include "utils/URIUtils.h"
 #include "settings/AdvancedSettings.h"
 #include "video/VideoInfoTag.h"
 #include "music/tags/MusicInfoTag.h"
 #include "URL.h"
+#ifdef _XBOX
 #include "Key.h"
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
+#endif
 
 namespace XFILE
 {
@@ -44,7 +49,7 @@ bool CFavouritesDirectory::GetDirectory(const CURL& url, CFileItemList &items)
   items.Clear();
   if (url.IsProtocol("favourites"))
   {
-    Load(items); //load the default favourite files
+    return Load(items); //load the default favourite files
   }
   return LoadFavourites(url.Get(), items); //directly load the given file
 }
@@ -53,16 +58,16 @@ bool CFavouritesDirectory::Exists(const CURL& url)
 {
   if (url.IsProtocol("favourites"))
   {
-    return XFILE::CFile::Exists("special://xbmc/system/favourites.xml") 
+    return XFILE::CFile::Exists("special://xbmc/system/favourites.xml")
         || XFILE::CFile::Exists(URIUtils::AddFileToFolder(CProfilesManager::Get().GetProfileUserDataFolder(), "favourites.xml"));
   }
-  return XFILE::CFile::Exists(url); //directly load the given file
+  return XFILE::CDirectory::Exists(url);
 }
 
 bool CFavouritesDirectory::Load(CFileItemList &items)
 {
   items.Clear();
-  CStdString favourites;
+  std::string favourites;
 
   favourites = "special://xbmc/system/favourites.xml";
   if(XFILE::CFile::Exists(favourites))
@@ -78,7 +83,7 @@ bool CFavouritesDirectory::Load(CFileItemList &items)
   return true;
 }
 
-bool CFavouritesDirectory::LoadFavourites(const CStdString& strPath, CFileItemList& items)
+bool CFavouritesDirectory::LoadFavourites(const std::string& strPath, CFileItemList& items)
 {
   CXBMCTinyXML doc;
   if (!doc.LoadFile(strPath))
@@ -119,7 +124,7 @@ bool CFavouritesDirectory::LoadFavourites(const CStdString& strPath, CFileItemLi
 
 bool CFavouritesDirectory::Save(const CFileItemList &items)
 {
-  CStdString favourites;
+  std::string favourites;
   CXBMCTinyXML doc;
   TiXmlElement xmlRootElement("favourites");
   TiXmlNode *rootNode = doc.InsertEndChild(xmlRootElement);
@@ -138,7 +143,12 @@ bool CFavouritesDirectory::Save(const CFileItemList &items)
   }
 
   favourites = URIUtils::AddFileToFolder(CProfilesManager::Get().GetProfileUserDataFolder(), "favourites.xml");
-  return doc.SaveFile(favourites);
+
+  bool bRet = doc.SaveFile(favourites);
+  if (bRet)
+    ANNOUNCEMENT::CAnnouncementManager::GetInstance().Announce(ANNOUNCEMENT::GUI, "xbmc", "OnFavouritesUpdated");
+
+  return bRet;
 }
 
 bool CFavouritesDirectory::AddOrRemove(CFileItem *item, int contextWindow)
@@ -149,7 +159,7 @@ bool CFavouritesDirectory::AddOrRemove(CFileItem *item, int contextWindow)
   CFileItemList items;
   Load(items);
 
-  CStdString executePath(GetExecutePath(*item, contextWindow));
+  std::string executePath(GetExecutePath(*item, contextWindow));
 
   CFileItemPtr match = items.Get(executePath);
   if (match)
@@ -178,27 +188,35 @@ bool CFavouritesDirectory::IsFavourite(CFileItem *item, int contextWindow)
   return items.Contains(GetExecutePath(*item, contextWindow));
 }
 
-CStdString CFavouritesDirectory::GetExecutePath(const CFileItem &item, int contextWindow)
+std::string CFavouritesDirectory::GetExecutePath(const CFileItem &item, int contextWindow)
 {
-  CStdString text;
-  text.Format("%i", contextWindow);
-  return GetExecutePath(item, text);
+  return GetExecutePath(item, StringUtils::Format("%i", contextWindow));
 }
 
-CStdString CFavouritesDirectory::GetExecutePath(const CFileItem &item, const std::string &contextWindow)
+std::string CFavouritesDirectory::GetExecutePath(const CFileItem &item, const std::string &contextWindow)
 {
-  CStdString execute;
+  std::string execute;
   if (item.m_bIsFolder && (g_advancedSettings.m_playlistAsFolders ||
                             !(item.IsSmartPlayList() || item.IsPlayList())))
   {
     if (!contextWindow.empty())
       execute = StringUtils::Format("ActivateWindow(%s,%s,return)", contextWindow.c_str(), StringUtils::Paramify(item.GetPath()).c_str());
   }
-  /* TODO:STRING_CLEANUP */
-  else if (item.IsScript() && item.GetPath().size() > 9) // plugin://<foo>
+  //! @todo STRING_CLEANUP
+  else if (item.IsScript() && item.GetPath().size() > 9) // script://<foo>
     execute = StringUtils::Format("RunScript(%s)", StringUtils::Paramify(item.GetPath().substr(9)).c_str());
+  else if (item.IsAddonsPath() && item.GetPath().size() > 9) // addons://<foo>
+  {
+    CURL url(item.GetPath());
+    execute = StringUtils::Format("RunAddon(%s)", url.GetFileName().c_str());
+  }
+#ifndef _XBOX
+  else if (item.IsAndroidApp() && item.GetPath().size() > 26) // androidapp://sources/apps/<foo>
+    execute = StringUtils::Format("StartAndroidActivity(%s)", StringUtils::Paramify(item.GetPath().substr(26)).c_str());
+#else
   else if (contextWindow == STRINGIZE(WINDOW_PROGRAMS))
-    execute.Format("RunXBE(%s)", StringUtils::Paramify(item.GetPath()).c_str());
+    execute = StringUtils::Format("RunXBE(%s)", StringUtils::Paramify(item.GetPath()).c_str());
+#endif
   else  // assume a media file
   {
     if (item.IsVideoDb() && item.HasVideoInfoTag())
