@@ -18,21 +18,19 @@
  *
  */
 
-#include "pictures/GUIViewStatePictures.h"
-#include "GUIBaseContainer.h"
+#include "GUIViewStatePictures.h"
 #include "FileItem.h"
 #include "view/ViewState.h"
 #include "settings/AdvancedSettings.h"
 #include "settings/MediaSourceSettings.h"
 #include "settings/Settings.h"
 #include "filesystem/Directory.h"
-#include "filesystem/PluginDirectory.h"
-#include "Util.h"
 #include "guilib/LocalizeStrings.h"
 #include "guilib/Key.h"
 #include "view/ViewStateSettings.h"
 
 using namespace XFILE;
+using namespace ADDON;
 
 CGUIViewStateWindowPictures::CGUIViewStateWindowPictures(const CFileItemList& items) : CGUIViewState(items)
 {
@@ -74,17 +72,30 @@ std::string CGUIViewStateWindowPictures::GetLockType()
 
 std::string CGUIViewStateWindowPictures::GetExtensions()
 {
+  std::string extensions = g_advancedSettings.m_pictureExtensions;
   if (CSettings::GetInstance().GetBool("pictures.showvideos"))
-    return g_advancedSettings.m_pictureExtensions+"|"+g_advancedSettings.m_videoExtensions;
+    extensions += "|" + g_advancedSettings.m_videoExtensions;
 
-  return g_advancedSettings.m_pictureExtensions;
+  return extensions;
 }
 
 VECSOURCES& CGUIViewStateWindowPictures::GetSources()
 {
   VECSOURCES *pictureSources = CMediaSourceSettings::Get().GetSources("pictures");
+
+  // Guard against source type not existing
+  if (pictureSources == nullptr)
+  {
+    static VECSOURCES empty;
+    return empty;
+  }
+
+  // Picture add-ons
   AddAddonsSource("image", g_localizeStrings.Get(1039), "DefaultAddonPicture.png");
+
+  // Global sources
   AddOrReplace(*pictureSources, CGUIViewState::GetSources());
+
   return *pictureSources;
 }
 

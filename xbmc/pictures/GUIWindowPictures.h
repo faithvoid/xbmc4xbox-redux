@@ -21,10 +21,7 @@
  */
 
 #include "windows/GUIMediaWindow.h"
-#include "filesystem/VirtualDirectory.h"
-#include "filesystem/DirectoryHistory.h"
-#include "pictures/GUIWindowSlideShow.h"
-#include "pictures/PictureThumbLoader.h"
+#include "PictureThumbLoader.h"
 #include "pictures/DllImageLib.h"
 
 class CGUIDialogProgress;
@@ -34,30 +31,31 @@ class CGUIWindowPictures : public CGUIMediaWindow, public IBackgroundLoaderObser
 public:
   CGUIWindowPictures(void);
   virtual ~CGUIWindowPictures(void);
-  virtual bool OnMessage(CGUIMessage& message);
-  virtual void OnInitWindow();
+  bool OnMessage(CGUIMessage& message);
+  void OnInitWindow();
 
 protected:
-  virtual bool GetDirectory(const CStdString &strDirectory, CFileItemList& items);
-  virtual void OnItemInfo(int item);
-  virtual bool OnClick(int iItem);
-  virtual void UpdateButtons();
-  virtual void OnPrepareFileItems(CFileItemList& items);
-  virtual bool Update(const CStdString &strDirectory, bool updateFilterPath = true);
-  virtual void GetContextButtons(int itemNumber, CContextButtons &buttons);
-  virtual bool OnContextButton(int itemNumber, CONTEXT_BUTTON button);
-  virtual CStdString GetStartFolder(const CStdString &dir);
+  bool GetDirectory(const std::string &strDirectory, CFileItemList& items);
+  void OnItemInfo(int item);
+  bool OnClick(int iItem, const std::string &player = "");
+  void UpdateButtons();
+  void OnPrepareFileItems(CFileItemList& items);
+  bool Update(const std::string &strDirectory, bool updateFilterPath = true);
+  void GetContextButtons(int itemNumber, CContextButtons &buttons);
+  bool OnContextButton(int itemNumber, CONTEXT_BUTTON button);
+  bool OnAddMediaSource();
+  std::string GetStartFolder(const std::string &dir);
 
   void OnRegenerateThumbs();
-  virtual bool OnPlayMedia(int iItem);
+  bool OnPlayMedia(int iItem, const std::string &player = "");
   bool ShowPicture(int iItem, bool startSlideShow);
-  void OnShowPictureRecursive(const CStdString& strPath);
-  void OnSlideShow(const CStdString& strPicture);
+  void OnShowPictureRecursive(const std::string& strPath);
+  void OnSlideShow(const std::string& strPicture);
   void OnSlideShow();
-  void OnSlideShowRecursive(const CStdString& strPicture);
+  void OnSlideShowRecursive(const std::string& strPicture);
   void OnSlideShowRecursive();
-  virtual void OnItemLoaded(CFileItem* pItem);
-  virtual void LoadPlayList(const CStdString& strPlayList);
+  void OnItemLoaded(CFileItem* pItem);
+  void LoadPlayList(const std::string& strPlayList);
 
   CGUIDialogProgress* m_dlgProgress;
   DllImageLib m_ImageLib;

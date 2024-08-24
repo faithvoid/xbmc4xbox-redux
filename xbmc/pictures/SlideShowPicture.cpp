@@ -26,8 +26,6 @@
 #include "settings/Settings.h"
 #include "threads/SingleLock.h"
 
-using namespace std;
-
 #define M_PI       3.14159265358979323846
 
 #define IMMEDIATE_TRANSISTION_TIME          20
@@ -41,7 +39,7 @@ using namespace std;
 
 static float zoomamount[10] = { 1.0f, 1.2f, 1.5f, 2.0f, 2.8f, 4.0f, 6.0f, 9.0f, 13.5f, 20.0f };
 
-CSlideShowPic::CSlideShowPic()
+CSlideShowPic::CSlideShowPic() : m_alpha(0)
 {
   m_pImage = NULL;
   m_bIsLoaded = false;
@@ -71,6 +69,7 @@ void CSlideShowPic::Close()
   m_bDrawNextImage = false;
   m_bTransistionImmediately = false;
   m_bIsDirty = true;
+  m_alpha = 0;
 }
 
 void CSlideShowPic::Reset(DISPLAY_EFFECT dispEffect, TRANSISTION_EFFECT transEffect)
@@ -115,6 +114,18 @@ void CSlideShowPic::SetTexture_Internal(int iSlideNumber, CBaseTexture* pTexture
   // initialize our transistion effect
   m_transistionStart.type = transEffect;
   m_transistionStart.start = 0;
+
+  // initialize our display effect
+  if (dispEffect == EFFECT_RANDOM)
+  {
+    if (((m_fWidth / m_fHeight) > 1.9) || ((m_fHeight / m_fWidth) > 1.9))
+      m_displayEffect = EFFECT_PANORAMA;
+    else
+      m_displayEffect = (DISPLAY_EFFECT)((rand() % (EFFECT_RANDOM - 1)) + 1);
+  }
+  else
+    m_displayEffect = dispEffect;
+
   // the +1's make sure it actually occurs
   float fadeTime = 0.2f;
   if (m_displayEffect != EFFECT_NO_TIMEOUT)
@@ -141,20 +152,10 @@ void CSlideShowPic::SetTexture_Internal(int iSlideNumber, CBaseTexture* pTexture
   m_fZoomAmount = 1;
   m_fZoomLeft = 0;
   m_fZoomTop = 0;
-  // initialize our display effect
-  if (dispEffect == EFFECT_RANDOM)
-  {
-    if (((m_fWidth / m_fHeight) > 1.9) || ((m_fHeight / m_fWidth) > 1.9))
-      m_displayEffect = EFFECT_PANORAMA;
-    else
-      m_displayEffect = (DISPLAY_EFFECT)((rand() % (EFFECT_RANDOM - 1)) + 1);
-  }
-  else
-    m_displayEffect = dispEffect;
   m_fPosX = m_fPosY = 0.0f;
   m_fPosZ = 1.0f;
   m_fVelocityX = m_fVelocityY = m_fVelocityZ = 0.0f;
-  int iFrames = max((int)(g_graphicsContext.GetFPS() * CSettings::GetInstance().GetInt("slideshow.staytime")), 1);
+  int iFrames = std::max((int)(g_graphicsContext.GetFPS() * CSettings::GetInstance().GetInt("slideshow.staytime")), 1);
   if (m_displayEffect == EFFECT_PANORAMA)
   {
     RESOLUTION_INFO res = g_graphicsContext.GetResInfo();
@@ -457,7 +458,7 @@ void CSlideShowPic::Process(unsigned int currentTime, CDirtyRegionList &dirtyreg
   float fScreenRatio = fScreenWidth / fScreenHeight * fPixelRatio;
   // work out if we should be compensating the zoom to minimize blackbars
   // we should compute this based on the % of black bars on screen perhaps??
-  // TODO: change m_displayEffect != EFFECT_NO_TIMEOUT to whether we're running the slideshow
+  //! @todo change m_displayEffect != EFFECT_NO_TIMEOUT to whether we're running the slideshow
   if (m_displayEffect != EFFECT_NO_TIMEOUT && fScreenRatio < fSourceAR * fComp && fSourceAR < fScreenRatio * fComp)
     bFillScreen = true;
   if ((!bFillScreen && fScreenWidth*fPixelRatio > fScreenHeight*fSourceAR) || (bFillScreen && fScreenWidth*fPixelRatio < fScreenHeight*fSourceAR))
@@ -687,7 +688,7 @@ void CSlideShowPic::Rotate(float fRotateAngle, bool immediate /* = false */)
 
   // if there is a rotation ongoing already
   // add the new angle to the old destination angle
-  if (m_transistionTemp.type == TRANSISTION_ROTATE && 
+  if (m_transistionTemp.type == TRANSISTION_ROTATE &&
       m_transistionTemp.start + m_transistionTemp.length > m_iCounter)
   {
     int remainder = m_transistionTemp.start + m_transistionTemp.length - m_iCounter;
