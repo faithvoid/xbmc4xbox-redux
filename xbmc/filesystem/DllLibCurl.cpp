@@ -21,8 +21,8 @@
 #include "threads/SystemClock.h"
 #include "system.h"
 #include "DllLibCurl.h"
+#include "threads/SingleLock.h"
 #include "utils/log.h"
-#include "utils/TimeUtils.h"
 
 #include <assert.h>
 
@@ -86,13 +86,14 @@ void DllLibCurlGlobal::CheckIdle()
     return;
 
   CSingleLock lock(m_critSection);
-#ifdef _XBOX  
+#ifdef _XBOX
   /* 10 seconds idle time before closing handle. Set this low on Xbox to save memory */
-  const DWORD idletime = 10000;
+  const unsigned int idletime = 10000;
 #else
   /* 30 seconds idle time before closing handle */
-  const DWORD idletime = 30000;
+  const unsigned int idletime = 30000;
 #endif
+
   VEC_CURLSESSIONS::iterator it = m_sessions.begin();
   while(it != m_sessions.end())
   {
@@ -100,19 +101,19 @@ void DllLibCurlGlobal::CheckIdle()
     {
       CLog::Log(LOGINFO, "%s - Closing session to %s://%s (easy=%p, multi=%p)\n", __FUNCTION__, it->m_protocol.c_str(), it->m_hostname.c_str(), (void*)it->m_easy, (void*)it->m_multi);
 
-      // It's important to clean up multi *before* cleaning up easy, because the multi cleanup
-      // code accesses stuff in the easy's structure.
-      if(it->m_multi)
-        multi_cleanup(it->m_multi);
+      if(it->m_multi && it->m_easy)
+        multi_remove_handle(it->m_multi, it->m_easy);
       if(it->m_easy)
         easy_cleanup(it->m_easy);
+      if(it->m_multi)
+        multi_cleanup(it->m_multi);
 
       Unload();
 
       it = m_sessions.erase(it);
       continue;
     }
-    it++;
+    ++it;
   }
 
   /* check if we should unload the dll */
@@ -127,7 +128,7 @@ void DllLibCurlGlobal::easy_aquire(const char *protocol, const char *hostname, C
   CSingleLock lock(m_critSection);
 
   VEC_CURLSESSIONS::iterator it;
-  for(it = m_sessions.begin(); it != m_sessions.end(); it++)
+  for(it = m_sessions.begin(); it != m_sessions.end(); ++it)
   {
     if( !it->m_busy )
     {
@@ -206,7 +207,7 @@ void DllLibCurlGlobal::easy_release(CURL_HANDLE** easy_handle, CURLM** multi_han
   }
 
   VEC_CURLSESSIONS::iterator it;
-  for(it = m_sessions.begin(); it != m_sessions.end(); it++)
+  for(it = m_sessions.begin(); it != m_sessions.end(); ++it)
   {
     if( it->m_easy == easy && (multi == NULL || it->m_multi == multi) )
     {
@@ -225,7 +226,7 @@ CURL_HANDLE* DllLibCurlGlobal::easy_duphandle(CURL_HANDLE* easy_handle)
   CSingleLock lock(m_critSection);
 
   VEC_CURLSESSIONS::iterator it;
-  for(it = m_sessions.begin(); it != m_sessions.end(); it++)
+  for(it = m_sessions.begin(); it != m_sessions.end(); ++it)
   {
     if( it->m_easy == easy_handle )
     {
@@ -250,7 +251,7 @@ void DllLibCurlGlobal::easy_duplicate(CURL_HANDLE* easy, CURLM* multi, CURL_HAND
     *multi_out = DllLibCurl::multi_init();
 
   VEC_CURLSESSIONS::iterator it;
-  for(it = m_sessions.begin(); it != m_sessions.end(); it++)
+  for(it = m_sessions.begin(); it != m_sessions.end(); ++it)
   {
     if( it->m_easy == easy )
     {
