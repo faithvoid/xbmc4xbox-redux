@@ -853,9 +853,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 					RelativePath=".\xbmc\utils\DelayController.cpp">
 				</File>
 				<File
-					RelativePath=".\xbmc\utils\DownloadQueue.cpp">
-				</File>
-				<File
 					RelativePath=".\xbmc\DynamicDll.cpp">
 				</File>
 				<File
@@ -4717,9 +4714,6 @@ bundler xbelogo\saveimage.rdf -o xbelogo\saveimage.xbx
 			</File>
 			<File
 				RelativePath=".\xbmc\pictures\DllImageLib.h">
-			</File>
-			<File
-				RelativePath=".\xbmc\utils\DownloadQueue.h">
 			</File>
 			<File
 				RelativePath=".\xbmc\DynamicDll.h">
