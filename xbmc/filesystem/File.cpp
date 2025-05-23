@@ -315,7 +315,7 @@ bool CFile::Open(const CURL& file, const unsigned int flags)
       return false;
 
     CURL authUrl(url);
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
     try
@@ -341,7 +341,7 @@ bool CFile::Open(const CURL& file, const unsigned int flags)
         if (pNewUrl.get())
         {
           CURL newAuthUrl(*pNewUrl);
-          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl))
+          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl) && newAuthUrl.GetUserName().empty())
             CPasswordManager::GetInstance().AuthenticateURL(newAuthUrl);
 
           if (!m_pFile->Open(newAuthUrl))
@@ -402,7 +402,7 @@ bool CFile::OpenForWrite(const CURL& file, bool bOverWrite)
   {
     CURL url = URIUtils::SubstitutePath(file);
     CURL authUrl = url;
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
     m_pFile = CFileFactory::CreateLoader(url);
@@ -434,7 +434,7 @@ bool CFile::Exists(const CURL& file, bool bUseCache /* = true */)
 {
   CURL url(URIUtils::SubstitutePath(file));
   CURL authUrl = url;
-  if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+  if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
     CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
   try
@@ -479,7 +479,7 @@ bool CFile::Exists(const CURL& file, bool bUseCache /* = true */)
               return false;
           }
           CURL newAuthUrl = *pNewUrl;
-          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl))
+          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl) && newAuthUrl.GetUserName().empty())
             CPasswordManager::GetInstance().AuthenticateURL(newAuthUrl);
 
           return pImp->Exists(newAuthUrl);
@@ -534,7 +534,7 @@ int CFile::Stat(const CURL& file, struct __stat64* buffer)
 
   CURL url(URIUtils::SubstitutePath(file));
   CURL authUrl = url;
-  if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+  if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
     CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
   try
@@ -561,7 +561,7 @@ int CFile::Stat(const CURL& file, struct __stat64* buffer)
         if (pImp.get())
         {
           CURL newAuthUrl = *pNewUrl;
-          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl))
+          if (CPasswordManager::GetInstance().IsURLSupported(newAuthUrl) && newAuthUrl.GetUserName().empty())
             CPasswordManager::GetInstance().AuthenticateURL(newAuthUrl);
 
           if (!pImp->Stat(newAuthUrl, buffer))
@@ -884,7 +884,7 @@ bool CFile::Delete(const CURL& file)
   {
     CURL url(URIUtils::SubstitutePath(file));
     CURL authUrl = url;
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
     boost::movelib::unique_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
@@ -922,10 +922,10 @@ bool CFile::Rename(const CURL& file, const CURL& newFile)
     CURL urlnew(URIUtils::SubstitutePath(newFile));
 
     CURL authUrl = url;
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrl);
     CURL authUrlNew = urlnew;
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrlNew))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrlNew) && authUrlNew.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrlNew);
 
     boost::movelib::unique_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
@@ -960,7 +960,7 @@ bool CFile::SetHidden(const CURL& file, bool hidden)
   {
     CURL url(URIUtils::SubstitutePath(file));
     CURL authUrl = url;
-    if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+    if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
       CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
     boost::movelib::unique_ptr<IFile> pFile(CFileFactory::CreateLoader(url));
@@ -1240,7 +1240,7 @@ bool CFileStream::Open(const CURL& filename)
   m_file = CFileFactory::CreateLoader(url);
 
   CURL authUrl = url;
-  if (CPasswordManager::GetInstance().IsURLSupported(authUrl))
+  if (CPasswordManager::GetInstance().IsURLSupported(authUrl) && authUrl.GetUserName().empty())
     CPasswordManager::GetInstance().AuthenticateURL(authUrl);
 
   if(m_file && m_file->Open(authUrl))
