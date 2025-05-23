@@ -35,6 +35,7 @@ namespace XFILE
     CVirtualDirectory(void);
     virtual ~CVirtualDirectory(void);
     virtual bool GetDirectory(const CURL& url, CFileItemList &items);
+    virtual void CancelDirectory();
     bool GetDirectory(const CURL& url, CFileItemList &items, bool bUseFileDirectories);
     void SetSources(const VECSOURCES& vecSources);
     inline unsigned int GetNumberOfSources()
@@ -63,6 +64,7 @@ namespace XFILE
     void CacheThumbs(CFileItemList &items);
 
     VECSOURCES m_vecSources;
-    bool       m_allowNonLocalSources;
+    bool m_allowNonLocalSources;
+    boost::shared_ptr<IDirectory> m_pDir;
   };
 }

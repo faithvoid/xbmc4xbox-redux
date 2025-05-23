@@ -127,7 +127,18 @@ bool CDirectory::GetDirectory(const std::string& strPath, CFileItemList &items, 
   CHints hints;
   hints.flags = flags;
   hints.mask = strMask;
-  return GetDirectory(strPath, items, hints);
+  const CURL pathToUrl(strPath);
+  return GetDirectory(pathToUrl, items, hints);
+}
+
+bool CDirectory::GetDirectory(const std::string& strPath, boost::shared_ptr<IDirectory> pDirectory,
+                              CFileItemList &items, const std::string &strMask, int flags)
+{
+  CHints hints;
+  hints.flags = flags;
+  hints.mask = strMask;
+  const CURL pathToUrl(strPath);
+  return GetDirectory(pathToUrl, pDirectory, items, hints);
 }
 
 bool CDirectory::GetDirectory(const std::string& strPath, CFileItemList &items, const CHints &hints)
@@ -146,10 +157,17 @@ bool CDirectory::GetDirectory(const CURL& url, CFileItemList &items, const std::
 
 bool CDirectory::GetDirectory(const CURL& url, CFileItemList &items, const CHints &hints)
 {
+  CURL realURL = URIUtils::SubstitutePath(url);
+  boost::shared_ptr<IDirectory> pDirectory(CFactoryDirectory::Create(realURL));
+  return CDirectory::GetDirectory(url, pDirectory, items, hints);
+}
+
+bool CDirectory::GetDirectory(const CURL& url, boost::shared_ptr<IDirectory> pDirectory,
+                              CFileItemList &items, const CHints &hints)
+{
   try
   {
     CURL realURL = URIUtils::SubstitutePath(url);
-    boost::shared_ptr<IDirectory> pDirectory(CFactoryDirectory::Create(realURL));
     if (!pDirectory.get())
       return false;
 

@@ -19,7 +19,10 @@
  *
  */
 
+#include "system.h" // <xtl.h>
 #include "IDirectory.h"
+
+#include <boost/shared_ptr.hpp>
 #include <string>
 
 namespace XFILE
@@ -49,6 +52,11 @@ public:
                            , const std::string &strMask
                            , int flags);
 
+  static bool GetDirectory(const CURL& url,
+                           boost::shared_ptr<IDirectory> pDirectory,
+                           CFileItemList &items,
+                           const CHints &hints);
+
   static bool GetDirectory(const CURL& url
                            , CFileItemList &items
                            , const CHints &hints);
@@ -62,6 +70,12 @@ public:
                            , CFileItemList &items
                            , const std::string &strMask
                            , int flags);
+
+  static bool GetDirectory(const std::string& strPath,
+                           boost::shared_ptr<IDirectory> pDirectory,
+                           CFileItemList &items,
+                           const std::string &strMask,
+                           int flags);
 
   static bool GetDirectory(const std::string& strPath
                            , CFileItemList &items

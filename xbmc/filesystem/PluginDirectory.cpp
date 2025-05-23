@@ -572,6 +572,7 @@ void CPluginDirectory::SetProperty(int handle, const std::string &strProperty, c
 void CPluginDirectory::CancelDirectory()
 {
   m_cancelled.set(true);
+  m_fetchComplete.Set();
 }
 
 float CPluginDirectory::GetProgress() const

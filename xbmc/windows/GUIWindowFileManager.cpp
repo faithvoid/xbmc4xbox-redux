@@ -105,6 +105,10 @@ public:
   {
     m_result = m_dir.GetDirectory(m_url, m_items, false);
   }
+  void Cancel()
+  {
+    m_dir.CancelDirectory();
+  }
   bool m_result;
 protected:
   XFILE::CVirtualDirectory &m_dir;
@@ -930,9 +934,8 @@ bool CGUIWindowFileManager::GetDirectory(int iList, const std::string &strDirect
   CURL pathToUrl(strDirectory);
 
   CGetDirectoryItems getItems(m_rootDir, pathToUrl, items);
-  if (!CGUIDialogBusy::Wait(&getItems))
+  if (!CGUIDialogBusy::Wait(&getItems, 100, true))
   {
-    m_rootDir.CancelDirectory();
     return false;
   }
   return getItems.m_result;
