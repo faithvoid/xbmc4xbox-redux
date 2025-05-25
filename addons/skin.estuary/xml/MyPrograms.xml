@@ -16,7 +16,11 @@
 				<include>OpenClose_Left</include>
 				<include>Visible_Left</include>
 				<visible>Control.IsVisible(55)</visible>
-				<include>ListThumbInfoPanel</include>
+				<include content="ListThumbInfoPanel">
+          <param name="panel_icon" value="$VAR[InfoWallThumbVar]" />
+          <param name="textbox_label" value="$INFO[ListItem.Property(overview)]" />
+          <param name="is_program" value="true" />
+        </include>
 			</control>
 			<include content="TopBar">
 				<param name="breadcrumbs_label" value="$LOCALIZE[10001]" />

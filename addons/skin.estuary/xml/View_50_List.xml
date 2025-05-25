@@ -155,6 +155,9 @@
 	</include>
 	<include name="ListThumbInfoPanel">
 		<param name="flip_bg">false</param>
+    <param name="panel_icon">$VAR[IconWallThumbVar]</param>
+    <param name="textbox_label">$VAR[ListBoxInfoVar]</param>
+    <param name="is_program">false</param>
 		<definition>
 			<control type="group">
 				<depth>DepthContentPanel</depth>
@@ -169,7 +172,7 @@
 					<height>470</height>
 					<aspectratio aligny="bottom">keep</aspectratio>
 					<fadetime>300</fadetime>
-					<texture background="true">$VAR[IconWallThumbVar]</texture>
+					<texture background="true">$PARAM[panel_icon]</texture>
 				</control>
 				<control type="group">
 					<left>273</left>
@@ -182,8 +185,8 @@
 					<width>525</width>
 					<bottom>117</bottom>
 					<autoscroll time="3000" delay="7000" repeat="5000">!System.HasModalDialog + Skin.HasSetting(AutoScroll)</autoscroll>
-					<label>$VAR[ListBoxInfoVar]</label>
-					<visible>!Container.Content() | !String.isempty(ListItem.Plot)</visible>
+					<label>$PARAM[textbox_label]</label>
+					<visible>!Container.Content() | !String.isempty(ListItem.Plot) | $PARAM[is_program]</visible>
 				</control>
 				<control type="group">
 					<left>20</left>

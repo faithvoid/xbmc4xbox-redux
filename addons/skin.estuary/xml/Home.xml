@@ -507,6 +507,13 @@
 							<visible>!Skin.HasSetting(HomeMenuNoMusicVideoButton)</visible>
 						</item>
 						<item>
+							<label>$LOCALIZE[350]</label>
+							<property name="menu_id">$NUMBER[9000]</property>
+							<onclick>ActivateWindow(Programs)</onclick>
+							<thumb>icons/sidemenu/programs.png</thumb>
+							<property name="id">programs</property>
+						</item>
+						<item>
 							<label>$LOCALIZE[24001]</label>
 							<property name="menu_id">$NUMBER[8000]</property>
 							<onclick>ActivateWindow(1100)</onclick>
