@@ -913,18 +913,21 @@
 		</control>
 	</include>
 	<include name="WidgetListCommon">
-		<scrolltime tween="cubic" easing="out">500</scrolltime>
-		<orientation>horizontal</orientation>
-		<onleft>9000</onleft>
-		<onright>noop</onright>
-		<onunfocus>SetProperty(listposition,$INFO[Container($PARAM[list_id]).Position],home)</onunfocus>
-		<onfocus>Control.Move($PARAM[list_id],-$INFO[Container($PARAM[list_id]).Position])</onfocus>
-		<onfocus>Control.Move($PARAM[list_id],$INFO[Window(home).Property(listposition)])</onfocus>
-		<onback>PageUp</onback>
-		<onback>PageUp</onback>
-		<onback>PageUp</onback>
-		<onback>PageUp</onback>
-		<preloaditems>2</preloaditems>
+		<param name="list_orientation" default="horizontal" />
+		<definition>
+			<scrolltime tween="cubic" easing="out">500</scrolltime>
+			<orientation>$PARAM[list_orientation]</orientation>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<onunfocus>SetProperty(listposition,$INFO[Container($PARAM[list_id]).Position],home)</onunfocus>
+			<onfocus>Control.Move($PARAM[list_id],-$INFO[Container($PARAM[list_id]).Position])</onfocus>
+			<onfocus>Control.Move($PARAM[list_id],$INFO[Window(home).Property(listposition)])</onfocus>
+			<onback>PageUp</onback>
+			<onback>PageUp</onback>
+			<onback>PageUp</onback>
+			<onback>PageUp</onback>
+			<preloaditems>2</preloaditems>
+		</definition>
 	</include>
 	<include name="BusyListSpinner">
 		<param name="posy">160</param>
