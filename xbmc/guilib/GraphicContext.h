@@ -175,6 +175,7 @@ public:
 
   // output scaling
   const RESOLUTION_INFO &GetResInfo() const;
+  void SetResInfo(RESOLUTION res, const RESOLUTION_INFO& info);
 
   /* \brief Get UI scaling information from a given resolution to the screen resolution.
    Takes account of overscan and UI zooming.

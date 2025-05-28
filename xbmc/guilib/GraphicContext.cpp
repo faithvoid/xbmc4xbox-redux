@@ -715,6 +715,14 @@ const RESOLUTION_INFO &CGraphicContext::GetResInfo() const
   return CDisplaySettings::Get().GetResolutionInfo(m_Resolution);
 }
 
+void CGraphicContext::SetResInfo(RESOLUTION res, const RESOLUTION_INFO& info)
+{
+  RESOLUTION_INFO& curr = CDisplaySettings::Get().GetResolutionInfo(res);
+  curr.Overscan   = info.Overscan;
+  curr.iSubtitles = info.iSubtitles;
+  curr.fPixelRatio = info.fPixelRatio;
+}
+
 void CGraphicContext::GetGUIScaling(const RESOLUTION_INFO &res, float &scaleX, float &scaleY, TransformMatrix *matrix /* = NULL */)
 {
   if (m_Resolution != RES_INVALID)
