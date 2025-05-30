@@ -6081,45 +6081,68 @@ void CApplication::OnSettingChanged(const CSetting *setting)
     return;
 
   const std::string &settingId = setting->GetId();
+  // check if we should ignore this change event due to changing skins in which case we have to
+  // change several settings and each one of them could lead to a complete skin reload which would
+  // result in multiple skin reloads. Therefore we manually specify to ignore specific settings
+  // which are going to be changed.
+  if (settingId == m_skinReloadSettingIgnore)
+  {
+    m_skinReloadSettingIgnore.clear();
+    return;
+  }
+
   if (settingId == "lookandfeel.skin" ||
       settingId == "lookandfeel.font" ||
+      settingId == "lookandfeel.skintheme" ||
       settingId == "lookandfeel.skincolors")
   {
-    // if the skin changes and the current theme is not the default one, reset
-    // the theme to the default value (which will also change lookandfeel.skincolors
-    // which in turn will reload the skin.  Similarly, if the current skin font is not
-    // the default, reset it as well.
-    if (settingId == "lookandfeel.skin" && CSettings::GetInstance().GetString("lookandfeel.skintheme") != "SKINDEFAULT")
+    // if the skin changes and the current color/theme/font is not the default one, reset
+    // the it to the default value
+    if (settingId == "lookandfeel.skin")
     {
-      CSettings::GetInstance().SetString("lookandfeel.skintheme", "SKINDEFAULT");
-      return;
+      CSetting* skinRelatedSetting = CSettings::GetInstance().GetSetting("lookandfeel.skincolors");
+      if (!skinRelatedSetting->IsDefault())
+      {
+        m_skinReloadSettingIgnore = skinRelatedSetting->GetId();
+        skinRelatedSetting->Reset();
+      }
+
+      skinRelatedSetting = CSettings::GetInstance().GetSetting("lookandfeel.skintheme");
+      if (!skinRelatedSetting->IsDefault())
+      {
+        m_skinReloadSettingIgnore = skinRelatedSetting->GetId();
+        skinRelatedSetting->Reset();
+      }
+
+      setting = CSettings::GetInstance().GetSetting("lookandfeel.font");
+      if (!setting->IsDefault())
+      {
+        m_skinReloadSettingIgnore = skinRelatedSetting->GetId();
+        skinRelatedSetting->Reset();
+      }
     }
-    if (settingId == "lookandfeel.skin" && CSettings::GetInstance().GetString("lookandfeel.font") != "Default")
+    else if (settingId == "lookandfeel.skintheme")
     {
-      CSettings::GetInstance().SetString("lookandfeel.font", "Default");
-      return;
+      CSettingString* skinColorsSetting = static_cast<CSettingString*>(CSettings::GetInstance().GetSetting("lookandfeel.skincolors"));
+      m_skinReloadSettingIgnore = skinColorsSetting->GetId();
+
+      // we also need to adjust the skin color setting
+      std::string colorTheme = ((CSettingString*)setting)->GetValue();
+      URIUtils::RemoveExtension(colorTheme);
+      if (setting->IsDefault() || StringUtils::EqualsNoCase(colorTheme, "Textures"))
+        skinColorsSetting->Reset();
+      else
+        skinColorsSetting->SetValue(colorTheme);
     }
 
+    // reset the settings to ignore during changing skins
+    m_skinReloadSettingIgnore.clear();
+
+    // now we can finally reload skins
     std::string builtin("ReloadSkin");
     if (settingId == "lookandfeel.skin" && !m_skinReverting)
       builtin += "(confirm)";
     CApplicationMessenger::Get().PostMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, NULL, builtin);
-  }
-  else if (settingId == "lookandfeel.skintheme")
-  {
-    // also set the default color theme
-    string colorTheme = URIUtils::ReplaceExtension(((CSettingString*)setting)->GetValue(), ".xml");
-    if (StringUtils::EqualsNoCase(colorTheme, "Textures.xml"))
-      colorTheme = "defaults.xml";
-
-    // check if we have to change the skin color
-    // if yes, it will trigger a call to ReloadSkin() in
-    // it's OnSettingChanged() callback
-    // if no we have to call ReloadSkin() ourselves
-    if (!StringUtils::EqualsNoCase(colorTheme, CSettings::GetInstance().GetString("lookandfeel.skincolors")))
-      CSettings::GetInstance().SetString("lookandfeel.skincolors", colorTheme);
-    else
-      CApplicationMessenger::Get().SendMsg(TMSG_EXECUTE_BUILT_IN, -1, -1, NULL, "ReloadSkin");
   }
   else if (settingId == "lookandfeel.skinzoom")
   {
