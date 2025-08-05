@@ -31,7 +31,7 @@ $! A rename action section is needed to make sure that the files are
 $! created in the GNV$GNU: in the correct case, and to create the alias
 $! link [usr.bin]curl. for [usr.bin]curl.exe.
 $!
-$! Copyright 2009, John Malmberg
+$! Copyright 2009 - 2020, John Malmberg
 $!
 $! Permission to use, copy, modify, and/or distribute this software for any
 $! purpose with or without fee is hereby granted, provided that the above
@@ -113,6 +113,7 @@ $! Required product dependencies.
 $!----------------------------------
 $ vmsprd = "DEC"
 $ if base .eqs. "I64VMS" then vmsprd = "HP"
+$ vsiprd = "VSI"
 $!
 $ write pdsc "   software ''vmsprd' ''base' VMS ;"
 $ arch_type = f$getsyi("ARCH_NAME")
@@ -126,8 +127,11 @@ $ if dashver .eqs. "-" then dashver = ""
 $ vmstag = majver + minver + dashver
 $ code = f$extract(0, 1, arch_type)
 $ arch_code = f$extract(0, 1, arch_type)
-$ write pdsc -
- "   if (not <software ''vmsprd' ''base' VMS version minimum ''node_swvers'>) ;"
+$ line_out = -
+ "   if ((not <software ''vsiprd' ''base' VMS version minimum" + -
+ " ''node_swvers'>) and" + -
+ " (not <software ''vmsprd' ''base' VMS version minimum ''node_swvers'>));"
+$ write pdsc line_out
 $ write pdsc "      error NEED_VMS''vmstag';"
 $ write pdsc "   end if;"
 $!
@@ -347,7 +351,7 @@ $           endif
 $       endif
 $   endif
 $!
-$!  Filenames with $ in them are VMS special and do not need to be lowercased.
+$!  Filenames with $ in them are VMS special and do not need to be lowercase.
 $!  --------------------------------------------------------------------------
 $   if f$locate("$", pathname) .lt. f$length(pathname) then goto inst_file_loop
 $!

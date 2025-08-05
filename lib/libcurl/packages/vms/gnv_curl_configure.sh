@@ -5,7 +5,7 @@
 # Set up and run the configure script for Curl so that it can find the
 # proper options for VMS.
 #
-# Copyright 2009, John Malmberg
+# Copyright 2009 - 2020, John Malmberg
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -23,7 +23,7 @@
 # 28-Dec-2012	J. Malmberg	Update for Bash 4.2.39
 #==========================================================================
 #
-# POSIX exit mode is needed for UNIX shells.
+# POSIX exit mode is needed for Unix shells.
 export GNV_CC_MAIN_POSIX_EXIT=1
 #
 # Where to look for the helper files.

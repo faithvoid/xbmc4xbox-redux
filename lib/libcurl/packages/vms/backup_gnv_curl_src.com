@@ -17,7 +17,7 @@ $! This file is created from a template file for the purpose of making it
 $! easier to port Unix code, particularly open source code to VMS.
 $! Therefore permission is freely granted for any use.
 $!
-$! Copyright 2009, John Malmberg
+$! Copyright 2009 - 2020, John Malmberg
 $!
 $! Permission to use, copy, modify, and/or distribute this software for any
 $! purpose with or without fee is hereby granted, provided that the above
@@ -52,19 +52,19 @@ $!
 $ kit_name = f$trnlnm("GNV_PCSI_KITNAME")
 $ if kit_name .eqs. ""
 $ then
-$   write sys$output "@MAKE_PCSI_BASH_KIT_NAME.COM has not been run."
+$   write sys$output "@MAKE_PCSI_CURL_KIT_NAME.COM has not been run."
 $   goto all_exit
 $ endif
 $ producer = f$trnlnm("GNV_PCSI_PRODUCER")
 $ if producer .eqs. ""
 $ then
-$   write sys$output "@MAKE_PCSI_BASH_KIT_NAME.COM has not been run."
+$   write sys$output "@MAKE_PCSI_CURL_KIT_NAME.COM has not been run."
 $   goto all_exit
 $ endif
 $ filename_base = f$trnlnm("GNV_PCSI_FILENAME_BASE")
 $ if filename_base .eqs. ""
 $ then
-$   write sys$output "@MAKE_PCSI_BASH_KIT_NAME.COM has not been run."
+$   write sys$output "@MAKE_PCSI_CURL_KIT_NAME.COM has not been run."
 $   goto all_exit
 $ endif
 $!
