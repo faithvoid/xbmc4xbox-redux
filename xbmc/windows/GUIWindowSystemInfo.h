@@ -20,7 +20,10 @@
  *
  */
 
-#include "GUIWindow.h"
+#include <string>
+#include <vector>
+
+#include "guilib/GUIWindow.h"
 
 class CGUIWindowSystemInfo : public CGUIWindow
 {
@@ -30,7 +33,7 @@ public:
   virtual bool OnMessage(CGUIMessage& message);
   virtual void FrameMove();
 private:
-  unsigned int m_section;
+  int  m_section;
   void ResetLabels();
   void SetControlLabel(int id, const char *format, int label, int info);
 };
