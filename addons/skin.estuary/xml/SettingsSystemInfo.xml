@@ -80,30 +80,6 @@
 					<font>Mono30</font>
 				</control>
 			</control>
-			<control type="textbox" id="30">
-				<left>430</left>
-				<right>50</right>
-				<top>100</top>
-				<bottom>315</bottom>
-				<pagecontrol>60</pagecontrol>
-				<autoscroll delay="5000" repeat="7500" time="5000">!Control.HasFocus(60)</autoscroll>
-			</control>
-			<control type="scrollbar" id="60">
-				<right>0</right>
-				<top>93</top>
-				<width>12</width>
-				<bottom>312</bottom>
-				<orientation>vertical</orientation>
-				<texturesliderbackground />
-				<animation effect="slide" end="6,0" time="300" tween="sine" easing="inout" condition="!Control.HasFocus(60)">conditional</animation>
-				<onleft>9000</onleft>
-				<onright>9000</onright>
-				<visible>Control.IsVisible(30)</visible>
-				<animation effect="fade" start="0" end="100" time="200" delay="300">Visible</animation>
-				<animation effect="fade" start="100" end="0" time="200">Hidden</animation>
-				<animation effect="fade" start="0" end="100" delay="300" time="320">WindowOpen</animation>
-				<animation effect="fade" start="100" end="0" time="150">WindowClose</animation>
-			</control>
 			<control type="image">
 				<left>360</left>
 				<top>90</top>
@@ -276,22 +252,6 @@
 					</include>
 					<width>420</width>
 					<label>$LOCALIZE[13281]</label>
-				</control>
-				<control type="button" id="99">
-					<description>Button PVR</description>
-					<include content="DefaultSettingButton">
-						<param name="height" value="88" />
-					</include>
-					<width>420</width>
-					<label>$LOCALIZE[19191]</label>
-				</control>
-				<control type="button" id="100">
-					<description>Button Privacy policy</description>
-					<include content="DefaultSettingButton">
-						<param name="height" value="88" />
-					</include>
-					<width>420</width>
-					<label>$LOCALIZE[12389]</label>
 				</control>
 			</control>
 		</control>
