@@ -98,7 +98,6 @@
 				<control type="group" id="699">
 					<width>76</width>
 					<height>76</height>
-					<visible>!MusicPlayer.Content(LiveTV)</visible>
 					<control type="button" id="704">
 						<left>0</left>
 						<top>0</top>
@@ -141,7 +140,6 @@
 					<radioposx>1</radioposx>
 					<radioposy>0</radioposy>
 					<selected>Playlist.IsRandom</selected>
-					<visible>!MusicPlayer.Content(LiveTV)</visible>
 					<onclick>PlayerControl(Random)</onclick>
 				</control>
 				<control type="radiobutton" id="703">

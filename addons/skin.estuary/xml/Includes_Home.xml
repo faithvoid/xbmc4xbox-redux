@@ -24,42 +24,6 @@
 			</control>
 		</definition>
 	</include>
-	<include name="PVRWidget">
-		<control type="image">
-			<top>80</top>
-			<left>16</left>
-			<width>670</width>
-			<height>225</height>
-			<texture border="21">dialogs/dialog-bg.png</texture>
-		</control>
-		<control type="image">
-			<left>55</left>
-			<top>122</top>
-			<width>140</width>
-			<height>140</height>
-			<aspectratio>keep</aspectratio>
-			<texture background="true" fallback="DefaultVideo.png">$PARAM[icon]</texture>
-		</control>
-		<control type="label">
-			<left>225</left>
-			<top>127</top>
-			<height>25</height>
-			<width>420</width>
-			<label>$PARAM[header]</label>
-			<aligny>center</aligny>
-			<font>font36_title</font>
-			<shadowcolor>black</shadowcolor>
-		</control>
-		<control type="label">
-			<left>225</left>
-			<top>172</top>
-			<height>105</height>
-			<width>420</width>
-			<label>$PARAM[label1][CR]$PARAM[label2]</label>
-			<font>font12</font>
-			<shadowcolor>black</shadowcolor>
-		</control>
-	</include>
 	<include name="WidgetListPoster">
 		<definition>
 			<include content="CategoryLabel">
@@ -291,9 +255,7 @@
 		<param name="item_limit">20</param>
 		<param name="icon">$INFO[ListItem.Icon]</param>
 		<param name="icon_height">120</param>
-		<param name="pvr_submenu">false</param>
 		<param name="addon_submenu">false</param>
-		<param name="pvr_type">TV</param>
 		<param name="visible">true</param>
 		<definition>
 			<include content="CategoryLabel">
@@ -391,13 +353,10 @@
 						</control>
 					</control>
 				</focusedlayout>
-				<include condition="!$PARAM[pvr_submenu] + !$PARAM[addon_submenu]" content="SubmenuContent">
+				<include condition="!$PARAM[addon_submenu]" content="SubmenuContent">
 					<param name="widget_target" value="$PARAM[widget_target]"/>
 					<param name="item_limit" value="$PARAM[item_limit]"/>
 					<param name="content_path" value="$PARAM[content_path]"/>
-				</include>
-				<include condition="$PARAM[pvr_submenu]" content="PVRSubMenuContent">
-					<param name="pvr_type" value="$PARAM[pvr_type]"/>
 				</include>
 				<include condition="$PARAM[addon_submenu]">AddonSubMenuContent</include>
 			</control>
@@ -434,181 +393,6 @@
 				<thumb>DefaultAddonsSearch.png</thumb>
 			</item>
 		</content>
-	</include>
-	<include name="PVRSubMenuContent">
-		<content>
-			<item>
-				<label>$LOCALIZE[19019]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]Channels)</onclick>
-				<thumb>DefaultAddonPeripheral.png</thumb>
-			</item>
-			<item>
-				<label>$LOCALIZE[19069]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]Guide)</onclick>
-				<thumb>icons/pvr/epg.png</thumb>
-			</item>
-			<item>
-				<label>$LOCALIZE[19017]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]Recordings)</onclick>
-				<thumb>icons/pvr/recording.png</thumb>
-			</item>
-			<item>
-				<label>$LOCALIZE[19040]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]Timers)</onclick>
-				<thumb>icons/pvr/timer.png</thumb>
-			</item>
-			<item>
-				<label>$LOCALIZE[19138]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]TimerRules)</onclick>
-				<thumb>icons/pvr/timer-rule.png</thumb>
-			</item>
-			<item>
-				<label>$LOCALIZE[137]</label>
-				<onclick>ActivateWindow($PARAM[pvr_type]Search)</onclick>
-				<thumb>DefaultAddonsSearch.png</thumb>
-			</item>
-		</content>
-	</include>
-	<include name="WidgetListChannels">
-		<param name="item_limit">15</param>
-		<param name="icon">$INFO[ListItem.Icon]</param>
-		<param name="label">$INFO[ListItem.Label]</param>
-		<param name="label2">$INFO[ListItem.Title]</param>
-		<definition>
-			<include content="CategoryLabel">
-				<param name="label">$PARAM[widget_header]</param>
-				<param name="list_id" value="$PARAM[list_id]"/>
-			</include>
-			<include content="BusyListSpinner">
-				<param name="list_id" value="$PARAM[list_id]"/>
-				<param name="posy" value="200"/>
-			</include>
-			<control type="panel" id="$PARAM[list_id]">
-				<left>0</left>
-				<top>120</top>
-				<right>0</right>
-				<height>430</height>
-				<include content="WidgetListCommon">
-					<param name="list_id" value="$PARAM[list_id]"/>
-				</include>
-				<visible>Integer.IsGreater(Container($PARAM[list_id]).NumItems,0) | Container($PARAM[list_id]).IsUpdating</visible>
-				<itemlayout width="310" height="500">
-					<control type="group">
-						<left>70</left>
-						<control type="image">
-							<width>319</width>
-							<height>340</height>
-							<texture>dialogs/dialog-bg-nobo.png</texture>
-							<bordertexture border="21">overlays/shadow.png</bordertexture>
-							<bordersize>20</bordersize>
-						</control>
-						<control type="image">
-							<top>43</top>
-							<left>38</left>
-							<width>245</width>
-							<height>200</height>
-							<texture fallback="DefaultTVShows.png">$PARAM[icon]</texture>
-							<aspectratio>keep</aspectratio>
-						</control>
-						<control type="label">
-							<left>42</left>
-							<top>247</top>
-							<width>245</width>
-							<height>70</height>
-							<label>$PARAM[label]</label>
-							<font>font12</font>
-							<shadowcolor>text_shadow</shadowcolor>
-							<align>center</align>
-							<aligny>top</aligny>
-						</control>
-						<control type="label">
-							<left>42</left>
-							<top>277</top>
-							<width>245</width>
-							<height>65</height>
-							<label>$PARAM[label2]</label>
-							<font>font12</font>
-							<shadowcolor>text_shadow</shadowcolor>
-							<align>center</align>
-							<aligny>top</aligny>
-						</control>
-						<control type="image">
-							<left>260</left>
-							<top>30</top>
-							<width>32</width>
-							<height>32</height>
-							<texture>$VAR[WallWatchedIconVar]</texture>
-						</control>
-					</control>
-				</itemlayout>
-				<focusedlayout width="310" height="500">
-					<control type="group">
-						<depth>DepthContentPopout</depth>
-						<left>70</left>
-						<animation type="Focus">
-							<effect type="zoom" start="100" end="110" time="200" tween="sine" easing="inout" center="240,100" />
-						</animation>
-						<animation type="Unfocus">
-							<effect type="zoom" start="110" end="100" time="200" tween="sine" easing="inout" center="240,100" />
-						</animation>
-						<control type="image">
-							<width>319</width>
-							<height>340</height>
-							<texture>dialogs/dialog-bg-nobo.png</texture>
-							<bordertexture border="21">overlays/shadow.png</bordertexture>
-							<bordersize>20</bordersize>
-						</control>
-						<control type="image">
-							<width>319</width>
-							<height>340</height>
-							<texture colordiffuse="button_focus">colors/grey.png</texture>
-							<bordersize>20</bordersize>
-							<include>Animation_FocusTextureFade</include>
-						</control>
-						<control type="image">
-							<top>43</top>
-							<left>38</left>
-							<width>245</width>
-							<height>200</height>
-							<texture fallback="DefaultTVShows.png">$PARAM[icon]</texture>
-							<aspectratio>keep</aspectratio>
-						</control>
-						<control type="label">
-							<left>42</left>
-							<top>247</top>
-							<width>245</width>
-							<height>70</height>
-							<label>$PARAM[label]</label>
-							<font>font12</font>
-							<shadowcolor>text_shadow</shadowcolor>
-							<align>center</align>
-							<scroll>true</scroll>
-							<aligny>top</aligny>
-						</control>
-						<control type="label">
-							<left>42</left>
-							<top>277</top>
-							<width>245</width>
-							<height>65</height>
-							<label>$PARAM[label2]</label>
-							<font>font12</font>
-							<shadowcolor>text_shadow</shadowcolor>
-							<align>center</align>
-							<scroll>true</scroll>
-							<aligny>top</aligny>
-						</control>
-						<control type="image">
-							<left>260</left>
-							<top>30</top>
-							<width>32</width>
-							<height>32</height>
-							<texture>$VAR[WallWatchedIconVar]</texture>
-						</control>
-					</control>
-				</focusedlayout>
-				<content sortby="$PARAM[sortby]" sortorder="$PARAM[sortorder]" target="$PARAM[widget_target]" limit="$PARAM[item_limit]">$PARAM[content_path]</content>
-			</control>
-		</definition>
 	</include>
 	<include name="WeatherWidget">
 		<param name="width">266</param>

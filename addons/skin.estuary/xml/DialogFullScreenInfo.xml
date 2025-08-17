@@ -18,7 +18,6 @@
 			<height>230</height>
 			<animation effect="fade" time="200">VisibleChange</animation>
 			<control type="group">
-				<animation effect="slide" end="0,-80" time="150" condition="PVR.IsTimeShift">conditional</animation>
 				<control type="image">
 					<depth>DepthOSD+</depth>
 					<left>10</left>
@@ -75,13 +74,6 @@
 							<label>$LOCALIZE[206]</label>
 							<visible>!String.IsEmpty(VideoPlayer.CastAndRole)</visible>
 						</control>
-						<control type="button" id="5555">
-							<width>auto</width>
-							<height>100</height>
-							<textoffsetx>80</textoffsetx>
-							<label>$LOCALIZE[19031]</label>
-							<visible>VideoPlayer.Content(livetv)</visible>
-						</control>
 					</control>
 				</control>
 			</control>
@@ -94,7 +86,6 @@
 				<include>Animation_BottomSlide</include>
 				<orientation>horizontal</orientation>
 				<itemgap>10</itemgap>
-				<visible>!Player.ChannelPreviewActive</visible>
 				<include content="MediaFlag">
 					<param name="texture" value="$INFO[VideoPlayer.AudioChannels,flags/audiochannel/,.png]" />
 				</include>
