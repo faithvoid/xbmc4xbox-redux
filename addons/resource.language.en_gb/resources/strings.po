@@ -7798,7 +7798,13 @@ msgctxt "#19033"
 msgid "Information"
 msgstr ""
 
-#empty strings from id 19034 to 19176
+#empty strings from id 19034 to 19054
+
+msgctxt "#19055"
+msgid "No information available"
+msgstr ""
+
+#empty strings from id 19056 to 19176
 
 #: system/settings/settings.xml
 msgctxt "#19177"
