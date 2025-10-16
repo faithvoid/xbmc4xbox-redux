@@ -45,7 +45,7 @@ void CProgramDatabase::CreateTables()
   for (int i = 0; i < PROGRAMDB_MAX_COLUMNS; i++)
     columns += StringUtils::Format(",c%02d text", i);
 
-  columns += ")";
+  columns += ", playCount integer, lastPlayed text, dateAdded text)";
   m_pDS->exec(columns);
 
   CLog::Log(LOGINFO, "create trainers table");
@@ -345,7 +345,7 @@ int CProgramDatabase::AddProgram(const std::string& strFilenameAndPath, const in
     if (idProgram > 0)
       return idProgram;
 
-    strSQL=PrepareSQL("insert into program (idProgram, idPath, c%02d) values (NULL, %i, '%s')", PROGRAMDB_ID_PATH, idPath, strFilenameAndPath.c_str());
+    strSQL=PrepareSQL("insert into program (idProgram, idPath, c%02d, playCount, dateAdded) values (NULL, %i, '%s', 0, '%s')", PROGRAMDB_ID_PATH, idPath, strFilenameAndPath.c_str(), CDateTime::GetCurrentDateTime().GetAsDBDateTime().c_str());
 
     m_pDS->exec(strSQL);
     idProgram = (int)m_pDS->lastinsertid();
