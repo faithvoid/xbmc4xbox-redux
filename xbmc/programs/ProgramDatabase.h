@@ -79,6 +79,9 @@ public:
 
   std::string GetXBEPathByTitleId(const std::string& idTitle);
 
+protected:
+  void GetDetailsForItem(boost::movelib::unique_ptr<dbiplus::Dataset> &pDS, CFileItem* pItem);
+
 private:
   virtual void CreateTables();
   virtual void CreateAnalytics();

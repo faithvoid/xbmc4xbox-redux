@@ -447,26 +447,7 @@ bool CProgramDatabase::GetPathContent(const int idPath, CFileItemList &items)
     while (!m_pDS->eof())
     {
       CFileItemPtr pItem(new CFileItem());
-      std::string path = m_pDS->fv(PROGRAMDB_ID_PATH + 2).get_asString();
-      std::string type = m_pDS->fv(PROGRAMDB_ID_TYPE + 2).get_asString();
-      std::string system = m_pDS->fv(PROGRAMDB_ID_SYSTEM + 2).get_asString();
-      std::string title = m_pDS->fv(PROGRAMDB_ID_TITLE + 2).get_asString();
-      std::string plot = m_pDS->fv(PROGRAMDB_ID_PLOT + 2).get_asString();
-      std::string poster = m_pDS->fv(PROGRAMDB_ID_POSTER + 2).get_asString();
-      std::string fanart = m_pDS->fv(PROGRAMDB_ID_FANART + 2).get_asString();
-      std::string trailer = m_pDS->fv(PROGRAMDB_ID_TRAILER + 2).get_asString();
-      pItem->SetPath(path);
-      pItem->SetProperty("type", type);
-      pItem->SetProperty("system", system);
-      pItem->SetLabel(title);
-      pItem->SetProperty("title", title);
-      pItem->SetLabel2(plot);
-      pItem->SetProperty("overview", plot);
-      pItem->SetProperty("trailer", trailer);
-      pItem->SetArt("poster", poster);
-      pItem->SetArt("fanart", fanart);
-      pItem->m_dwSize = m_pDS->fv(PROGRAMDB_ID_SIZE + 2).get_asInt64();
-
+      GetDetailsForItem(m_pDS, pItem.get());
       items.Add(pItem);
       m_pDS->next();
     }
@@ -626,26 +607,7 @@ bool CProgramDatabase::GetEmulators(const std::string& shortname, CFileItemList 
     while (!m_pDS->eof())
     {
       CFileItemPtr pItem(new CFileItem());
-      std::string path = m_pDS->fv(PROGRAMDB_ID_PATH + 2).get_asString();
-      std::string type = m_pDS->fv(PROGRAMDB_ID_TYPE + 2).get_asString();
-      std::string system = m_pDS->fv(PROGRAMDB_ID_SYSTEM + 2).get_asString();
-      std::string title = m_pDS->fv(PROGRAMDB_ID_TITLE + 2).get_asString();
-      std::string plot = m_pDS->fv(PROGRAMDB_ID_PLOT + 2).get_asString();
-      std::string poster = m_pDS->fv(PROGRAMDB_ID_POSTER + 2).get_asString();
-      std::string fanart = m_pDS->fv(PROGRAMDB_ID_FANART + 2).get_asString();
-      std::string trailer = m_pDS->fv(PROGRAMDB_ID_TRAILER + 2).get_asString();
-      pItem->SetPath(path);
-      pItem->SetProperty("type", type);
-      pItem->SetProperty("system", system);
-      pItem->SetLabel(title);
-      pItem->SetProperty("title", title);
-      pItem->SetLabel2(plot);
-      pItem->SetProperty("overview", plot);
-      pItem->SetProperty("trailer", trailer);
-      pItem->SetArt("poster", poster);
-      pItem->SetArt("fanart", fanart);
-      pItem->m_dwSize = m_pDS->fv(PROGRAMDB_ID_SIZE + 2).get_asInt64();
-
+      GetDetailsForItem(m_pDS, pItem.get());
       emulators.Add(pItem);
       m_pDS->next();
     }
@@ -685,4 +647,47 @@ std::string CProgramDatabase::GetXBEPathByTitleId(const std::string& idTitle)
     CLog::Log(LOGERROR, "%s (%i) failed", __FUNCTION__, idTitle);
   }
   return "";
+}
+
+void CProgramDatabase::GetDetailsForItem(boost::movelib::unique_ptr<dbiplus::Dataset> &pDS, CFileItem* pItem)
+{
+  std::string value = pDS->fv(PROGRAMDB_ID_PATH + 2).get_asString();
+  if (!value.empty())
+    pItem->SetPath(value);
+
+  value = pDS->fv(PROGRAMDB_ID_TYPE + 2).get_asString();
+  if (!value.empty())
+    pItem->SetProperty("type", value);
+
+  value = pDS->fv(PROGRAMDB_ID_SYSTEM + 2).get_asString();
+  if (!value.empty())
+    pItem->SetProperty("system", value);
+
+  value = pDS->fv(PROGRAMDB_ID_TITLE + 2).get_asString();
+  if (!value.empty())
+  {
+    pItem->SetLabel(value);
+    pItem->SetProperty("title", value);
+  }
+
+  value = pDS->fv(PROGRAMDB_ID_PLOT + 2).get_asString();
+  if (!value.empty())
+  {
+    pItem->SetLabel2(value);
+    pItem->SetProperty("overview", value);
+  }
+
+  value = pDS->fv(PROGRAMDB_ID_POSTER + 2).get_asString();
+  if (!value.empty())
+    pItem->SetArt("poster", value);
+
+  value = pDS->fv(PROGRAMDB_ID_FANART + 2).get_asString();
+  if (!value.empty())
+    pItem->SetArt("fanart", value);
+
+  value = pDS->fv(PROGRAMDB_ID_TRAILER + 2).get_asString();
+  if (!value.empty())
+    pItem->SetProperty("trailer", value);
+
+  pItem->m_dwSize = pDS->fv(PROGRAMDB_ID_SIZE + 2).get_asInt64();
 }
