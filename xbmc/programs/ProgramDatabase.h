@@ -26,6 +26,7 @@ typedef enum
   PROGRAMDB_ID_TYPE = 2,
   PROGRAMDB_ID_TITLE = 3,
   PROGRAMDB_ID_PLOT = 4,
+  PROGRAMDB_ID_SYSTEM = 5,
   PROGRAMDB_ID_TRAILER = 19,
   PROGRAMDB_ID_POSTER = 20,
   PROGRAMDB_ID_FANART = 21,
@@ -66,6 +67,9 @@ public:
   // Program settings
   bool SetProgramSettings(const std::string& strFileNameAndPath, const std::string& strSettings);
   bool GetProgramSettings(const std::string& strFileNameAndPath, std::string& strSettings);
+
+  // Emulators
+  bool GetEmulators(const std::string& shortname, CFileItemList& emulators);
 
   /*! \brief Update the last played time of program
    Updates the last played date and play count
