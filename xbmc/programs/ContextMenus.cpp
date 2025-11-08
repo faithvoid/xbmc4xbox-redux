@@ -8,11 +8,12 @@
 
 #include "ContextMenus.h"
 
+#include "FileItem.h"
 #include "addons/Addon.h"
 #include "dialogs/GUIDialogKaiToast.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "filesystem/AddonsDirectory.h"
-#include "FileItem.h"
+#include "filesystem/File.h"
 #include "guilib/GUIWindowManager.h"
 #include "interfaces/generic/ScriptInvocationManager.h"
 #include "programs/dialogs/GUIDialogProgramInfo.h"
@@ -34,6 +35,11 @@ CProgramInfoBase::CProgramInfoBase()
 bool CProgramInfoBase::IsVisible(const CFileItem& item) const
 {
   if (item.m_bIsFolder)
+    return false;
+
+  std::string strNFO = URIUtils::GetParentPath(item.GetPath());
+  strNFO = URIUtils::AddFileToFolder(strNFO, "_resources", "default.xml");
+  if (!XFILE::CFile::Exists(strNFO))
     return false;
 
   return URIUtils::HasExtension(item.GetPath(), g_advancedSettings.m_programExtensions);
