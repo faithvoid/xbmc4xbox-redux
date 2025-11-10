@@ -394,7 +394,7 @@ void CProgramInfoTag::SetSystem(std::string system)
 
 void CProgramInfoTag::SetUniqueID(std::string uniqueID)
 {
-  m_strSystem = uniqueID;
+  m_strUniqueID = uniqueID;
 }
 
 void CProgramInfoTag::SetLastPlayed(CDateTime lastPlayed)
