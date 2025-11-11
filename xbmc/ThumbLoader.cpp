@@ -144,40 +144,6 @@ std::string CProgramThumbLoader::GetLocalThumb(const CFileItem &item)
     if (CFile::Exists(folderThumb))
       return folderThumb;
   }
-#ifdef _XBOX
-  // look for the thumb
-  else if (item.IsShortCut())
-  {
-    CShortcut shortcut;
-    if (shortcut.Create(item.GetPath()))
-    {
-      // use the shortcut's thumb
-      if (!shortcut.m_strThumb.empty())
-        return shortcut.m_strThumb;
-      else
-      {
-        CFileItem cut(shortcut.m_strPath,false);
-        CProgramThumbLoader loader;
-        if (loader.LoadItem(&cut))
-          return cut.GetArt("thumb");
-      }
-    }
-  }
-  else if (item.IsXBE())
-  {
-    std::string directory = URIUtils::GetDirectory(item.GetPath());
-    std::string icon = URIUtils::AddFileToFolder(directory, "avalaunch_icon.jpg");
-
-    // first check for avalaunch_icon.jpg
-    if (CFile::Exists(icon) || CUtil::CacheXBEIcon(item.GetPath(), icon))
-    {
-      CFileItem item(icon,false);
-      CProgramThumbLoader loader;
-      if (loader.LoadItem(&item))
-        return item.GetArt("thumb");
-    }
-  }
-#endif
   else
   {
     std::string fileThumb(item.GetTBNFile());
