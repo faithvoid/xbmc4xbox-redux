@@ -1,7 +1,7 @@
 # Kodi Media Center language file
-# Addon Name: Gismeteo
-# Addon id: weather.gismeteo
-# Addon Provider: vl.maksime
+# Addon Name: Built-in Weather
+# Addon id: weather.xbmc.builtin
+# Addon Provider: Team XBMC
 
 msgid ""
 msgstr ""
@@ -12,10 +12,6 @@ msgstr ""
 
 msgctxt "#32101"
 msgid "Location setup"
-msgstr ""
-
-msgctxt "#32110"
-msgid "Current Location"
 msgstr ""
 
 msgctxt "#32111"
