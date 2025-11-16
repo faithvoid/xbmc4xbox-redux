@@ -26,6 +26,10 @@
 
 XBMC4Xbox is a free and open source media player software made solely for the first-generation Xbox video-game console. The software was forked from the XBMC project (now known as Kodi and formerly known as Xbox Media Player) after XBMC removed support for the Xbox console. Other than the audio / video playback and media center functionality, XBMC4Xbox also has the ability to catalog and launch original Xbox games, and homebrew applications such as console emulators from the Xbox's built-in harddrive.
 
+## Suppport us
+I'm seeking for Xbox Development Kit (DVT3/4). Consider buying me a coffee so I can buy one!
+<a href="https://www.buymeacoffee.com/antonic901" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ## Download links
 This softwer is in alpha and currently we are only providing nightly releases.
 
