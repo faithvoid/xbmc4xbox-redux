@@ -41,7 +41,7 @@ XBMC is your all-in-one solution for enjoying almost all popular audio, video, a
 Simply point XBMC to your media or game collection, and watch as it **magically scans and creates a personalized library** complete with box covers, descriptions, and fanart. XBMC isn't just for movies and music; it also offers robust support for video games, including emulators and retro games. Turn your Xbox into the ultimate multimedia and gaming hub, complete with playlist and slideshow features, weather forecasts, audio visualizations, and more. Once installed, your Xbox will become a fully functional multimedia jukebox and gaming console all in one.
 
 <p align="center">
-  <img src="https://github.com/xbmc/xbmc/blob/master/docs/resources/kodi.gif" alt="XBMC">
+  <img src="https://github.com/antonic901/xbmc4xbox-redux/blob/master/docs/resources/xbmc.gif" alt="XBMC">
 </p>
 
 ## Getting Started
