@@ -107,8 +107,7 @@ XBMC couldn't exist without
 ## License
 XBMC is **GPLv2 licensed**. You may use, distribute and copy it under the license terms.
 
+This project, XBMC version 4.0 (and upcoming releases), is not supported, endorsed, or affiliated with Team Kodi of The Kodi Foundation, or its members. Any references to “XBMC” are for nostalgia and historical or descriptive purposes only. If you believe this project inadvertently violates any trademarks, please open an issue on our GitHub so we can address it promptly.
+
 <a href="https://github.com/antonic901/xbmc4xbox-redux/graphs/contributors"><img src="https://forthebadge.com/images/badges/built-by-developers.svg" height="25"></a>
-<a href="https://github.com/antonic901/xbmc4xbox-redux"><img src="https://forthebadge.com/images/badges/certified-cousin-terio.svg" height="25"></a>
-<a href="https://github.com/antonic901/xbmc4xbox-redux"><img src="https://forthebadge.com/images/badges/approved-by-george-costanza.svg" height="25"></a>
 <a href="https://github.com/antonic901/xbmc4xbox-redux/releases"><img src="https://forthebadge.com/images/badges/check-it-out.svg" height="25"></a>
-<a href="https://github.com/antonic901/xbmc4xbox-redux"><img src="https://forthebadge.com/images/badges/winter-is-coming.svg" height="25"></a>

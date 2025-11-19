@@ -1,7 +1,7 @@
 # Kodi Media Center language file
 # Addon Name: Built-in Weather
 # Addon id: weather.xbmc.builtin
-# Addon Provider: Team XBMC
+# Addon Provider: -
 
 msgid ""
 msgstr ""

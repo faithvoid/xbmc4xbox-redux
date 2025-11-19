@@ -81,4 +81,4 @@ Here is some additional context or explanation that might help:
 
 <!--- End of this issue -->
 *note: Once the issue is made we require you to update it with new information or XBMC versions should that be required.
-Team XBMC will consider your problem report however, we will not make any promises the problem will be solved.*
+We will consider your problem report however, we will not make any promises the problem will be solved.*

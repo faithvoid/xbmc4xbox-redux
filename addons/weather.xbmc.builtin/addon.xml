@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="weather.xbmc.builtin" version="1.0.0" name="Gismeteo (Internal Weather)" provider-name="Team XBMC">
+<addon id="weather.xbmc.builtin" version="1.0.0" name="Gismeteo (Internal Weather)" provider-name="Nikola Antonic">
   <requires>
     <import addon="xbmc.python" version="2.19.0"/>
   </requires>
