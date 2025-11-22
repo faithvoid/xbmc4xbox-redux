@@ -234,8 +234,8 @@ bool CNetwork::Initialize(int iAssignment, const char* szLocalAddress, const cha
 
     // Insignia DNS
     strcpy(m_networkinfo.DNS1, "46.101.64.175");
-    strcpy(m_networkinfo.DNS2, "8.8.8.8");
-
+    strcpy(m_networkinfo.DNS2, szNameServerAlt);
+    
     TranslateConfig(m_networkinfo, params);
     CLog::Log(LOGNOTICE, "Network: Using Insignia IP settings");
   }
